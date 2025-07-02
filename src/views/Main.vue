@@ -1,13 +1,28 @@
 <script setup>
-
+import CommonAside from '@/components/CommonAside.vue'
 </script>
 
 <template>
-    <div>
-        i am main
+    <div class="common-layout">
+        <el-container class="lay-container">
+            <common-aside />
+            <el-container>
+                <el-header class="el-heder">
+                    <common-header />
+                </el-header>
+                <el-main class="el-main">
+                    mian
+                </el-main>
+            </el-container>
+        </el-container>
     </div>
 </template>
 
-<style scoped>
-
+<style scoped lang="less">
+    .common-layout,.lay-container{
+        height: 100%;
+    }
+    .el-header{
+        background-color: #333;
+    }
 </style>
