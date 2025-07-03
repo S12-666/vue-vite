@@ -1,5 +1,5 @@
 <template>
-    <el-aside width="180px",height="100%">
+    <el-aside width="180px">
         <!-- <h3>Default colors</h3> -->
         <el-menu class="el-menu">
             <h3>System Management</h3>

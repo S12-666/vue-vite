@@ -1,5 +1,6 @@
 <script setup>
-import CommonAside from '@/components/CommonAside.vue'
+import CommonAside from '@/components/CommonAside.vue';
+import CommonHeader from '@/components/CommonHeader.vue';
 </script>
 
 <template>
@@ -24,5 +25,6 @@ import CommonAside from '@/components/CommonAside.vue'
     }
     .el-header{
         background-color: #333;
+        border: #e3ebf2;
     }
 </style>
