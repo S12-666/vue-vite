@@ -1,7 +1,7 @@
 <template>
     <div class="header">
         <div class="l-content">
-            <el-button>
+            <el-button @click="handleCollapse">
                 <Menu class="icons" />
             </el-button>
             <el-breadcrumb class="bread">
@@ -26,9 +26,14 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import {useAllDataStore} from '@/stores';
 
 const getUrl = (user) => {
     return new URL(`../assets/images/${user}.png`, import.meta.url).href
+}
+const store = useAllDataStore()
+const handleCollapse = () => {
+    store.state.isCollapse = !store.state.isCollapse
 }
 
 </script>
