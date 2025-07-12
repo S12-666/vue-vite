@@ -3,7 +3,7 @@ import { ref, getCurrentInstance, onMounted} from 'vue';
 
 const {proxy} = getCurrentInstance()
 const tableData = ref([])
-
+const countData = ref([])
 const tableLabel = ref({
     name: "课程",
     todayBuy: "今日购买",
@@ -15,11 +15,17 @@ const getImageUrl = (user) => {
 } 
 const getTableData = async () => {
     const data = await proxy.$api.getTableData()
-    console.log(data);
+    // console.log(data);
     tableData.value = data.tableData
 }
+const getCountData = async () => {
+    const data = await proxy.$api.getCountData()
+    console.log(data);
+    countData.value = data
+}
 onMounted(() => {
-    getTableData()
+    getTableData();
+    getCountData();
 })
 </script>
 
