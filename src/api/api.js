@@ -14,4 +14,10 @@ export default {
             method: "get",
         });
     },
+    getChartData() {
+        return request({
+            url: "/home/getChartData",
+            method: "get",
+        });
+    },
 };
