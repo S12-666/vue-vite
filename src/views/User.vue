@@ -90,8 +90,21 @@ const handleCancel = () => {
     dialogVisible.value = false;
 };
 const handleAdd = () => {
-    dialogVisible.value = true;
     action.value = 'add';
+    // 重置数据
+    Object.assign(formUser, {
+        name: '',
+        age: null,
+        sex: '1',
+        birth: '',
+        addr: ''
+    });
+
+    // 重置校验状态（如果已有）
+    nextTick(() => {
+        proxy.$refs.userForm?.resetFields();
+        dialogVisible.value = true;
+    });
 };
 const timeFormat = (time) => {
     let d = new Date(time);
@@ -106,21 +119,21 @@ const timeFormat = (time) => {
 const onSubmit = () => {
     // 先校验
     proxy.$refs['userForm'].validate(async (valid) => {
-        if(valid){
+        if (valid) {
             let res = null
-            if(action.value === 'add'){
+            if (action.value === 'add') {
                 // console.log(formUser);
                 formUser.birth = /^\d{4}-\d{2}-\d{2}$/.test(formUser.birth) ? formUser.birth : timeFormat(formUser.birth);
                 res = await proxy.$api.addUser(formUser)
-            }else{
+            } else {
                 res = await proxy.$api.editUser(formUser)
             }
-            if(res){
+            if (res) {
                 dialogVisible.value = false;
                 proxy.$refs['userForm'].resetFields();
                 getUserData();
             }
-        }else{
+        } else {
             ElMessage({
                 showClose: true,
                 message: '请输入正确内容',
@@ -132,11 +145,12 @@ const onSubmit = () => {
 const handleEdit = (val) => {
     action.value = 'edit';
     dialogVisible.value = true;
-    
+
     nextTick(() => {
-        Object.assign(formUser, {...val, sex:'' + val.sex});
+        Object.assign(formUser, { ...val, sex: '' + val.sex });
     });
-}
+};
+
 onMounted(() => {
     getUserData();
 })
@@ -233,6 +247,7 @@ onMounted(() => {
         margin-top: 20px;
     }
 }
+
 .select-clearn {
     display: flex;
 }
