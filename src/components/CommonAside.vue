@@ -1,10 +1,10 @@
 <template>
     <el-aside :width="width">
         <!-- <h3>Default colors</h3> -->
-        <el-menu :collapse="isCollapse" :collapse-transition="false">
+        <el-menu :collapse="isCollapse" :collapse-transition="false" :default-active="activeMenu">
             <h3 v-show="!isCollapse">System Management</h3>
             <h3 v-show="isCollapse">Manage</h3>
-            <el-menu-item v-for="item in noChildren" :index="item.path" :key="item.path">
+            <el-menu-item v-for="item in noChildren" :index="item.path" :key="item.path" @click="handleMenu(item)">
                 <component class="icons" :is="item.icon"></component>
                 <span>{{ item.label }}</span>
             </el-menu-item>
@@ -15,7 +15,8 @@
                 </template>
                 <el-menu-item-group>
                     <el-menu-item v-for="(subItem, subIndex) in item.children" :index="subItem.path"
-                        :key="subItem.path">
+                        :key="subItem.path"
+                        @click="handleMenu(subItem)">
                         <component class="icons" :is="subItem.icon"></component>
                         <span>{{ subItem.label }}</span>
                     </el-menu-item>
@@ -28,6 +29,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useAllDataStore } from '@/stores'
+import { useRoute, useRouter } from 'vue-router';
 const list = ref([
     {
         path: '/home',
@@ -76,7 +78,15 @@ const store = useAllDataStore();
 const noChildren = computed(() => list.value.filter(item => !item.children));
 const hasChildren = computed(() => list.value.filter(item => item.children));
 const isCollapse = computed(() => store.state.isCollapse);
-const width = computed(() => store.state.isCollapse ? "64px" : "180px")
+const width = computed(() => store.state.isCollapse ? "64px" : "180px");
+
+const router = useRouter()
+const route = useRoute()
+const activeMenu = computed(() => route.path)
+const handleMenu = (item) => {
+    router.push(item.path)
+    store.selectMenu(item)
+}
 </script>
 
 <style lang="less" scoped>
