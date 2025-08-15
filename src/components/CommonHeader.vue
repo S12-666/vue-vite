@@ -46,7 +46,7 @@ const handelLogout = () => {
     router.push('login');
 };
 
-const current = computed(() => store.state.currentMenu)
+const current = computed(() => store.state.currentMenu);
 
 </script>
 
