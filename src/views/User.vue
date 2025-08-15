@@ -1,14 +1,11 @@
 <script setup>
 import { ref, getCurrentInstance, onMounted, reactive, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus'
-const handleClick = () => {
-    console.log('click')
-}
 const tableData = ref([]);
 const { proxy } = getCurrentInstance();
 const getUserData = async () => {
     let data = await proxy.$api.getUserData(config);
-    console.log(data);
+    // console.log(data);
     tableData.value = data.list.map(item => ({
         ...item,
         sexLabel: item.sex === '1' ? '男' : '女'

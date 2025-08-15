@@ -6,6 +6,11 @@
             </el-button>
             <el-breadcrumb class="bread">
                 <el-breadcrumb-item :to="{ path: '/' }">Home</el-breadcrumb-item>
+                <!-- <el-breadcrumb-item v-if="current" :to="current.path">{{ current.label }}</el-breadcrumb-item> -->
+                <el-breadcrumb-item v-if="current" :to="current.path">
+                    {{ current.label }}
+                </el-breadcrumb-item>
+
             </el-breadcrumb>
         </div>
         <div class="r-content">
@@ -16,7 +21,7 @@
                 <template #dropdown>
                     <el-dropdown-menu>
                         <el-dropdown-item>User Center</el-dropdown-item>
-                        <el-dropdown-item>Log Out</el-dropdown-item>
+                        <el-dropdown-item @click="handelLogout">Log Out</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -26,20 +31,27 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import {useAllDataStore} from '@/stores';
-
+import { useAllDataStore } from '@/stores';
+import { useRoute, useRouter } from 'vue-router'
 const getUrl = (user) => {
     return new URL(`../assets/images/${user}.png`, import.meta.url).href
 }
-const store = useAllDataStore()
+const store = useAllDataStore();
+const router = useRouter()
 const handleCollapse = () => {
     store.state.isCollapse = !store.state.isCollapse
 }
+const handelLogout = () => {
+    store.clean();
+    router.push('login');
+};
+
+const current = computed(() => store.state.currentMenu)
 
 </script>
 
 <style lang="less" scoped>
-.header{
+.header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -48,25 +60,30 @@ const handleCollapse = () => {
     background-color: #333;
 
 }
-.icons{
+
+.icons {
     width: 18px;
     height: 18px;
 }
-.l-content{
+
+.l-content {
     display: flex;
     align-items: center;
-    .el-button{
+
+    .el-button {
         margin-right: 20px;
     }
 }
-.r-content{
-    .user{
+
+.r-content {
+    .user {
         width: 48px;
         height: 48px;
         border-radius: 20%;
     }
 }
-:deep(.bread span){
+
+:deep(.bread span) {
     color: #fff !important;
     cursor: pointer !important;
 }

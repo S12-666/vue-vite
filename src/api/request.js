@@ -45,7 +45,7 @@ function request(options){
         service.defaults.baseURL = config.baseApi;
     }else{
         // 判断mock是否启用
-        console.log("Mock_State:",isTrue(isMock));
+        // console.log("Mock_State:",isTrue(isMock));
         service.defaults.baseURL = isMock ? config.mockApi : config.baseApi;
     };
     return service(options);
