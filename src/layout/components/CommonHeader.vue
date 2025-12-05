@@ -1,17 +1,20 @@
 <template>
     <div class="header">
-        <div class="l-content">
+        <div class="l-content"></div>
+        <!-- <div class="l-content">
             <el-button @click="handleCollapse">
                 <Menu class="icons" />
             </el-button>
             <el-breadcrumb class="bread">
-                <el-breadcrumb-item :to="{ path: '/' }">Home</el-breadcrumb-item>
-                <!-- <el-breadcrumb-item v-if="current" :to="current.path">{{ current.label }}</el-breadcrumb-item> -->
+                <el-breadcrumb-item :to="{ path: '/' }">Visual</el-breadcrumb-item>
+                <el-breadcrumb-item v-if="current" :to="current.path">{{ current.label }}</el-breadcrumb-item>
                 <el-breadcrumb-item v-if="current" :to="current.path">
                     {{ current.label }}
                 </el-breadcrumb-item>
-
             </el-breadcrumb>
+        </div> -->
+        <div class="title-content">
+            厚板性能监控与异常诊断系统
         </div>
         <div class="r-content">
             <el-dropdown>
@@ -34,13 +37,15 @@ import { ref, computed } from 'vue';
 import { useAllDataStore } from '@/stores';
 import { useRoute, useRouter } from 'vue-router'
 const getUrl = (user) => {
-    return new URL(`../assets/images/${user}.png`, import.meta.url).href
+    // 文件位于 `src/assets/images`，当前文件在 `src/layout/components`，
+    // 相对路径应为 ../../assets/images
+    return new URL(`../../assets/images/${user}.png`, import.meta.url).href
 }
 const store = useAllDataStore();
 const router = useRouter()
-const handleCollapse = () => {
-    store.state.isCollapse = !store.state.isCollapse
-}
+// const handleCollapse = () => {
+//     store.state.isCollapse = !store.state.isCollapse
+// }
 const handelLogout = () => {
     store.clean();
     router.push('login');
@@ -52,14 +57,24 @@ const current = computed(() => store.state.currentMenu);
 
 <style lang="less" scoped>
 .header {
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
     height: 100%;
     width: 100%;
-    background-color: #333;
-
+    // background-color: red;
 }
+
+.title-content {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+}
+
 
 .icons {
     width: 18px;
@@ -84,7 +99,7 @@ const current = computed(() => store.state.currentMenu);
 }
 
 :deep(.bread span) {
-    color: #fff !important;
+    color: black !important;
     cursor: pointer !important;
 }
 </style>

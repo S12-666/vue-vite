@@ -10,6 +10,7 @@ import "@/api/mock.js";
 import api from './api/api';
 import * as echarts from "echarts";
 import { useAllDataStore } from '@/stores'
+import { loadIcon } from '@/utils/icons_utils/iconLoader';
 
 function isRoute(to) {
     return router.getRoutes().filter(item => item.path === to.path).length > 0
@@ -29,6 +30,7 @@ const app = createApp(App);
 const pinia = createPinia();
 app.config.globalProperties.$api = api;
 app.config.globalProperties.$echarts = echarts;
+app.config.globalProperties.$loadIcon = loadIcon;
 app.use(ElementPlus);
 app.use(pinia);
 const store = useAllDataStore();

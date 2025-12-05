@@ -21,7 +21,9 @@ const handleLogin = async () => {
 
             // 等路由注册完成再跳转
             await nextTick();
-            router.push("/home");
+            router.push("/visual");
+            console.log(router);
+            
         } else {
             console.error("菜单数据为空");
         }

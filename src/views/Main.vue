@@ -1,7 +1,8 @@
 <script setup>
-import CommonAside from '@/components/CommonAside.vue';
-import CommonHeader from '@/components/CommonHeader.vue';
-import CommonTag from '@/components/CommonTag.vue';
+import CommonAside from '@/layout/components/CommonAside.vue';
+import CommonHeader from '@/layout/components/CommonHeader.vue';
+import CommonTag from '@/layout/components/CommonTag.vue';
+import CommonFooter from '@/layout/components/CommonFooter.vue';
 </script>
 
 <!-- <template>
@@ -41,14 +42,16 @@ import CommonTag from '@/components/CommonTag.vue';
                 <el-header class="el-header-fixed">
                     <common-header />
                 </el-header>
-
                 <!-- 滚动区域 -->
                 <div class="main-scroll">
-                    <common-tag />
+                    <!-- <common-tag /> -->
                     <el-main class="el-main">
                         <router-view></router-view>
                     </el-main>
                 </div>
+                <el-footer class="footer-fixed">
+                    <common-footer />
+                </el-footer>
             </el-container>
         </el-container>
     </div>
@@ -58,6 +61,7 @@ import CommonTag from '@/components/CommonTag.vue';
 .common-layout,
 .lay-container {
     height: 100vh; /* 全屏高度 */
+    width: 100%;
     overflow: hidden; /* 防止页面整体滚动 */
 }
 
@@ -71,7 +75,8 @@ import CommonTag from '@/components/CommonTag.vue';
 /* 顶部固定 */
 .el-header-fixed {
     height: 60px;
-    background-color: #333;
+    width: 100%;
+    background-color: white;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -79,9 +84,16 @@ import CommonTag from '@/components/CommonTag.vue';
 
 /* 中间滚动区域 */
 .main-scroll {
-    height: calc(100vh - 60px); /* 除去header高度 */
+    height: calc(100vh - 60px - 30px); /* 除去header和footer高度 */
     overflow-y: auto; /* 垂直滚动 */
     background: #f5f5f5;
+}
+
+.footer-fixed{
+    width: 100%;
+    height: 30px;
+    background: white;
+    border-top: 1px solid #E5E6EB;
 }
 
 .el-main {

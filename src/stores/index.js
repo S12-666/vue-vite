@@ -33,7 +33,7 @@ export const useAllDataStore = defineStore('AllData', () => {
     )
 
     const selectMenu = (val) => {
-        if (val.name === 'home') {
+        if (val.name === 'visual') {
             state.value.currentMenu = null
         } else {
             state.value.currentMenu = val

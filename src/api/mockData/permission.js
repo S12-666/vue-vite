@@ -1,28 +1,28 @@
-import Mock from 'mockjs'
+import Mock from 'mockjs';
 export default {
     getMenu: config => {
         const { username, password } = JSON.parse(config.body)
         // 先判断用户是否存在
         // 判断账号和密码是否对应
         //menuList用于后面做权限分配，也就是用户可以展示的菜单
-        if (username === 'admin' && password === 'admin') {
+        if (username === 'superadmin' && password === 'woshimima') {
             return {
                 code: 200,
                 data: {
                     menuList: [
                         {
-                            path: '/home',
-                            name: 'home',
-                            label: '首页',
-                            icon: 'house',
-                            url: 'Home'
+                            path: '/visual',
+                            name: 'visual',
+                            label: '可视分析',
+                            icon: 'analysis',
+                            url: 'Visual'
                         },
                         {
-                            path: '/mall',
-                            name: 'mall',
-                            label: '商品管理',
-                            icon: 'video-play',
-                            url: 'Mall'
+                            path: '/limits',
+                            name: 'limits',
+                            label: '权限管理',
+                            icon: 'limits',
+                            url: 'Limits'
                         },
                         {
                             path: '/user',
@@ -32,23 +32,30 @@ export default {
                             url: 'User'
                         },
                         {
-                            path: 'other',
-                            label: '其他',
-                            icon: 'location',
+                            path: 'dataoverview',
+                            label: '关键指标',
+                            icon: 'dataoverview',
                             children: [
                                 {
-                                    path: '/page1',
-                                    name: 'page1',
-                                    label: '页面1',
-                                    icon: 'setting',
-                                    url: 'Page1'
+                                    path: '/heating',
+                                    name: 'heating',
+                                    label: '加热工序',
+                                    icon: 'heating',
+                                    url: 'Heating'
                                 },
                                 {
-                                    path: '/page2',
-                                    name: 'page2',
-                                    label: '页面2',
-                                    icon: 'setting',
-                                    url: 'Page2'
+                                    path: '/rolling',
+                                    name: 'rolling',
+                                    label: '轧制工序',
+                                    icon: 'rolling',
+                                    url: 'Rolling'
+                                },
+                                {
+                                    path: '/cooling',
+                                    name: 'cooling',
+                                    label: '冷却工序',
+                                    icon: 'cooling',
+                                    url: 'Cooling'
                                 }
                             ]
                         }
@@ -57,24 +64,45 @@ export default {
                     message: '获取成功'
                 }
             }
-        } else if (username === 'xiaoxiao' && password === 'xiaoxiao') {
+        } else if (username === 'admin' && password === 'woshimima') {
             return {
                 code: 200,
                 data: {
                     menuList: [
                         {
-                            path: '/home',
-                            name: 'home',
-                            label: '首页',
-                            icon: 'house',
-                            url: 'Home'
+                            path: '/visual',
+                            name: 'visual',
+                            label: '可视分析',
+                            icon: 'analysis',
+                            url: 'Visual'
                         },
                         {
-                            path: '/user',
-                            name: 'user',
-                            label: '用户管理',
-                            icon: 'user',
-                            url: 'User'
+                            path: 'dataoverview',
+                            label: '关键指标',
+                            icon: 'dataoverview',
+                            children: [
+                                {
+                                    path: '/heating',
+                                    name: 'heating',
+                                    label: '加热工序',
+                                    icon: 'heating',
+                                    url: 'Heating'
+                                },
+                                {
+                                    path: '/rolling',
+                                    name: 'rolling',
+                                    label: '轧制工序',
+                                    icon: 'rolling',
+                                    url: 'Rolling'
+                                },
+                                {
+                                    path: '/cooling',
+                                    name: 'cooling',
+                                    label: '冷却工序',
+                                    icon: 'cooling',
+                                    url: 'Cooling'
+                                }
+                            ]
                         }
                     ],
                     token: Mock.Random.guid(),
