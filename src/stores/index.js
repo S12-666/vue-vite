@@ -48,34 +48,6 @@ export const useAllDataStore = defineStore('AllData', () => {
     const updateMenuList = (val) => {
         state.value.menuList = val;
     }
-    // const addMenu = (router) => {
-    //     const menu = state.value.menuList;
-    //     const modules = import.meta.glob('../views/**/*.vue');
-    //     const routeArr = [];
-    //     menu.forEach(item => {
-    //         if(item.children){
-    //             item.children.forEach(val => {
-    //                 let url = `../views/${val.url}.vue`
-    //                 val.component = modules[url];
-    //                 routeArr.push(val);
-    //             })
-    //         }else{
-    //             let url = `../views/${item.url}.vue`;
-    //             item.component = modules[url];
-    //             routeArr.push(item)
-    //         }
-    //     });
-    //     state.value.routerList = [];
-    //     let routers = router.getRoutes();
-    //     routers.forEach(item => {
-    //         if(item.name === 'main' || item.name === 'login'){
-    //             return
-    //         }else{
-    //             router.removeRoute(item.name)
-    //         }
-    //         state.value.routerList.push(router.addRoute('main', item))
-    //     });
-    // }
     const addMenu = (router, type) => {
         if (type === 'refresh') {
             if (JSON.parse(localStorage.getItem('store'))) {
@@ -117,13 +89,6 @@ export const useAllDataStore = defineStore('AllData', () => {
         });
         state.value.routerList = routeArr;
     };
-    // const clean = () => {
-    //     state.value.routerList.forEach(item => {
-    //         if (item) item();
-    //     });
-    //     state.value = initState();
-    //     localStorage.removeItem('store');
-    // };
     const clean = () => {
         state.value.routerList.forEach(item => {
             // 只执行真正的函数，忽略其他类型

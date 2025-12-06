@@ -15,21 +15,21 @@ export default {
                             name: 'visual',
                             label: '可视分析',
                             icon: 'analysis',
-                            url: 'Visual'
+                            url: 'visual/Visual'
                         },
                         {
                             path: '/limits',
                             name: 'limits',
                             label: '权限管理',
                             icon: 'limits',
-                            url: 'Limits'
+                            url: 'limits/Limits'
                         },
                         {
                             path: '/user',
                             name: 'user',
                             label: '用户管理',
                             icon: 'user',
-                            url: 'User'
+                            url: 'user/User'
                         },
                         {
                             path: 'dataoverview',
@@ -41,21 +41,21 @@ export default {
                                     name: 'heating',
                                     label: '加热工序',
                                     icon: 'heating',
-                                    url: 'Heating'
+                                    url: 'dataoverview/heating/Heating'
                                 },
                                 {
                                     path: '/rolling',
                                     name: 'rolling',
                                     label: '轧制工序',
                                     icon: 'rolling',
-                                    url: 'Rolling'
+                                    url: 'dataoverview/rolling/Rolling'
                                 },
                                 {
                                     path: '/cooling',
                                     name: 'cooling',
                                     label: '冷却工序',
                                     icon: 'cooling',
-                                    url: 'Cooling'
+                                    url: 'dataoverview/cooling/Cooling'
                                 }
                             ]
                         }

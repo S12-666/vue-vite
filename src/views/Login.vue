@@ -1,10 +1,10 @@
 <script setup>
-import { reactive, getCurrentInstance, nextTick } from 'vue';
+import { reactive, getCurrentInstance, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useAllDataStore } from "@/stores";
 import { useRoute, useRouter } from 'vue-router';
 const loginForm = reactive({
-    username: '',
-    password: ''
+    username: 'superadmin',
+    password: 'woshimima'
 });
 const { proxy } = getCurrentInstance();
 const store = useAllDataStore();
@@ -12,6 +12,8 @@ const router = useRouter();
 const handleLogin = async () => {
     try {
         const res = await proxy.$api.getMenu(loginForm);
+        // console.log(res, 'res');
+
         if (res && res.menuList) {
             store.updateMenuList(res.menuList);
             store.state.token = res.token;
@@ -22,8 +24,8 @@ const handleLogin = async () => {
             // 等路由注册完成再跳转
             await nextTick();
             router.push("/visual");
-            console.log(router);
-            
+            // console.log(router);
+
         } else {
             console.error("菜单数据为空");
         }
@@ -31,6 +33,19 @@ const handleLogin = async () => {
         console.error("登录失败:", error);
     }
 };
+const handleKeyup = (e) => {
+    if (e.key === 'Enter') {
+        handleLogin();
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('keyup', handleKeyup);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keyup', handleKeyup);
+});
 </script>
 
 <template>
@@ -41,7 +56,7 @@ const handleLogin = async () => {
                 <el-input type="input" placeholder="请输入账号" v-model="loginForm.username"></el-input>
             </el-form-item>
             <el-form-item>
-                <el-input type="input" placeholder="请输入密码" v-model="loginForm.password"></el-input>
+                <el-input type="password" placeholder="请输入密码" v-model="loginForm.password"></el-input>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="handleLogin">Login</el-button>

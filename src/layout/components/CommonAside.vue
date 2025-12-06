@@ -46,9 +46,11 @@ import { loadIcon } from '@/utils/icons_utils/iconLoader';
 
 const store = useAllDataStore();
 const list = computed(() => store.state.menuList);
+// console.log(list);
+
 const noChildren = computed(() => list.value.filter(item => !item.children));
 const hasChildren = computed(() => list.value.filter(item => item.children));
-console.log(list.value);
+// console.log(list.value);
 const isCollapse = computed(() => store.state.isCollapse);
 const width = computed(() => store.state.isCollapse ? "64px" : "180px");
 const handleCollapse = () => {

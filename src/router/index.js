@@ -14,13 +14,6 @@ const routes = [
         component: () => import('@/views/Main.vue'), // 主布局组件
         redirect: '/visual',
         children: [
-            // **【修改：将 /visual 作为子路由】**
-            {
-                path: 'visual', // 注意：这里是相对路径 'visual'，完整路径是 /visual
-                name: 'visual',
-                // 确保导入路径正确，这里使用您提供的路径
-                component: () => import('@/views/visual/Visual.vue') 
-            }
         ]
     },
     {
