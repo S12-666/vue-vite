@@ -33,9 +33,16 @@ export default {
                         },
                         {
                             path: 'dataoverview',
-                            label: '关键指标',
+                            label: '数据概览',
                             icon: 'dataoverview',
                             children: [
+                                {
+                                    path: '/specification',
+                                    name: 'specification',
+                                    label: '规格参数',
+                                    icon: 'spec',
+                                    url: 'dataoverview/specification/Specification'
+                                },
                                 {
                                     path: '/heating',
                                     name: 'heating',

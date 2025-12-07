@@ -10,7 +10,8 @@ export function loadIcon(iconName) {
         rolling: 'rolling.svg',
         cooling: 'cooling.svg',
         limits: 'limits_of_authority.svg',
-        settings: 'settings.svg'
+        settings: 'settings.svg',
+        spec: 'spec.svg',
     };
 
     const filename = map[iconName];
