@@ -70,6 +70,7 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
     height: 100vh;
     position: sticky;
     top: 0;
+    border-right: 1px solid #E5E6EB;
 }
 
 /* 顶部固定 */
@@ -80,6 +81,7 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
     position: sticky;
     top: 0;
     z-index: 10;
+    border-bottom: 1px solid #E5E6EB;
 }
 
 /* 中间滚动区域 */
