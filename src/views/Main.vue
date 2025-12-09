@@ -88,7 +88,7 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
 .main-scroll {
     height: calc(100vh - 60px - 30px); /* 除去header和footer高度 */
     overflow-y: auto; /* 垂直滚动 */
-    background: #f5f5f5;
+    background: white;
 }
 
 .footer-fixed{
@@ -100,5 +100,6 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
 
 .el-main {
     padding: 20px;
+    background: white;
 }
 </style>

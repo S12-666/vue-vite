@@ -37,6 +37,7 @@ function request(options){
     };
     // 对mock的开关处理
     let isMock = config.mock;
+    // let isMock = true;
     if(typeof options.mock !== 'undefined'){
         isMock = options.mock;
     };
