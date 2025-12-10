@@ -70,7 +70,7 @@ const handleMenu = (item) => {
     height: 100vh;
     background-color: #fff;
     overflow-x: hidden; // 防止宽度变化时内容溢出
-    transition: width 0.3s ease;
+    transition: width 0.05s ease;
     
     display: flex;
     flex-direction: column; 

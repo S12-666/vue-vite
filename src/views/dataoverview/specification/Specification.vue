@@ -8,8 +8,11 @@
             </div>
         </div>
     </el-config-provider>
-    <div class="table-container">
-        <el-table :data="tableData" border strip style="width: 100%" height="400">
+    <div class="specCharts">
+
+    </div>
+    <div class="table-container" :class="{ 'animating': isAnimating }">
+        <el-table ref="myTableRef" :data="paginatedData" border strip style="width: 100%">
             <el-table-column prop="index" width="58" align="center">
                 <template #header>
                     <div class="column-header-box">
@@ -42,15 +45,15 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="steelspec">
+            <el-table-column prop="steelspec" width="136">
                 <template #header>
-                    <div class="column-header-box" width="90">
+                    <div class="column-header-box">
                         <span class="main-title">钢种规格</span>
                         <span class="sub-title">steelspec</span>
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="toc">
+            <el-table-column prop="toc" min-width="134">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">生产日期</span>
@@ -58,10 +61,10 @@
                     </div>
                 </template>
                 <template #default="scope">
-                    {{ scope.row.toc.slice(5, 16) }}
+                    {{ scope.row.toc.slice(2, 16) }}
                 </template>
             </el-table-column>
-            <el-table-column prop="slabthick" width="90">
+            <el-table-column prop="slabthick" width="85">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">板坯厚度</span>
@@ -69,7 +72,7 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="tgtthick" width="90">
+            <el-table-column prop="tgtthick" width="85">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">目标厚度</span>
@@ -77,7 +80,7 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="tgtlen" width="90">
+            <el-table-column prop="tgtlen" width="85">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">目标长度</span>
@@ -93,7 +96,7 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="tgtdistemp" width="90">
+            <el-table-column prop="tgtdistemp" width="85">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">出炉温度</span>
@@ -101,7 +104,7 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="tgttmptemp" width="90">
+            <el-table-column prop="tgttmptemp" width="85">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">终轧温度</span>
@@ -109,7 +112,7 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="c_start_t" width="100">
+            <el-table-column prop="c_start_t" width="85">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">开冷温度</span>
@@ -117,7 +120,7 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="c_stop_t" width="100">
+            <el-table-column prop="c_stop_t" width="85">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">终冷温度</span>
@@ -125,7 +128,7 @@
                     </div>
                 </template>
             </el-table-column>
-            <el-table-column prop="c_rate" width="100">
+            <el-table-column prop="c_rate" width="85">
                 <template #header>
                     <div class="column-header-box">
                         <span class="main-title">冷却速率</span>
@@ -165,20 +168,52 @@
                 </template>
             </el-table-column>
         </el-table>
+        <el-config-provider :locale="zhCn">
+            <div class="pagination-wrapper">
+                <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper" :page-sizes="[10, 20, 40, 60]"
+                    :current-page.sync="currentPage" :total="tableData.length" @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange" />
+            </div>
+        </el-config-provider>
+
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { ElConfigProvider } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { loadIcon } from '@/utils/icons_utils/iconLoader';
 import { getStatusClass } from '@/utils/color_utils/colorSelect';
 import { getSpecData } from '@/api/api.js';
+import { useAllDataStore } from '@/stores/index.js';
+
+const store = useAllDataStore();
 
 const value1 = ref(['2021-06-01', '2021-06-03']);
 const faultLabels = ['pa', 'pf', 'pn', 'ps', 'gs'];
 const tableData = ref([]);
+
+const currentPage = ref(1);
+const pageSize = ref(10);
+
+const paginatedData = computed(() => {
+    if (!tableData.value || tableData.value.length === 0) return [];
+    const start = (currentPage.value - 1) * pageSize.value;
+    const end = start + pageSize.value;
+    return tableData.value.slice(start, end);
+});
+const handleSizeChange = (val) => {
+    pageSize.value = val;
+    currentPage.value = 1; // 重置到第一页
+}
+const handleCurrentChange = (val) => {
+    currentPage.value = val;
+}
+
+const myTableRef = ref(null);
+const isAnimating = ref(false);
 
 const fetchTableData = async () => {
     try {
@@ -188,9 +223,9 @@ const fetchTableData = async () => {
         };
         const res = await getSpecData(params);
         // console.log(res);
-        
         if (res && Array.isArray(res)) {
             tableData.value = res;
+            currentPage.value = 1; // 重置到第一页
         } else {
             tableData.value = [];
             console.log('TableData error');
@@ -199,6 +234,21 @@ const fetchTableData = async () => {
         console.error('Failed to fetch table data:', error);
     }
 }
+
+watch(
+    () => store.state.isCollapse,
+    () => {
+        isAnimating.value = true; // 1. 动画开始，标记为正在动
+
+        setTimeout(() => {
+            isAnimating.value = false; // 2. 动画结束，取消标记
+            if (myTableRef.value) {
+                myTableRef.value.doLayout();
+            }
+        }, 1000);
+    }
+);
+
 
 onMounted(() => {
     fetchTableData();
@@ -236,6 +286,9 @@ onMounted(() => {
 
 .table-container {
     width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    /* position: relative; */
 }
 
 /* 使用 Flex 布局让文字垂直排列 */
@@ -338,6 +391,22 @@ onMounted(() => {
     /* 悬停时稍微放大 */
 }
 
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    padding-bottom: 10px;
+}
+
+.animating {
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.animating :deep(.el-table__body) {
+    width: 100% !important;
+}
+
 :deep(.el-table__body .el-table__cell) {
     /* 1. 修改字体大小 */
     font-size: 12px;
@@ -349,6 +418,11 @@ onMounted(() => {
 
     /* 3. (可选) 修改文字颜色 */
     color: #606266;
+}
+
+:deep(.el-table) {
+    transform: translateZ(0);
+    will-change: width;
 }
 
 @media screen and (max-width: 1200px) {
