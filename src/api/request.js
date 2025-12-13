@@ -33,7 +33,7 @@ function request(options){
     options.method = options.method || 'get';
     // 关于get请求参数的调整
     if(options.method.toLowerCase() === 'get'){
-        options.params = options.data;
+        options.params = options.params || options.data;
     };
     // 对mock的开关处理
     let isMock = config.mock;

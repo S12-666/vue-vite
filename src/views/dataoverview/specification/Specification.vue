@@ -4,12 +4,19 @@
             <div class="block">
                 <span class="demonstration">选择日期</span>
                 <el-date-picker v-model="value1" type="daterange" range-separator="至" start-placeholder="开始时间"
-                    end-placeholder="结束时间" />
+                    end-placeholder="结束时间"
+                    @change="handleDateChange"
+                    value-format="YYYY-MM-DD" />
             </div>
         </div>
     </el-config-provider>
     <div class="specCharts">
-
+        <div class="count_chart">
+            <SpecificationsCharts :date-range="value1"/>
+        </div>
+        <div class="rhythm">
+            <RhythmCharts :xData="lineX" :yData="lineY"/>
+        </div>
     </div>
     <div class="table-container" :class="{ 'animating': isAnimating }">
         <el-table ref="myTableRef" :data="paginatedData" border strip style="width: 100%">
@@ -188,15 +195,22 @@ import { loadIcon } from '@/utils/icons_utils/iconLoader';
 import { getStatusClass } from '@/utils/color_utils/colorSelect';
 import { getSpecData } from '@/api/api.js';
 import { useAllDataStore } from '@/stores/index.js';
+import { ElMessage } from 'element-plus';
+
+import SpecificationsCharts from '@/views/dataoverview/specification/SpecificationsCharts.vue';
+import RhythmCharts from '@/views/dataoverview/specification/RhythmCharts.vue';
 
 const store = useAllDataStore();
 
-const value1 = ref(['2021-06-01', '2021-06-03']);
+const value1 = ref(['2021-06-01', '2021-06-04']);
 const faultLabels = ['pa', 'pf', 'pn', 'ps', 'gs'];
 const tableData = ref([]);
 
 const currentPage = ref(1);
 const pageSize = ref(10);
+
+const myTableRef = ref(null);
+const isAnimating = ref(false);
 
 const paginatedData = computed(() => {
     if (!tableData.value || tableData.value.length === 0) return [];
@@ -212,15 +226,35 @@ const handleCurrentChange = (val) => {
     currentPage.value = val;
 }
 
-const myTableRef = ref(null);
-const isAnimating = ref(false);
+const handleDateChange = (val) => {
+    if(val && val.length === 2) {
+        console.log(val[0], val[1]);
+        fetchTableData();
+    } else {
+        ElMessage({
+            showClose: true,
+            message: '请选择正确的日期范围',
+            type: 'info'
+        });
+        value1.value = ['2021-06-01', '2021-06-03'];
+    }
+};
 
 const fetchTableData = async () => {
     try {
+        if(!value1.value || value1.value.length !== 2) {
+            ElMessage({
+                showClose: true,
+                message: '请选择正确的日期范围',
+                type: 'info'
+            });
+            return;
+        }
         const params = {
             startTime: value1.value[0],
             endTime: value1.value[1],
         };
+        
         const res = await getSpecData(params);
         // console.log(res);
         if (res && Array.isArray(res)) {
@@ -228,25 +262,37 @@ const fetchTableData = async () => {
             currentPage.value = 1; // 重置到第一页
         } else {
             tableData.value = [];
-            console.log('TableData error');
+            ElMessage({
+                showClose: true,
+                message: '表格数据为空！',
+                type: 'error'
+            })
         }
     } catch (error) {
-        console.error('Failed to fetch table data:', error);
+        ElMessage({
+            showClose: true,
+            message: '获取表格数据失败！',
+            type: 'error'
+        });
     }
 }
 
 watch(
     () => store.state.isCollapse,
-    () => {
-        isAnimating.value = true; // 1. 动画开始，标记为正在动
+    async () => {
+        isAnimating.value = true;
 
-        setTimeout(() => {
-            isAnimating.value = false; // 2. 动画结束，取消标记
-            if (myTableRef.value) {
-                myTableRef.value.doLayout();
-            }
-        }, 1000);
-    }
+        clearTimeout(window.resizeTimer);
+        window.resizeTimer = setTimeout(() => {
+            isAnimating.value = false;
+            nextTick(() => {
+                if (myTableRef.value) {
+                    myTableRef.value.doLayout();
+                }
+            });
+        }, 350); // 略大于动画时间（300ms + 50ms缓冲）
+    },
+    { immediate: false }
 );
 
 
@@ -256,7 +302,7 @@ onMounted(() => {
 
 </script>
 
-<style scoped>
+<style scoped lang="less">
 .demo-date-picker {
     display: flex;
     width: 100%;
@@ -288,6 +334,7 @@ onMounted(() => {
     width: 100%;
     overflow: hidden;
     box-sizing: border-box;
+    transition: width 0.3s ease;
     /* position: relative; */
 }
 
@@ -407,6 +454,24 @@ onMounted(() => {
     width: 100% !important;
 }
 
+/* 优化动画过程中的渲染 */
+.animating :deep(.el-table) {
+    transform: translateZ(0); /* 开启GPU加速 */
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* 使用 will-change 提前告知浏览器 */
+:deep(.el-table) {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* 优化表格单元格渲染 */
+:deep(.el-table__body tr) {
+    transform: translateZ(0);
+}
+
 :deep(.el-table__body .el-table__cell) {
     /* 1. 修改字体大小 */
     font-size: 12px;
@@ -438,4 +503,10 @@ onMounted(() => {
         border-bottom: none;
     }
 }
+
+@import '@/views/dataoverview/specification/chartsLayout.css';
+
+
+
+
 </style>

@@ -1,0 +1,38 @@
+.specCharts {
+    width: 100%;
+    /* 去掉固定的 height: 400px，改由内容撑开，或者设置最小高度 */
+    /* height: 400px;  <-- 删掉或改成 min-height */
+
+    display: flex;
+    justify-content: space-between;
+
+    /* 关键 1：允许换行。当一行放不下时，自动换到下一行 */
+    flex-wrap: wrap;
+
+    .count_chart,
+    .rhythm {
+        /* 默认大屏状态：宽度 48% 并排 */
+        width: 48%;
+        height: 220px;
+        /* 给一个固定高度，否则图表可能出不来 */
+        background-color: #fff;
+        /* 可选：背景色 */
+        margin-bottom: 15px;
+        margin-top: 10px;
+        /* 底部留点空隙，为了变竖排时好看 */
+    }
+}
+
+/* 关键 2：媒体查询 - 当屏幕宽度小于 768px (常见平板/手机尺寸) */
+@media screen and (max-width: 768px) {
+    .specCharts {
+        /* 改为单列布局 (其实 flex-wrap 会自动处理，但这样写更保险) */
+        flex-direction: column;
+    }
+
+    .specCharts .count_chart,
+    .specCharts .rhythm {
+        /* 小屏状态：宽度占满 100%，变成上下排列 */
+        width: 100%;
+    }
+}

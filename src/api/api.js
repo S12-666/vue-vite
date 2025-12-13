@@ -1,30 +1,5 @@
 import request from "./request";
 
-// 1. getTableData
-export function getTableData() {
-    return request({
-        url: "/home/getTableData",
-        method: "get",
-    });
-}
-
-// 2. getCountData
-export function getCountData() {
-    return request({
-        url: "/home/getCountData",
-        method: "get",
-    });
-}
-
-// 3. getChartData
-export function getChartData() {
-    return request({
-        url: "/home/getChartData",
-        method: "get",
-    });
-}
-
-// 4. getUserData
 export function getUserData(data) {
     return request({
         url: "/home/getUserData",
@@ -33,7 +8,6 @@ export function getUserData(data) {
     });
 }
 
-// 5. deleteUser
 export function deleteUser(data) {
     return request({
         url: '/user/deleteUser',
@@ -42,7 +16,6 @@ export function deleteUser(data) {
     })
 }
 
-// 6. addUser
 export function addUser(data) {
     return request({
         url: '/user/addUser',
@@ -51,7 +24,6 @@ export function addUser(data) {
     })
 }
 
-// 7. editUser
 export function editUser(data) {
     return request({
         url: '/user/editUser',
@@ -60,7 +32,6 @@ export function editUser(data) {
     })
 }
 
-// 8. getMenu
 export function getMenu(params) {
     return request({
         url: '/permission/getMenu',
@@ -69,11 +40,18 @@ export function getMenu(params) {
     })
 }
 
-// 9. getSpecData (这就是你报错的那个)
 export function getSpecData(params) {
     return request({
-        url: '/specdata/getSpecData',
+        url: '/newbaogangapi/v1.0/pidas/getKeyIndicatorsByTime/all',
         method: 'get',
         params // get请求参数一般放在 params 里
+    })
+}
+
+export function getSpecCountByTime(params) {
+    return request({
+        url: '/newbaogangapi/v1.0/pidas/getSpecCountByTime/all',
+        method: 'get',
+        params
     })
 }
