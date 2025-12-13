@@ -35,20 +35,22 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
 <template>
     <div class="common-layout">
         <el-container class="lay-container">
-            <!-- 侧边栏固定 -->
             <common-aside class="aside-fixed" />
             <el-container>
-                <!-- 顶部固定 -->
                 <el-header class="el-header-fixed">
                     <common-header />
                 </el-header>
-                <!-- 滚动区域 -->
+
                 <div class="main-scroll">
-                    <!-- <common-tag /> -->
                     <el-main class="el-main">
-                        <router-view></router-view>
+                        <router-view v-slot="{ Component }">
+                            <keep-alive>
+                                <component :is="Component" />
+                            </keep-alive>
+                        </router-view>
                     </el-main>
                 </div>
+
                 <el-footer class="footer-fixed">
                     <common-footer />
                 </el-footer>
@@ -60,9 +62,11 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
 <style scoped lang="less">
 .common-layout,
 .lay-container {
-    height: 100vh; /* 全屏高度 */
+    height: 100vh;
+    /* 全屏高度 */
     width: 100%;
-    overflow: hidden; /* 防止页面整体滚动 */
+    overflow: hidden;
+    /* 防止页面整体滚动 */
 }
 
 /* 侧边栏固定 */
@@ -86,12 +90,14 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
 
 /* 中间滚动区域 */
 .main-scroll {
-    height: calc(100vh - 60px - 30px); /* 除去header和footer高度 */
-    overflow-y: auto; /* 垂直滚动 */
+    height: calc(100vh - 60px - 30px);
+    /* 除去header和footer高度 */
+    overflow-y: auto;
+    /* 垂直滚动 */
     background: white;
 }
 
-.footer-fixed{
+.footer-fixed {
     width: 100%;
     height: 30px;
     background: white;
