@@ -206,6 +206,10 @@ const value1 = ref(['2021-06-01', '2021-06-04']);
 const faultLabels = ['pa', 'pf', 'pn', 'ps', 'gs'];
 const tableData = ref([]);
 
+const lineX = ref([]);
+const lineY = ref([]);
+const yDataNames = ['discharge', 'rm', 'fm', 'acc'];
+
 const currentPage = ref(1);
 const pageSize = ref(10);
 
@@ -259,7 +263,14 @@ const fetchTableData = async () => {
         // console.log(res);
         if (res && Array.isArray(res)) {
             tableData.value = res;
-            currentPage.value = 1; // 重置到第一页
+            currentPage.value = 1;
+
+            lineX.value = res.map(item => item.slabid);
+            lineY.value = yDataNames.map(name => ({
+                name,
+                type: 'line',
+                data: res.map(item => item[name] || 0)
+            }));
         } else {
             tableData.value = [];
             ElMessage({

@@ -5,6 +5,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import * as echarts from 'echarts';
+import { Right } from '@element-plus/icons-vue';
 
 // 定义 Props
 const props = defineProps({
@@ -51,7 +52,9 @@ const baseOptions = {
         // 增加 grid 配置，防止 label 被遮挡
         containLabel: true,
         bottom: '10%',
-        left: '5%'
+        left: '5%',
+        top: '15%',
+        right: '5%'
     },
     xAxis: {
         type: 'category',
