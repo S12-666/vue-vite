@@ -1,10 +1,12 @@
 <script setup>
 import { ref, getCurrentInstance, onMounted, reactive, nextTick } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { getUserData, deleteUser, addUser, editUser } from '@/api/mockData/mockapi.js';
+
 const tableData = ref([]);
 const { proxy } = getCurrentInstance();
-const getUserData = async () => {
-    let data = await proxy.$api.getUserData(config);
+const getUserData1 = async () => {
+    let data = await getUserData(config);
     // console.log(data);
     tableData.value = data.list.map(item => ({
         ...item,
@@ -41,7 +43,7 @@ const fromInline = reactive({
 });
 const hindleSearch = () => {
     config.name = fromInline.keyWord;
-    getUserData();
+    getUserData1();
 };
 const config = reactive({
     name: '',
@@ -50,18 +52,18 @@ const config = reactive({
 });
 const handleChange = (page) => {
     config.page = page;
-    getUserData();
+    getUserData1();
 };
 const handleDelete = (val) => {
     // proxy.$api.
     ElMessageBox.confirm("你确定要删除吗").then(async () => {
-        await proxy.$api.deleteUser({ id: val.id });
+        await deleteUser({ id: val.id });
         ElMessage({
             showClose: true,
             message: '删除成功',
             type: 'success'
         });
-        getUserData();
+        getUserData1();
     })
 };
 const action = ref('add');
@@ -121,14 +123,14 @@ const onSubmit = () => {
             if (action.value === 'add') {
                 // console.log(formUser);
                 formUser.birth = /^\d{4}-\d{2}-\d{2}$/.test(formUser.birth) ? formUser.birth : timeFormat(formUser.birth);
-                res = await proxy.$api.addUser(formUser)
+                res = await addUser(formUser)
             } else {
-                res = await proxy.$api.editUser(formUser)
+                res = await editUser(formUser)
             }
             if (res) {
                 dialogVisible.value = false;
                 proxy.$refs['userForm'].resetFields();
-                getUserData();
+                getUserData1();
             }
         } else {
             ElMessage({
@@ -149,7 +151,7 @@ const handleEdit = (val) => {
 };
 
 onMounted(() => {
-    getUserData();
+    getUserData1();
 })
 </script>
 
