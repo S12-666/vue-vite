@@ -12,6 +12,7 @@ export function loadIcon(iconName) {
         limits: 'limits_of_authority.svg',
         settings: 'settings.svg',
         spec: 'spec.svg',
+        report: 'report.svg'
     };
 
     const filename = map[iconName];

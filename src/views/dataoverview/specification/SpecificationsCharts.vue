@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, watch, defineProps } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import * as echarts from 'echarts/core';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { BarChart, PieChart } from 'echarts/charts';

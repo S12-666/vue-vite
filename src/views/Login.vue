@@ -2,6 +2,8 @@
 import { reactive, getCurrentInstance, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useAllDataStore } from "@/stores";
 import { useRoute, useRouter } from 'vue-router';
+import { getMenu } from '../api/mockData/mockapi';
+
 const loginForm = reactive({
     username: 'superadmin',
     password: 'woshimima'
@@ -11,8 +13,8 @@ const store = useAllDataStore();
 const router = useRouter();
 const handleLogin = async () => {
     try {
-        const res = await proxy.$api.getMenu(loginForm);
-        // console.log(res, 'res');
+        const res = await getMenu(loginForm);
+        console.log(res, 'res');
 
         if (res && res.menuList) {
             store.updateMenuList(res.menuList);
@@ -30,7 +32,9 @@ const handleLogin = async () => {
             console.error("菜单数据为空");
         }
     } catch (error) {
-        console.error("登录失败:", error);
+        // console.error("登录失败:", error);
+        // console.dir(error); 
+        console.error("具体的报错信息:", error.message);
     }
 };
 const handleKeyup = (e) => {
