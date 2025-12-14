@@ -1,31 +1,27 @@
 <template>
     <el-aside :width="width" class="my-aside">
-        <el-menu 
-            :collapse="isCollapse" 
-            :collapse-transition="false" 
-            :default-active="activeMenu"
-            class="el-menu-vertical"
-        >
+        <el-menu  :collapse-transition="false" :unique-opened="true" :default-active="activeMenu"
+            class="el-menu-vertical" :class="{'force-narrow-mode': isCollapse}">
             <el-menu-item v-for="item in noChildren" :index="item.path" :key="item.path" @click="handleMenu(item)">
                 <!-- <component class="icons" :is="loadIcon(item.icon)"></component> -->
                 <img :src="loadIcon(item.icon)" class="icons" alt="" />
                 <span>{{ item.label }}</span>
             </el-menu-item>
-            
+
             <el-sub-menu v-for="item in hasChildren" :index="item.path" :key="item.path">
                 <template #title>
                     <img :src="loadIcon(item.icon)" class="icons" alt="" />
                     <!-- <component class="icons" :is="loadIcon(item.icon)"></component> -->
                     <span>{{ item.label }}</span>
                 </template>
-                <el-menu-item-group>
-                    <el-menu-item v-for="(subItem, subIndex) in item.children" :index="subItem.path" :key="subItem.path"
-                        @click="handleMenu(subItem)">
-                        <!-- <component class="icons" :is="loadIcon(subItem.icon)"></component> -->
-                        <img :src="loadIcon(subItem.icon)" class="icons" alt="" />
-                        <span>{{ subItem.label }}</span>
-                    </el-menu-item>
-                </el-menu-item-group>
+
+                <el-menu-item v-for="(subItem, subIndex) in item.children" :index="subItem.path" :key="subItem.path"
+                    @click="handleMenu(subItem)">
+                    <!-- <component class="icons" :is="loadIcon(subItem.icon)"></component> -->
+                    <img :src="loadIcon(subItem.icon)" class="icons" alt="" />
+                    <span>{{ subItem.label }}</span>
+                </el-menu-item>
+
             </el-sub-menu>
         </el-menu>
 
@@ -71,18 +67,19 @@ const handleMenu = (item) => {
     background-color: #fff;
     overflow-x: hidden; // 防止宽度变化时内容溢出
     transition: width 0.3s ease;
-    
+
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
 }
 
 .el-menu-vertical {
     width: 100%;
     border-right: none;
     white-space: nowrap; // 防止折叠时文字换行
-    flex: 1; 
-    
-    overflow-y: auto; 
+    flex: 1;
+
+    overflow-y: auto;
+
     &::-webkit-scrollbar {
         width: 0;
     }
@@ -101,7 +98,7 @@ const handleMenu = (item) => {
     // border-top: 1px solid #dcdfe6; 
     color: #606266;
     transition: all 0.3s ease;
-    
+
     &:hover {
         // background-color: #ecf5ff;
         color: #409eff;
@@ -114,11 +111,49 @@ const handleMenu = (item) => {
 }
 
 .icons {
-    width: 18px;  // 或者18px，但必须固定
+    width: 18px; // 或者18px，但必须固定
     height: 18px;
     margin-right: 10px;
     flex-shrink: 0; // 关键属性！防止图标缩小
 }
 
-// ...
+.force-narrow-mode {
+    // 1. 隐藏所有文字 span
+    :deep(span) {
+        display: none;
+        opacity: 0; 
+    }
+
+    // 2. 隐藏父菜单右侧的小箭头 (那个 > 符号)
+    :deep(.el-sub-menu__icon-arrow) {
+        display: none;
+    }
+
+    // 3. 调整父级菜单的 padding，让图标居中
+    :deep(.el-sub-menu__title), :deep(.el-menu-item) {
+        padding: 0 !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        
+        .icons {
+            margin-right: 0; // 去掉图标右边距
+        }
+    }
+
+    // 4. 调整展开后的子菜单样式
+    // 这一步是为了让子菜单的图标跟父级区别开，或者保持对其
+    :deep(.el-sub-menu) {
+        .el-menu-item {
+            min-width: unset; // 取消 element 默认的最小宽度
+            background-color: #f5f7fa; // 给子菜单加个背景色，方便区分层级
+            
+            // 如果你想让子菜单图标变小一点，表示它是子集
+            .icons {
+                transform: scale(0.8); 
+            }
+        }
+    }
+}
+
 </style>
