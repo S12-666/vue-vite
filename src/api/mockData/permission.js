@@ -41,9 +41,31 @@ export default [
                             {
                                 path: '/report',
                                 name: 'report',
-                                label: '报表管理',
+                                label: '工序报表',
                                 icon: 'report',
-                                url: 'report/Report'
+                                children: [
+                                    {
+                                        path: '/heatingreport',
+                                        name: 'heatingreport',
+                                        label: '加热报表',
+                                        icon: 'heating',
+                                        url: 'reportview/heatingreport/HeatingReport'
+                                    },
+                                    {
+                                        path: '/rollingreport',
+                                        name: 'rollingreport',
+                                        label: '轧制报表',
+                                        icon: 'rolling',
+                                        url: 'reportview/rollingreport/RollingReport'
+                                    },
+                                    {
+                                        path: '/coolingreport',
+                                        name: 'coolingreport',
+                                        label: '冷却报表',
+                                        icon: 'cooling',
+                                        url: 'reportview/coolingreport/CoolingReport'
+                                    }
+                                ]
                             },
                             {
                                 path: 'dataoverview',
@@ -79,6 +101,13 @@ export default [
                                         url: 'dataoverview/cooling/Cooling'
                                     }
                                 ]
+                            },
+                            {
+                                path: 'develop',
+                                name: 'develop',
+                                label: '开发日志',
+                                icon: 'github',
+                                url: 'developview/DevelopView'
                             }
                         ],
                         token: Mock.Random.guid(),
