@@ -12,6 +12,26 @@ import * as echarts from "echarts";
 import { useAllDataStore } from '@/stores'
 import { loadIcon } from '@/utils/icons_utils/iconLoader';
 
+const debounce = (fn, delay) => {
+    let timer = null;
+    return function () {
+        let context = this;
+        let args = arguments;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            fn.apply(context, args);
+        }, delay);
+    }
+}
+
+const _ResizeObserver = window.ResizeObserver;
+window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
+    constructor(callback) {
+        callback = debounce(callback, 20);
+        super(callback);
+    }
+}
+
 function isRoute(to) {
     return router.getRoutes().filter(item => item.path === to.path).length > 0
 }
@@ -36,7 +56,7 @@ app.use(pinia);
 const store = useAllDataStore();
 store.addMenu(router, 'refresh');
 app.use(router);
-app.mount('#app');
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
 }
+app.mount('#app');
