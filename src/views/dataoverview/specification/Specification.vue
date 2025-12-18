@@ -232,7 +232,7 @@ const handleCurrentChange = (val) => {
 
 const handleDateChange = (val) => {
     if(val && val.length === 2) {
-        console.log(val[0], val[1]);
+        // console.log(val[0], val[1]);
         fetchTableData();
     } else {
         ElMessage({

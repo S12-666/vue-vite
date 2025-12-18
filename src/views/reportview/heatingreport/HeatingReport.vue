@@ -1,38 +1,125 @@
 <script setup>
-import { reactive } from 'vue'
-import { ElConfigProvider } from 'element-plus';
+import { ref, reactive, computed, watch, nextTick } from 'vue'
+import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import { getHeatingReport } from '@/api/api.js';
 
-
+const tableData = ref([])
+const options = ref([])
+const value = ref('')
 const queryParams = reactive({
-    slabId: '',
-    plateId: '',
-    materialInput: '',
-
-    thick: [0, 80],     // 滑块范围数组
-    cr: [20, 40],
-    adaptKey: '',
-
-    width: [3, 8],
-    topFlow: [40, 60],
-    tapCode: '',
-
-    length: [2, 18],
-    precPercent: [30, 70],
-    precCType: '',
-    precCVal: '',
-
-    dateStart: '2019-06-01',
-    dateEnd: '2019-06-30',
-    materialSelect: ''
+    slabid: '',
+    upid: '',
 })
+const value1 = ref(['2021-06-01', '2021-06-02'])
+const currentPage = ref(1)
+const pageSize = ref(13)
+const tableRef = ref(null)
+
+const paginatedData = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value
+    const end = start + pageSize.value
+    return tableData.value.slice(start, end)
+})
+
+const filterParams = reactive({
+    thick: [0, 500],
+    width: [0, 10],
+    length: [0, 10],
+    distemp: [800, 1200],
+    fmtemp: [0, 10],
+    coolingrate: [100, 300]
+})
+
+const handleSizeChange = (val) => {
+    pageSize.value = val
+    // 改变每页显示条数时，通常重置回第一页，防止页码溢出
+    currentPage.value = 1
+}
+
+const handleCurrentChange = (val) => {
+    currentPage.value = val
+}
+
+const handleDateChange = (val) => {
+    if (val && val.length === 2) {
+        console.log(val[0], val[1]);
+        ElMessage({
+            showClose: true,
+            message: '选择日期范围后可直接查询',
+            type: 'info'
+        })
+    } else {
+        ElMessage({
+            showClose: true,
+            message: '请选择正确的日期范围',
+            type: 'info'
+        });
+        value1.value = [];
+    }
+};
+
+const handleQuery = async () => {
+    const requestBody = {
+        daterange: value1.value || [],
+        upid: queryParams.upid,
+        slabid: queryParams.slabid
+    }
+    // console.log('请求体：', requestBody);
+    try {
+        const res = await getHeatingReport(requestBody)
+        if (res) {
+            ElMessage({
+                showClose: true,
+                message: '查询成功',
+                type: 'success'
+            })
+        }
+        tableData.value = res.tableData
+        console.log(res);
+
+        if (res.specs && Array.isArray(res.specs)) {
+            options.value = res.specs.map(item => ({
+                value: item,
+                label: item
+            }))
+        }
+
+        if (res.ranges) {
+            const r = res.ranges
+            if (r.thick_range) filterParams.thick = r.thick_range;
+            if (r.width_range) filterParams.width = r.width_range;
+            if (r.length_range) filterParams.length = r.length_range;
+            if (r.distemp_range) filterParams.distemp = r.distemp_range;
+
+        }
+    } catch (error) {
+        console.error('请求失败', error);
+        ElMessage({
+            showClose: true,
+            message: '请求数据失败 请检查后台服务器',
+            type: 'error'
+        })
+    }
+}
+
+const handleReset = () => {
+    queryParams.slabid = ''
+    queryParams.upid = ''
+    value1.value = []
+    ElMessage({
+        showClose: true,
+        message: '已重置查询条件 请选择',
+        type: 'info'
+    })
+}
+
 </script>
 
 <template>
     <div class="top-search-bar">
         <el-form :model="queryParams" inline class="search-form">
             <div class="flex-container">
-
                 <div class="flex-item">
                     <el-config-provider :locale="zhCn">
                         <span class="custom-label">选择日期</span>
@@ -41,36 +128,115 @@ const queryParams = reactive({
                             class="custom-input" />
                     </el-config-provider>
                 </div>
-
                 <div class="flex-item">
                     <span class="custom-label">SlabID</span>
-                    <el-input v-model="queryParams.slabId" placeholder="输入板坯号" clearable class="custom-input" />
+                    <el-input v-model="queryParams.slabid" placeholder="输入板坯号" clearable class="custom-input" />
                 </div>
-
                 <div class="flex-item">
                     <span class="custom-label">UPID</span>
-                    <el-input v-model="queryParams.upId" placeholder="输入钢板号" clearable class="custom-input" />
+                    <el-input v-model="queryParams.upid" placeholder="输入钢板号" clearable class="custom-input" />
                 </div>
-
                 <div class="flex-item button-group">
-                    <el-button type="primary" :icon="Search" @click="handleQuery">查询</el-button>
-                    <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+                    <el-button type="primary" @click="handleQuery">查询</el-button>
+                    <el-button @click="handleReset">重置</el-button>
                 </div>
-
+                <div class="title">
+                    加热报表
+                </div>
             </div>
         </el-form>
     </div>
 
-    <div class="filter">
-        
+
+    <div class="complex-filter-container custom-theme">
+        <div class="sliders-grid">
+            <div class="slider-item">
+                <span class="slider-label">Thick (mm)</span>
+                <el-slider v-model="filterParams.thick" range :max="500" />
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">Width (m)</span>
+                <el-slider v-model="filterParams.width" range :max="10" />
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">Length (m)</span>
+                <el-slider v-model="filterParams.length" range :max="10" />
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">DisTmp (°C)</span>
+                <el-slider v-model="filterParams.distemp" range :min="800" :max="1500" />
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">FmTmp (°C)</span>
+                <el-slider v-model="filterParams.fmtemp" range :max="5" disabled />
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">CR (°C/s)</span>
+                <el-slider v-model="filterParams.coolingrate" range :max="500" disabled />
+            </div>
+        </div>
+        <div class="actions-panel">
+            <div class="input-row">
+                <span class="select-label">Spec: </span>
+                <el-select v-model="value" placeholder="钢种" style="flex: 1" clearable>
+                    <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+            </div>
+
+            <div class="btns-wrapper">
+                <el-button type="primary" class="action-btn" @click="handleFilter">筛选</el-button>
+                <el-button class="action-btn" @click="handleReset">重置</el-button>
+            </div>
+        </div>
     </div>
+
+    <div class="table-container">
+        <el-table ref="tableRef" class="heating-table" :data="paginatedData" border size="small" style="width: 100%;"
+            header-cell-class-name="table-header-center">
+            <el-table-column prop="upid" label="upid" width="110" align="center" />
+            <el-table-column prop="slabid" label="slabid" width="110" align="center" />
+            <el-table-column prop="thick" label="Thick" width="70" align="center" />
+            <el-table-column label="Pre Heat" align="center">
+                <el-table-column prop="ave_temp_entry_pre" label="EntT" width="70" align="center" />
+                <el-table-column prop="ave_temp_pre" label="AveT" width="70" align="center" />
+                <el-table-column prop="staying_time_pre" label="Time" width="70" align="center" />
+            </el-table-column>
+            <el-table-column label="1st Heat" align="center">
+                <el-table-column prop="ave_temp_entry_1" label="EntT" width="70" align="center" />
+                <el-table-column prop="ave_temp_1" label="AveT" width="70" align="center" />
+                <el-table-column prop="staying_time_1" label="Time" width="70" align="center" />
+            </el-table-column>
+            <el-table-column label="2nd Heat" align="center">
+                <el-table-column prop="ave_temp_entry_2" label="EntT" width="70" align="center" />
+                <el-table-column prop="ave_temp_2" label="AveT" width="70" align="center" />
+                <el-table-column prop="staying_time_2" label="Time" width="70" align="center" />
+            </el-table-column>
+            <el-table-column label="Soak Heat" align="center">
+                <el-table-column prop="ave_temp_entry_soak" label="EntT" width="70" align="center" />
+                <el-table-column prop="ave_temp_soak" label="AveT" width="70" align="center" />
+                <el-table-column prop="staying_time_soak" label="Time" width="70" align="center" />
+            </el-table-column>
+            <el-table-column prop="ave_temp_dis" label="DisTemp" width="100" align="center" />
+            <el-table-column prop="alltime" label="AllTime" width="100" align="center" />
+            <el-table-column prop="discharge_time" label="DisTime" min-width="90" align="center" />
+            <el-table-column prop="steelspec" label="steelSpec" width="130" align="center" />
+            <el-table-column prop="label" label="fault" width="60" align="center" />
+        </el-table>
+    </div>
+    <el-config-provider :locale="zhCn">
+        <div class="pagination-wrapper">
+            <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper" :page-sizes="[13, 20, 40, 60]"
+                :current-page.sync="currentPage" :total="tableData.length" @size-change="handleSizeChange"
+                @current-change="handleCurrentChange" />
+        </div>
+    </el-config-provider>
 </template>
 
 <style scoped lang="less">
 .top-search-bar {
     background: #fff;
     padding: 10px 0;
-    
     border-bottom: #DCDCDC 1px solid;
 }
 
@@ -93,26 +259,19 @@ const queryParams = reactive({
 .flex-item {
     display: flex;
     align-items: center;
-    /* 保证 Label 和 Input 垂直对齐 */
     white-space: nowrap;
-    /* 防止标签换行 */
 }
 
-/* 统一的标签样式 (继承自你原来的 .demonstration) */
 .custom-label {
     color: #303133;
-    /* 原来的 var(--el-text-color-secondary) 改为你指定的深色 */
     font-size: 16px;
     font-family: "microsoft yahei";
-    font-weight: bold;
     margin-right: 12px;
-    /* 标签和输入框的距离 */
     white-space: nowrap;
 }
 
 .custom-input {
     width: 240px;
-    /* 你可以根据需要调整这个宽度，或者设为 auto */
 }
 
 /* 针对日期选择器的特殊微调，因为它自带宽度 */
@@ -121,6 +280,161 @@ const queryParams = reactive({
 }
 
 .button-group {
-    margin-left: 79px;
+    margin-left: 80px;
+}
+
+.title {
+    margin-left: auto;
+    padding: 6px 14px;
+    font-family: "DIN Alternate","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
+    border-radius: 999px;
+    background: #eef6ff;
+    color: #2563eb;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.custom-theme {
+    /* 滑块的高度（粗细） */
+    --el-slider-height: 10px;
+    /* 滑块选中部分的颜色 (深蓝色) */
+    --el-slider-main-bg-color: #409EFF;
+    /* 滑块未选中部分的背景色 (浅灰色) */
+    --el-slider-runway-bg-color: #e4e7ed;
+    /* 滑块圆球的大小 (如果滑块变粗，球可能也需要变大) */
+    --el-slider-button-size: 16px;
+    /* 滑块圆球边框颜色 */
+    --el-slider-button-wrapper-offset: -10px;
+    /* 垂直居中微调，通常不需要动，除非变得特别粗 */
+}
+
+.complex-filter-container {
+    display: flex;
+    /* 左右布局 */
+    align-items: flex-start;
+    /* 顶部对齐 (或者 center 居中对齐) */
+    background: #fff;
+    padding: 10px 0;
+    border-radius: 4px;
+    gap: 30px;
+    /* 滑块区和按钮区之间的间距 */
+}
+
+/* 左侧网格系统 */
+.sliders-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 10px;
+    column-gap: 50px;
+}
+
+/* 单个滑块块的样式 */
+.slider-item {
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+}
+
+.slider-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #606266;
+    flex-shrink: 0;
+    width: 90px;
+    text-align: left;
+    align-self: center;
+    justify-content: center;
+    margin-right: 15px;
+    /* 标签和滑块之间的距离 */
+}
+
+.slider-wrapper {
+    flex: 1;
+    /* 让滑块占据剩余宽度 */
+    /* 处理 Element Slider 边缘可能被裁切的问题 */
+    padding: 0 10px;
+    min-width: 0;
+}
+
+/* 右侧按钮区域 */
+.actions-panel {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 0;
+    border-left: 1px solid #eee;
+    padding-left: 30px;
+    padding-right: 0px;
+    flex-shrink: 0;
+}
+
+.input-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.select-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #606266;
+    flex-shrink: 0;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.btns-wrapper {
+    display: flex;
+
+    flex-direction: row;
+    /* 横向 */
+    gap: 10px;
+    /* 两个按钮之间的间距 */
+}
+
+.action-btn {
+    width: 80px;
+    /* 统一按钮宽度 */
+    margin-left: 0 !important;
+    /* 清除 Element 默认的 margin-left */
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    padding-bottom: 10px;
+}
+
+.table-container {
+    margin: 10px 0;
+}
+
+:deep(.heating-table) {
+    font-size: 12px;
+}
+
+:deep(.heating-table .el-table__header th) {
+    background: #f6f8fa;
+    color: black;
+    font-weight: 600;
+    height: 40px;
+}
+
+:deep(.heating-table .el-table__body td) {
+    height: 40px;
+    padding: 0;
+}
+
+:deep(.heating-table .el-table__body tr:hover > td) {
+    background: #eef6ff;
+}
+
+:deep(.heating-table .el-table__inner-wrapper),
+:deep(.heating-table .el-table__cell) {
+    border-color: #e6e6e6;
 }
 </style>

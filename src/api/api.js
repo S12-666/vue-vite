@@ -15,3 +15,11 @@ export function getSpecCountByTime(params) {
         params
     })
 }
+
+export function getHeatingReport(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/pidas/getHeatingReport',
+        method: 'post',
+        data
+    })
+}
