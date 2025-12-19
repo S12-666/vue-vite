@@ -1,10 +1,15 @@
 <script setup>
-import { ref, reactive, computed, watch, nextTick } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { getHeatingReport } from '@/api/api.js';
 
-const tableData = ref([])
+const allTableData = ref([])  //存储接口返回的全部数据
+const filteredTableData = ref([])  // 存储筛选后的数据
+
+const initialRanges = ref({}) // 记录接口返回的初始范围，用于重置和颜色变化
+
+// const tableData = ref([])
 const options = ref([])
 const value = ref('')
 const queryParams = reactive({
@@ -14,20 +19,19 @@ const queryParams = reactive({
 const value1 = ref(['2021-06-01', '2021-06-02'])
 const currentPage = ref(1)
 const pageSize = ref(13)
-const tableRef = ref(null)
 
 const paginatedData = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value
     const end = start + pageSize.value
-    return tableData.value.slice(start, end)
+    return filteredTableData.value.slice(start, end)
 })
 
 const filterParams = reactive({
     thick: [0, 500],
     width: [0, 10],
     length: [0, 10],
-    distemp: [800, 1200],
-    fmtemp: [0, 10],
+    distemp: [1000, 1200],
+    fmtemp: [0, 900],
     coolingrate: [100, 300]
 })
 
@@ -75,7 +79,8 @@ const handleQuery = async () => {
                 type: 'success'
             })
         }
-        tableData.value = res.tableData
+        allTableData.value = res.tableData || [];
+        filteredTableData.value = allTableData.value;
         console.log(res);
 
         if (res.specs && Array.isArray(res.specs)) {
@@ -87,11 +92,19 @@ const handleQuery = async () => {
 
         if (res.ranges) {
             const r = res.ranges
-            if (r.thick_range) filterParams.thick = r.thick_range;
-            if (r.width_range) filterParams.width = r.width_range;
-            if (r.length_range) filterParams.length = r.length_range;
-            if (r.distemp_range) filterParams.distemp = r.distemp_range;
+            if (r.thick_range) filterParams.thick = [...r.thick_range];
+            if (r.width_range) filterParams.width = [...r.width_range];
+            if (r.length_range) filterParams.length = [...r.length_range];
+            if (r.distemp_range) filterParams.distemp = [...r.distemp_range];
 
+            initialRanges.value = {
+                thick: r.thick_range ? [...r.thick_range] : [0, 500],
+                width: r.width_range ? [...r.width_range] : [0, 10],
+                length: r.length_range ? [...r.length_range] : [0, 10],
+                distemp: r.distemp_range ? [...r.distemp_range] : [1000, 1200],
+                fmtemp: [0, 900], // 假设接口没返这些，给个默认
+                coolingrate: [100, 300]
+            }
         }
     } catch (error) {
         console.error('请求失败', error);
@@ -112,6 +125,53 @@ const handleReset = () => {
         message: '已重置查询条件 请选择',
         type: 'info'
     })
+}
+
+const handleFilter = () => {
+    const result = allTableData.value.filter(row => {
+        if (value.value && row.steelspec !== value.value) {
+            return false
+        }
+
+        if (row.thick < filterParams.thick[0] || row.thick > filterParams.thick[1]) return false;
+        if (row.width < filterParams.width[0] || row.width > filterParams.width[1]) return false;
+        if (row.length < filterParams.length[0] || row.length > filterParams.length[1]) return false;
+        if (row.ave_temp_dis < filterParams.distemp[0] || row.ave_temp_dis > filterParams.distemp[1]) return false;
+
+        return true;
+    })
+    filteredTableData.value = result;
+    currentPage.value = 1;
+    ElMessage({
+        showClose: true,
+        message: `筛选完成 共${result.length}条数据`,
+        type: 'success'
+    })
+}
+
+const handleFilterReset = () => {
+    if (Object.keys(initialRanges.value).length > 0) {
+        filterParams.thick = [...initialRanges.value.thick]
+        filterParams.width = [...initialRanges.value.width]
+        filterParams.length = [...initialRanges.value.length]
+        filterParams.distemp = [...initialRanges.value.distemp]
+    }
+
+    value.value = '';
+    filteredTableData.value = allTableData.value;
+    currentPage.value = 1;
+    ElMessage({
+        showClose: true,
+        message: '条件已重置',
+        type: 'info'
+    })
+}
+
+const isSliderChanged = (key) => {
+    if (!initialRanges.value[key]) return false;
+    const current = filterParams[key];
+    const original = initialRanges.value[key];
+    return current[0] !== original[0] || current[1] !== original[1];
 }
 
 </script>
@@ -152,19 +212,19 @@ const handleReset = () => {
         <div class="sliders-grid">
             <div class="slider-item">
                 <span class="slider-label">Thick (mm)</span>
-                <el-slider v-model="filterParams.thick" range :max="500" />
+                <el-slider v-model="filterParams.thick" range :max="500" :class="{ 'changed-slider': isSliderChanged('thick') }" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">Width (m)</span>
-                <el-slider v-model="filterParams.width" range :max="10" />
+                <el-slider v-model="filterParams.width" range :max="10" :class="{ 'changed-slider': isSliderChanged('width') }" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">Length (m)</span>
-                <el-slider v-model="filterParams.length" range :max="10" />
+                <el-slider v-model="filterParams.length" range :max="10" :class="{ 'changed-slider': isSliderChanged('length') }" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">DisTmp (°C)</span>
-                <el-slider v-model="filterParams.distemp" range :min="800" :max="1500" />
+                <el-slider v-model="filterParams.distemp" range :min="1000" :max="1200" :class="{ 'changed-slider': isSliderChanged('distemp') }" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">FmTmp (°C)</span>
@@ -185,7 +245,7 @@ const handleReset = () => {
 
             <div class="btns-wrapper">
                 <el-button type="primary" class="action-btn" @click="handleFilter">筛选</el-button>
-                <el-button class="action-btn" @click="handleReset">重置</el-button>
+                <el-button class="action-btn" @click="handleFilterReset">重置</el-button>
             </div>
         </div>
     </div>
@@ -227,7 +287,7 @@ const handleReset = () => {
         <div class="pagination-wrapper">
             <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
                 layout="total, sizes, prev, pager, next, jumper" :page-sizes="[13, 20, 40, 60]"
-                :current-page.sync="currentPage" :total="tableData.length" @size-change="handleSizeChange"
+                :current-page.sync="currentPage" :total="filteredTableData.length" @size-change="handleSizeChange"
                 @current-change="handleCurrentChange" />
         </div>
     </el-config-provider>
@@ -286,7 +346,7 @@ const handleReset = () => {
 .title {
     margin-left: auto;
     padding: 6px 14px;
-    font-family: "DIN Alternate","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
+    font-family: "DIN Alternate", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
     border-radius: 999px;
     background: #eef6ff;
     color: #2563eb;
@@ -357,6 +417,16 @@ const handleReset = () => {
     padding: 0 10px;
     min-width: 0;
 }
+
+:deep(.changed-slider) {
+    --el-slider-main-bg-color: #e6a23c;
+    --el-slider-button-size: 20px;
+}
+
+:deep(.changed-slider .el-slider__button) {
+    border-color: #e6a23c;
+}
+
 
 /* 右侧按钮区域 */
 .actions-panel {
