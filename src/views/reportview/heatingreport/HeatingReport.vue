@@ -3,6 +3,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { getHeatingReport } from '@/api/api.js';
+import { getStatusClass } from '@/utils/color_utils/colorSelect.js'
 
 const allTableData = ref([])  //存储接口返回的全部数据
 const filteredTableData = ref([])  // 存储筛选后的数据
@@ -212,27 +213,33 @@ const isSliderChanged = (key) => {
         <div class="sliders-grid">
             <div class="slider-item">
                 <span class="slider-label">Thick (mm)</span>
-                <el-slider v-model="filterParams.thick" range :max="500" :step="1" :class="{ 'changed-slider': isSliderChanged('thick') }" />
+                <el-slider v-model="filterParams.thick" range :max="500" :step="1"
+                    :class="{ 'changed-slider': isSliderChanged('thick') }" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">Width (m)</span>
-                <el-slider v-model="filterParams.width" range :max="10" :step="0.001" :class="{ 'changed-slider': isSliderChanged('width') }" />
+                <el-slider v-model="filterParams.width" range :max="10" :step="0.001"
+                    :class="{ 'changed-slider': isSliderChanged('width') }" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">Length (m)</span>
-                <el-slider v-model="filterParams.length" range :max="10" :step="0.001" :class="{ 'changed-slider': isSliderChanged('length') }" />
+                <el-slider v-model="filterParams.length" range :max="10" :step="0.001"
+                    :class="{ 'changed-slider': isSliderChanged('length') }" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">DisTmp (°C)</span>
-                <el-slider v-model="filterParams.distemp" range :min="1000" :max="1200" :step="1" :class="{ 'changed-slider': isSliderChanged('distemp') }" />
+                <el-slider v-model="filterParams.distemp" range :min="1000" :max="1200" :step="1"
+                    :class="{ 'changed-slider': isSliderChanged('distemp') }" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">FmTmp (°C)</span>
-                <el-slider v-model="filterParams.fmtemp" range :max="5" :show-tooltip="false" disabled class="static-line-slider" />
+                <el-slider v-model="filterParams.fmtemp" range :max="5" :show-tooltip="false" disabled
+                    class="static-line-slider" />
             </div>
             <div class="slider-item">
                 <span class="slider-label">CR (°C/s)</span>
-                <el-slider v-model="filterParams.coolingrate" range :max="500" :show-tooltip="false" disabled class="static-line-slider" />
+                <el-slider v-model="filterParams.coolingrate" range :max="500" :show-tooltip="false" disabled
+                    class="static-line-slider" />
             </div>
         </div>
         <div class="actions-panel">
@@ -280,7 +287,11 @@ const isSliderChanged = (key) => {
             <el-table-column prop="alltime" label="AllTime" width="100" align="center" />
             <el-table-column prop="discharge_time" label="DisTime" min-width="90" align="center" />
             <el-table-column prop="steelspec" label="steelSpec" width="130" align="center" />
-            <el-table-column prop="label" label="fault" width="60" align="center" />
+            <el-table-column label="fault" width="60" align="center">
+                <template #default="{ row }">
+                    <div class="status-circle" :class="getStatusClass(row.label)"></div>
+                </template>
+            </el-table-column>
         </el-table>
     </div>
     <el-config-provider :locale="zhCn">
@@ -429,7 +440,7 @@ const isSliderChanged = (key) => {
 
 :deep(.static-line-slider) {
     /* 让鼠标放上去只显示普通箭头，不显示禁止图标（可选，看你喜好） */
-    cursor: default; 
+    cursor: default;
 }
 
 :deep(.static-line-slider .el-slider__button-wrapper) {
@@ -438,18 +449,17 @@ const isSliderChanged = (key) => {
 
 :deep(.static-line-slider .el-slider__bar) {
     display: none !important;
-    /* 或者如果你想保留一条淡淡的灰色填充，可以设背景色：
-    background-color: transparent !important; 
-    */
 }
 
 :deep(.static-line-slider .el-slider__runway) {
-    cursor: default; /* 鼠标样式 */
-    background-color: #A8ABB2; /* 保持默认灰色，或者你可以加深一点 */
+    cursor: default;
+    /* 鼠标样式 */
+    background-color: #A8ABB2;
+    /* 保持默认灰色，或者你可以加深一点 */
 }
 
 :deep(.static-line-slider.is-disabled .el-slider__runway) {
-    opacity: 1; 
+    opacity: 1;
 }
 
 /* 右侧按钮区域 */
@@ -530,5 +540,28 @@ const isSliderChanged = (key) => {
 :deep(.heating-table .el-table__inner-wrapper),
 :deep(.heating-table .el-table__cell) {
     border-color: #e6e6e6;
+}
+
+.status-circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 8px;
+}
+
+.bg-red {
+    background-color: #F56C6C; /* 红色 */
+    box-shadow: 0 0 4px rgba(245, 108, 108, 0.4); /* 稍微加点红色光晕 */
+}
+
+.bg-blue {
+    background-color: #409EFF; /* 蓝色 */
+    box-shadow: 0 0 4px rgba(64, 158, 255, 0.4);
+}
+
+.bg-gray {
+    background-color: #909399; /* 灰色 */
+    opacity: 0.6; /* 灰色可以稍微淡一点 */
 }
 </style>
