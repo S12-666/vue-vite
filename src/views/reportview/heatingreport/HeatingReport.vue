@@ -191,7 +191,7 @@ const handleReset = () => {
     </div>
 
     <div class="table-container">
-        <el-table ref="tableRef" class="heating-table" :data="paginatedData" border size="small" style="width: 100%;"
+        <el-table class="heating-table" :data="paginatedData" border size="small" style="width: 100%;"
             header-cell-class-name="table-header-center">
             <el-table-column prop="upid" label="upid" width="110" align="center" />
             <el-table-column prop="slabid" label="slabid" width="110" align="center" />

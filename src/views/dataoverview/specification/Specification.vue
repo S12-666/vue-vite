@@ -19,7 +19,7 @@
         </div>
     </div>
     <div class="table-container" :class="{ 'animating': isAnimating }">
-        <el-table ref="myTableRef" :data="paginatedData" border strip style="width: 100%">
+        <el-table :data="paginatedData" border strip style="width: 100%">
             <el-table-column prop="index" width="58" align="center">
                 <template #header>
                     <div class="column-header-box">
@@ -188,7 +188,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { ElConfigProvider } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { loadIcon } from '@/utils/icons_utils/iconLoader';
@@ -212,9 +212,6 @@ const yDataNames = ['discharge', 'rm', 'fm', 'acc'];
 
 const currentPage = ref(1);
 const pageSize = ref(10);
-
-const myTableRef = ref(null);
-const isAnimating = ref(false);
 
 const paginatedData = computed(() => {
     if (!tableData.value || tableData.value.length === 0) return [];
@@ -287,25 +284,6 @@ const fetchTableData = async () => {
         });
     }
 }
-
-watch(
-    () => store.state.isCollapse,
-    async () => {
-        isAnimating.value = true;
-
-        clearTimeout(window.resizeTimer);
-        window.resizeTimer = setTimeout(() => {
-            isAnimating.value = false;
-            nextTick(() => {
-                if (myTableRef.value) {
-                    myTableRef.value.doLayout();
-                }
-            });
-        }, 350); // 略大于动画时间（300ms + 50ms缓冲）
-    },
-    { immediate: false }
-);
-
 
 onMounted(() => {
     fetchTableData();
