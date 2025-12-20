@@ -7,10 +7,11 @@ import { getStatusClass } from '@/utils/color_utils/colorSelect.js'
 
 const allTableData = ref([])  //存储接口返回的全部数据
 const filteredTableData = ref([])  // 存储筛选后的数据
-
 const initialRanges = ref({}) // 记录接口返回的初始范围，用于重置和颜色变化
 
-// const tableData = ref([])
+const dialogVisible = ref(false)
+const currentFaultRow = ref({})
+
 const options = ref([])
 const value = ref('')
 const queryParams = reactive({
@@ -20,6 +21,8 @@ const queryParams = reactive({
 const value1 = ref(['2021-06-01', '2021-06-02'])
 const currentPage = ref(1)
 const pageSize = ref(13)
+
+const faultTypes = ['抗拉', '冲击', '落锤', '硬度', '晶粒度'];
 
 const paginatedData = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value
@@ -35,6 +38,12 @@ const filterParams = reactive({
     fmtemp: [0, 900],
     coolingrate: [100, 300]
 })
+
+const getTagType = (val) => {
+    if (val === 0) return 'danger';
+    if (val === 1) return 'primary';
+    return 'info'; // 2 或其他情况
+}
 
 const handleSizeChange = (val) => {
     pageSize.value = val
@@ -175,6 +184,11 @@ const isSliderChanged = (key) => {
     return current[0] !== original[0] || current[1] !== original[1];
 }
 
+const handleFaultClick = (row) => {
+    currentFaultRow.value = row // 保存当前行数据
+    dialogVisible.value = true  // 打开弹窗
+}
+
 </script>
 
 <template>
@@ -228,7 +242,7 @@ const isSliderChanged = (key) => {
             </div>
             <div class="slider-item">
                 <span class="slider-label">DisTmp (°C)</span>
-                <el-slider v-model="filterParams.distemp" range :min="1000" :max="1200" :step="1"
+                <el-slider v-model="filterParams.distemp" range :min="1000" :max="1300" :step="1"
                     :class="{ 'changed-slider': isSliderChanged('distemp') }" />
             </div>
             <div class="slider-item">
@@ -289,7 +303,7 @@ const isSliderChanged = (key) => {
             <el-table-column prop="steelspec" label="steelSpec" width="130" align="center" />
             <el-table-column label="fault" width="60" align="center">
                 <template #default="{ row }">
-                    <div class="status-circle" :class="getStatusClass(row.label)"></div>
+                    <div class="status-circle" :class="getStatusClass(row.label)" @click="handleFaultClick(row)"></div>
                 </template>
             </el-table-column>
         </el-table>
@@ -302,6 +316,51 @@ const isSliderChanged = (key) => {
                 @current-change="handleCurrentChange" />
         </div>
     </el-config-provider>
+
+    <el-dialog v-model="dialogVisible" title="参数详情" width="30%" align-center custom-class="clean-dialog">
+        <!-- <div class="section-title">关键参数</div> -->
+        <div v-if="currentFaultRow">
+            <el-descriptions :column="2" border>
+                <el-descriptions-item label="upid" align="center" label-align="center">
+                    {{ currentFaultRow.upid }}
+                </el-descriptions-item>
+                <el-descriptions-item label="slabid" align="center" label-align="center">
+                    {{ currentFaultRow.slabid }}
+                </el-descriptions-item>
+            </el-descriptions>
+
+            <el-descriptions :column="3" border class="merge-top">
+                <el-descriptions-item label="slabthickness" align="center" label-align="center">
+                    {{ currentFaultRow.thick }} <span class="unit">mm</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="slabwidth" align="center" label-align="center">
+                    {{ currentFaultRow.width }} <span class="unit">m</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="slablength" align="center" label-align="center">
+                    {{ currentFaultRow.length }} <span class="unit">m</span>
+                </el-descriptions-item>
+            </el-descriptions>
+
+            <div class="spacer"></div>
+        </div>
+        <div class="section-title">各项性能检测指标</div>
+
+        <div class="tags-container" v-if="currentFaultRow.p_f_label">
+            <div v-for="(name, index) in faultTypes" :key="index" class="tag-item">
+                <el-tag :type="getTagType(currentFaultRow.p_f_label[index])" effect="light"
+                    class="custom-tag">
+                    {{ name }}
+                </el-tag>
+            </div>
+        </div>
+
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="success" @click="dialogVisible = false">查询详情</el-button>
+                <el-button @click="dialogVisible = false">关闭</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 
 <style scoped lang="less">
@@ -548,20 +607,104 @@ const isSliderChanged = (key) => {
     height: 12px;
     border-radius: 50%;
     margin-top: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
 }
 
 .bg-red {
-    background-color: #F56C6C; /* 红色 */
-    box-shadow: 0 0 4px rgba(245, 108, 108, 0.4); /* 稍微加点红色光晕 */
+    background-color: #F56C6C;
+    /* 红色 */
+    box-shadow: 0 0 4px rgba(245, 108, 108, 0.4);
+    /* 稍微加点红色光晕 */
 }
 
 .bg-blue {
-    background-color: #409EFF; /* 蓝色 */
+    background-color: #409EFF;
+    /* 蓝色 */
     box-shadow: 0 0 4px rgba(64, 158, 255, 0.4);
 }
 
 .bg-gray {
-    background-color: #909399; /* 灰色 */
-    opacity: 0.6; /* 灰色可以稍微淡一点 */
+    background-color: #909399;
+    /* 灰色 */
+    opacity: 0.6;
+    /* 灰色可以稍微淡一点 */
 }
+
+.merge-top {
+    margin-top: -1px;
+}
+
+/* 分区标题 */
+.section-title {
+    margin: 15px 0 15px 0;
+    font-size: 15px;
+    font-weight: bold;
+    color: #303133;
+    border-left: 4px solid #409EFF;
+    /* 左侧蓝色竖条装饰 */
+    padding-left: 10px;
+}
+
+.tags-container {
+    display: flex;
+    justify-content: space-between;
+    /* 两端对齐，均匀分布 */
+    align-items: center;
+    background: #f5f7fa;
+    /* 浅灰背景衬托 */
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* 单个标签块 */
+.tag-item {
+    display: flex;
+    flex-direction: column;
+    /* 上下排列：上面文字，下面Tag */
+    align-items: center;
+    gap: 8px;
+}
+
+.custom-tag {
+    width: 60px;
+    /* 统一定宽 */
+    justify-content: center;
+}
+
+.unit {
+    font-size: 12px;
+    color: #909399;
+    margin-left: 2px;
+}
+
+:deep(.el-descriptions__label) {
+    font-weight: bold;
+    color: #606266;
+    background-color: #fafafa; /* 给表头加个淡灰色背景，更像Excel */
+}
+
+:deep(.el-descriptions__content) {
+    font-weight: 500;
+    color: #303133;
+}
+
+.custom-tag {
+    /* --- 1. 修改 Tag 的外形尺寸 --- */
+    width: 80px;        /* 宽度：之前是60px，改大一点以容纳大字体 */
+    height: 36px;       /* 高度：可以设得更高 */
+    
+    /* --- 2. 修改内部文字大小 --- */
+    font-size: 16px;    /* 字体大小：默认大概是12px，这里改大 */
+    font-weight: bold;  /* 字体加粗：让文字更清晰 */
+    
+    /* --- 3. 确保文字居中 --- */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* (可选) 如果你觉得圆角太小，可以改大圆角 */
+    border-radius: 6px; 
+}
+
 </style>
