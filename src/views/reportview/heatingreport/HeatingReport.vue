@@ -631,8 +631,17 @@ const handleFaultClick = (row) => {
     /* 灰色可以稍微淡一点 */
 }
 
-.merge-top {
-    margin-top: -1px;
+:deep(.merge-top) {
+    .el-descriptions__label {
+        color: #606266;
+        font-size: 14px;
+        background-color: #fafafa;
+        font-family: "Microsoft YaHei", sans-serif;
+    }
+    .el-descriptions__content {
+        color: #303133;
+        font-size: 14px;
+    }
 }
 
 /* 分区标题 */
