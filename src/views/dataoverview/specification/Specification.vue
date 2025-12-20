@@ -18,7 +18,7 @@
             <RhythmCharts :xData="lineX" :yData="lineY"/>
         </div>
     </div>
-    <div class="table-container" :class="{ 'animating': isAnimating }">
+    <div class="table-container">
         <el-table :data="paginatedData" border strip style="width: 100%">
             <el-table-column prop="index" width="58" align="center">
                 <template #header>
@@ -432,22 +432,6 @@ onMounted(() => {
     justify-content: center;
     margin-top: 10px;
     padding-bottom: 10px;
-}
-
-.animating {
-    overflow: hidden;
-    pointer-events: none;
-}
-
-.animating :deep(.el-table__body) {
-    width: 100% !important;
-}
-
-/* 优化动画过程中的渲染 */
-.animating :deep(.el-table) {
-    transform: translateZ(0); /* 开启GPU加速 */
-    backface-visibility: hidden;
-    perspective: 1000px;
 }
 
 /* 使用 will-change 提前告知浏览器 */
