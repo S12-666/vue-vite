@@ -57,7 +57,7 @@ const handleCurrentChange = (val) => {
 
 const handleDateChange = (val) => {
     if (val && val.length === 2) {
-        console.log(val[0], val[1]);
+        // console.log(val[0], val[1]);
         ElMessage({
             showClose: true,
             message: '选择日期范围后可直接查询',
@@ -91,7 +91,7 @@ const handleQuery = async () => {
         }
         allTableData.value = res.tableData || [];
         filteredTableData.value = allTableData.value;
-        console.log(res);
+        // console.log(res);
 
         if (res.specs && Array.isArray(res.specs)) {
             options.value = res.specs.map(item => ({
@@ -246,7 +246,7 @@ const handleFaultClick = (row) => {
                     :class="{ 'changed-slider': isSliderChanged('distemp') }" />
             </div>
             <div class="slider-item">
-                <span class="slider-label">FmTmp (°C)</span>
+                <span class="slider-label">TgTemp (°C)</span>
                 <el-slider v-model="filterParams.fmtemp" range :max="5" :show-tooltip="false" disabled
                     class="static-line-slider" />
             </div>
