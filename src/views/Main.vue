@@ -95,6 +95,8 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
     overflow-y: auto;
     /* 垂直滚动 */
     background: white;
+    scrollbar-gutter: stable;
+    // scroll-behavior: smooth;
 }
 
 .footer-fixed {
@@ -107,5 +109,6 @@ import CommonFooter from '@/layout/components/CommonFooter.vue';
 .el-main {
     padding: 20px;
     background: white;
+    min-height: calc(100vh - 150px);
 }
 </style>
