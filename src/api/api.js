@@ -39,3 +39,11 @@ export function getCoolingReport(data) {
         data
     })
 }
+
+export function getFQCReport(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/pidas/getFQCReport',
+        method: 'post',
+        data
+    })
+}

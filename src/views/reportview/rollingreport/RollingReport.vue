@@ -321,13 +321,13 @@ const handleFaultClick = (row) => {
             </el-descriptions>
 
             <el-descriptions :column="3" border class="merge-top">
-                <el-descriptions-item label="slabthickness" align="center" label-align="center">
+                <el-descriptions-item label="tgthickness" align="center" label-align="center">
                     {{ currentFaultRow.thick }} <span class="unit">mm</span>
                 </el-descriptions-item>
-                <el-descriptions-item label="slabwidth" align="center" label-align="center">
+                <el-descriptions-item label="tgwidth" align="center" label-align="center">
                     {{ currentFaultRow.width }} <span class="unit">m</span>
                 </el-descriptions-item>
-                <el-descriptions-item label="slablength" align="center" label-align="center">
+                <el-descriptions-item label="tglength" align="center" label-align="center">
                     {{ currentFaultRow.length }} <span class="unit">m</span>
                 </el-descriptions-item>
             </el-descriptions>

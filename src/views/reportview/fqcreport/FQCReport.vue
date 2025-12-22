@@ -2,7 +2,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
-import { getCoolingReport } from '@/api/api.js'
+import { getFQCReport } from '@/api/api.js'
 import { getStatusClass } from '@/utils/color_utils/colorSelect.js'
 
 const allTableData = ref([])  //存储接口返回的全部数据
@@ -22,7 +22,8 @@ const value1 = ref(['2021-06-01', '2021-06-02'])
 const currentPage = ref(1)
 const pageSize = ref(14)
 
-const faultTypes = ['抗拉', '冲击', '落锤', '硬度', '晶粒度'];
+const pfaultTypes = ['抗拉', '冲击', '落锤', '硬度', '晶粒度'];
+const sfaultTypes = ['翘曲', '厚度异常', '中浪', '左边浪', '右边浪'];
 
 const paginatedData = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value
@@ -34,9 +35,9 @@ const filterParams = reactive({
     thick: [0, 300],
     width: [1.3, 5],
     length: [0, 52],
-    distemp: [1000, 1200],
-    tg_temp: [700, 900],
-    coolingrate: [10, 60]
+    tgthick: [0, 300],
+    tgwidth: [1.3, 5],
+    tglength: [0, 52]
 })
 
 const getTagType = (val) => {
@@ -81,7 +82,7 @@ const handleQuery = async () => {
     }
     // console.log('请求体：', requestBody);
     try {
-        const res = await getCoolingReport(requestBody)
+        const res = await getFQCReport(requestBody)
         if (res) {
             ElMessage({
                 showClose: true,
@@ -105,17 +106,17 @@ const handleQuery = async () => {
             if (r.thick_range) filterParams.thick = [...r.thick_range];
             if (r.width_range) filterParams.width = [...r.width_range];
             if (r.length_range) filterParams.length = [...r.length_range];
-            if (r.distemp_range) filterParams.distemp = [...r.distemp_range];
-            if (r.tgtemp_range) filterParams.tg_temp = [...r.tgtemp_range];
-            if (r.cr_range) filterParams.coolingrate = [...r.cr_range];
+            if (r.tgthick_range) filterParams.tgthick = [...r.tgthick_range];
+            if (r.tglength_range) filterParams.tglength = [...r.tglength_range];
+            if (r.tgwidth_range) filterParams.tgwidth = [...r.tgwidth_range];
 
             initialRanges.value = {
-                thick: r.thick_range ? [...r.thick_range] : [0, 500],
+                thick: r.thick_range ? [...r.thick_range] : [0, 50],
                 width: r.width_range ? [...r.width_range] : [0, 10],
                 length: r.length_range ? [...r.length_range] : [0, 10],
-                distemp: r.distemp_range ? [...r.distemp_range] : [1000, 1200],
-                tg_temp: r.tgtemp_range ? [...r.tgtemp_range] : [7000, 1000],
-                coolingrate: r.cr_range ? [...r.cr_range] : [10, 60]
+                tgthick: r.tgthick_range ? [...r.tgthick_range] : [0, 50],
+                tglength: r.tglength_range ? [...r.tglength_range] : [0, 10],
+                tgwidth: r.tgwidth_range ? [...r.tgwidth_range] : [0, 10]
             }
         }
     } catch (error) {
@@ -148,9 +149,9 @@ const handleFilter = () => {
         if (row.thick < filterParams.thick[0] || row.thick > filterParams.thick[1]) return false;
         if (row.width < filterParams.width[0] || row.width > filterParams.width[1]) return false;
         if (row.length < filterParams.length[0] || row.length > filterParams.length[1]) return false;
-        if (row.ave_temp_dis < filterParams.distemp[0] || row.ave_temp_dis > filterParams.distemp[1]) return false;
-        if (row.tg_temp < filterParams.tg_temp[0] || row.tg_temp > filterParams.tg_temp[1]) return false;
-        if (row.cooling_rate1 < filterParams.coolingrate[0] || row.cooling_rate1 > filterParams.coolingrate[1]) return false;
+        if (row.tgthick < filterParams.tgthick[0] || row.tgthick > filterParams.tgthick[1]) return false;
+        if (row.tglength < filterParams.tglength[0] || row.tglength > filterParams.tglength[1]) return false;
+        if (row.tgwidth < filterParams.tgwidth[0] || row.tgwidth > filterParams.tgwidth[1]) return false;
 
         return true;
     })
@@ -168,9 +169,9 @@ const handleFilterReset = () => {
         filterParams.thick = [...initialRanges.value.thick]
         filterParams.width = [...initialRanges.value.width]
         filterParams.length = [...initialRanges.value.length]
-        filterParams.distemp = [...initialRanges.value.distemp]
-        filterParams.tg_temp = [...initialRanges.value.tg_temp]
-        filterParams.coolingrate = [...initialRanges.value.coolingrate]
+        filterParams.tgthick = [...initialRanges.value.tgthick]
+        filterParams.tglength = [...initialRanges.value.tglength]
+        filterParams.tgwidth = [...initialRanges.value.tgwidth]
     }
 
     value.value = '';
@@ -222,7 +223,7 @@ const handleFaultClick = (row) => {
                     <el-button @click="handleReset">重置</el-button>
                 </div>
                 <div class="title">
-                    冷却报表
+                    FQC报表
                 </div>
             </div>
         </el-form>
@@ -247,19 +248,19 @@ const handleFaultClick = (row) => {
                     :class="{ 'changed-slider': isSliderChanged('length') }" />
             </div>
             <div class="slider-item">
-                <span class="slider-label">DisTemp (°C)</span>
-                <el-slider v-model="filterParams.distemp" range :min="1000" :max="1300" :step="1"
-                    :class="{ 'changed-slider': isSliderChanged('distemp') }" />
+                <span class="slider-label">TgThick(mm)</span>
+                <el-slider v-model="filterParams.tgthick" range :max="300" :step="1"
+                    :class="{ 'changed-slider': isSliderChanged('tgthick') }" />
             </div>
             <div class="slider-item">
-                <span class="slider-label">TgTemp (°C)</span>
-                <el-slider v-model="filterParams.tg_temp" range :min="0" :max="900" :step="1"
-                    :class="{ 'changed-slider': isSliderChanged('tg_temp') }" />
+                <span class="slider-label">TgWidth (m)</span>
+                <el-slider v-model="filterParams.tgwidth" range :max="5" :step="0.001"
+                    :class="{ 'changed-slider': isSliderChanged('tgwidth') }" />
             </div>
             <div class="slider-item">
-                <span class="slider-label">CR (°C/s)</span>
-                <el-slider v-model="filterParams.coolingrate" range :min="0" :max="60" :step="1"
-                    :class="{ 'changed-slider': isSliderChanged('coolingrate') }" />
+                <span class="slider-label">TgLength (m)</span>
+                <el-slider v-model="filterParams.tglength" range :max="60" :step="0.1"
+                    :class="{ 'changed-slider': isSliderChanged('tglength') }" />
             </div>
         </div>
         <div class="actions-panel">
@@ -282,26 +283,24 @@ const handleFaultClick = (row) => {
             header-cell-class-name="table-header-center">
             <el-table-column prop="upid" label="upid" width="110" align="center" />
             <el-table-column prop="slabid" label="slabid" width="110" align="center" />
-            <el-table-column prop="thick" label="thick" width="70" align="center" />
-            <el-table-column prop="length" label="length" width="70" align="center" />
-            <el-table-column prop="width" label="width" width="70" align="center" />
             <el-table-column prop="toc" label="toc" min-width="90" align="center" />
-            <el-table-column prop="adaptive_key" label="AdaptKey" width="80" align="center" />
-            <el-table-column prop="tapping_code" label="TapCode" width="80" align="center" />
-            <el-table-column prop="cooling_start_temp" label="STemp" width="70" align="center" />
-            <el-table-column prop="cooling_stop_temp" label="ETemp" width="70" align="center" />
-            <el-table-column prop="cooling_rate" label="CR" width="70" align="center" />
-            <el-table-column prop="cooling_mode" label="CMode" width="70" align="center" />
-            <el-table-column prop="operate_mode" label="OMode" width="70" align="center" />
-            <el-table-column prop="p1" label="p1" width="70" align="center" />
-            <el-table-column prop="p2" label="p2" width="70" align="center" />
-            <el-table-column prop="p5" label="p5" width="70" align="center" />
-            <el-table-column prop="cr_act" label="CrAct" width="70" align="center" />
-            <el-table-column prop="adap" label="Adap" width="70" align="center" />
+            <el-table-column prop="tgthick" label="tgThick" width="70" align="center" />
+            <el-table-column prop="thick" label="thick" width="70" align="center" />
+            <el-table-column prop="tglength" label="tgLength" width="70" align="center" />
+            <el-table-column prop="length" label="length" width="70" align="center" />
+            <el-table-column prop="tgwidth" label="tgWidth" width="70" align="center" />
+            <el-table-column prop="width" label="width" width="70" align="center" />
+            <el-table-column prop="startTime" label="StartTime" min-width="90" align="center" />
+            <el-table-column prop="endTime" label="EndTime" min-width="90" align="center" />
             <el-table-column prop="steelspec" label="steelSpec" width="130" align="center" />
-            <el-table-column label="fault" width="60" align="center">
+            <el-table-column label="sfault" width="60" align="center">
                 <template #default="{ row }">
-                    <div class="status-circle" :class="getStatusClass(row.label)" @click="handleFaultClick(row)"></div>
+                    <div class="status-circle" :class="getStatusClass(row.slabel)" @click="handleFaultClick(row)"></div>
+                </template>
+            </el-table-column>
+            <el-table-column label="pfault" width="60" align="center">
+                <template #default="{ row }">
+                    <div class="status-circle" :class="getStatusClass(row.plabel)" @click="handleFaultClick(row)"></div>
                 </template>
             </el-table-column>
         </el-table>
@@ -328,13 +327,13 @@ const handleFaultClick = (row) => {
             </el-descriptions>
 
             <el-descriptions :column="3" border class="merge-top">
-                <el-descriptions-item label="thickness" align="center" label-align="center">
+                <el-descriptions-item label="slabthickness" align="center" label-align="center">
                     {{ currentFaultRow.thick }} <span class="unit">mm</span>
                 </el-descriptions-item>
-                <el-descriptions-item label="width" align="center" label-align="center">
+                <el-descriptions-item label="slabwidth" align="center" label-align="center">
                     {{ currentFaultRow.width }} <span class="unit">m</span>
                 </el-descriptions-item>
-                <el-descriptions-item label="length" align="center" label-align="center">
+                <el-descriptions-item label="slablength" align="center" label-align="center">
                     {{ currentFaultRow.length }} <span class="unit">m</span>
                 </el-descriptions-item>
             </el-descriptions>
@@ -344,10 +343,19 @@ const handleFaultClick = (row) => {
         <div class="section-title">各项性能检测指标</div>
 
         <div class="tags-container" v-if="currentFaultRow.p_f_label">
-            <div v-for="(name, index) in faultTypes" :key="index" class="tag-item">
-                <el-tag :type="getTagType(currentFaultRow.p_f_label[index])" effect="light" class="custom-tag">
-                    {{ name }}
-                </el-tag>
+            <div class="tag-row">
+                <div v-for="(name, index) in pfaultTypes" :key="index" class="tag-item">
+                    <el-tag :type="getTagType(currentFaultRow.p_f_label[index])" effect="light" class="custom-tag">
+                        {{ name }}
+                    </el-tag>
+                </div>
+            </div>
+            <div class="tag-row">
+                <div v-for="(name, index) in sfaultTypes" :key="index" class="tag-item">
+                    <el-tag :type="getTagType(currentFaultRow.fqc_label[index])" effect="light" class="custom-tag">
+                        {{ name }}
+                    </el-tag>
+                </div>
             </div>
         </div>
 
@@ -655,13 +663,19 @@ const handleFaultClick = (row) => {
 
 .tags-container {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     /* 两端对齐，均匀分布 */
-    align-items: center;
+    gap: 20px;
     background: #f5f7fa;
     /* 浅灰背景衬托 */
     padding: 20px;
     border-radius: 8px;
+}
+
+.tag-row {
+    display: flex;
+    justify-content: space-around; /* 关键：让 5 个 Tag 均匀分布在行内 */
+    width: 100%;
 }
 
 /* 单个标签块 */

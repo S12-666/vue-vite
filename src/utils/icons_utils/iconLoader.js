@@ -13,7 +13,8 @@ export function loadIcon(iconName) {
         settings: 'settings.svg',
         spec: 'spec.svg',
         report: 'report.svg',
-        github: 'github.svg'
+        github: 'github.svg',
+        FQC: 'FQC.svg'
     };
 
     const filename = map[iconName];

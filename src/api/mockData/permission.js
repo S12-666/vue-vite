@@ -64,7 +64,14 @@ export default [
                                         label: '冷却报表',
                                         icon: 'cooling',
                                         url: 'reportview/coolingreport/CoolingReport'
-                                    }
+                                    },
+                                    {
+                                        path: '/fqcreport',
+                                        name: 'fqcreport',
+                                        label: 'FQC报表',
+                                        icon: 'FQC',
+                                        url: 'reportview/fqcreport/FQCReport'
+                                    },
                                 ]
                             },
                             {
