@@ -31,3 +31,11 @@ export function getRollingReport(data) {
         data
     })
 }
+
+export function getCoolingReport(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/pidas/getCoolingReport',
+        method: 'post',
+        data
+    })
+}
