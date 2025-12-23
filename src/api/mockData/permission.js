@@ -106,7 +106,14 @@ export default [
                                         label: '冷却工序',
                                         icon: 'cooling',
                                         url: 'dataoverview/cooling/Cooling'
-                                    }
+                                    },
+                                    {
+                                        path: '/fqc',
+                                        name: 'fqc',
+                                        label: '质量检查',
+                                        icon: 'FQC',
+                                        url: 'dataoverview/fqc/FQC'
+                                    },
                                 ]
                             },
                             {
