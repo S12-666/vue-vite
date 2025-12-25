@@ -73,8 +73,8 @@
 
                 <el-card shadow="never" class="chart-card card-like">
                     <template #header>
-                        <div class="card-header">
-                            <span class="section-title">📅 月度全栈记录</span>
+                        <div class="card-header month-title">
+                            <span class="section-title">📅 月度记录</span>
                             <el-config-provider :locale="zhCn">
                                 <div class="block">
                                     <el-date-picker v-model="currentMonthDate" type="month" placeholder="选择月份"
@@ -578,7 +578,7 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    height: 85vh;
+    height: 86vh;
 }
 
 .profile-card {
@@ -609,7 +609,7 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    height: 85vh;
+    height: 86vh;
     /* 固定总高度 */
 }
 
@@ -777,6 +777,10 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.month-title {
+    height: 20px;
 }
 
 .section-title {

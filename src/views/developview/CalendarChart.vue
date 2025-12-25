@@ -83,9 +83,9 @@ function render() {
             show: true,
             orient: 'horizontal',
             left: 'center',
-            bottom: 0,
-            itemWidth: 12,
-            itemHeight: 12,
+            bottom: 10,
+            itemWidth: 10,
+            itemHeight: 100,
             inRange: {
                 // 0次(灰) -> 少(浅绿) -> 多(深绿)
                 color: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39']
@@ -98,8 +98,8 @@ function render() {
             orient: 'vertical',  // 垂直布局 = 挂历模式 (一周一行，向下排列)
             range: props.monthKey, // 锁定单月
 
-            top: 40,
-            bottom: 40,
+            top: 25,
+            // bottom: 40,
             left: 'center', // 居中显示
 
             // ✅ 样式调整：确保是正方形格子
@@ -111,10 +111,10 @@ function render() {
             // ✅ 星期标签：放在顶部
             dayLabel: {
                 firstDay: 1, // 周一开始
-                nameMap: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
-                margin: 10, // 距离格子的距离
+                nameMap: ['Sun', 'Mon', 'Tues', 'Wed', 'Thur', 'Fri', 'Sat'],
+                margin: 5, // 距离格子的距离
                 color: '#666',
-                fontWeight: 'bold'
+                // fontWeight: 'bold'
             },
 
             // 格子边框样式 (模拟间距)
