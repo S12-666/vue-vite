@@ -92,7 +92,7 @@ const handleQuery = async () => {
         }
         allTableData.value = res.tableData || [];
         filteredTableData.value = allTableData.value;
-        console.log(res);
+        // console.log(res);
 
         if (res.specs && Array.isArray(res.specs)) {
             options.value = res.specs.map(item => ({
