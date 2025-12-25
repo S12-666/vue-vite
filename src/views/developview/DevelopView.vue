@@ -119,7 +119,7 @@
                                 </el-scrollbar>
                             </div>
 
-                            <div class="split-divider"></div>
+                            <!-- <div class="split-divider"></div> -->
 
                             <div class="split-col right-col">
                                 <div class="col-header backend-header">
@@ -167,7 +167,7 @@
                                 </el-scrollbar>
                             </div>
 
-                            <div class="split-divider"></div>
+                            <!-- <div class="split-divider"></div> -->
 
                             <div class="split-col right-col">
                                 <div class="col-header backend-header"><span>⚙️ 后端历史</span></div>
@@ -621,6 +621,7 @@ onBeforeUnmount(() => {
 
 /* 左右分栏通用样式 */
 .split-container {
+    position: absolute;
     display: flex;
     width: 100%;
     height: 100%;
@@ -632,21 +633,28 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    height: 100%;
+    border-right: 1px solid #f0f2f5;;
+}
+
+.split-col:last-child {
+    border-right: none;
 }
 
 .split-divider {
-    width: 1px;
-    background-color: #eef2f7;
-    height: 100%;
-    margin: 0 4px;
+    display: none;
 }
 
 .col-header {
+    flex: none;
     padding: 8px 12px;
     font-size: 12px;
     font-weight: 700;
     border-bottom: 1px solid #f0f2f5;
     background: #fafafa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .frontend-header {
@@ -660,28 +668,43 @@ onBeforeUnmount(() => {
 .col-scroll {
     flex: 1;
     height: 0;
+    min-height: 0;
 }
 
 /* 今日动态卡片 (较矮) */
 .today-card {
+    display: flex;
+    flex-direction: column;
     flex: 4;
     min-height: 0;
+    overflow: hidden;
 }
 
 /* 历史记录卡片 (较高) */
 .history-card {
+    display: flex;
+    flex-direction: column;
     flex: 6;
     min-height: 0;
+    overflow: hidden;
 }
 
 .history-card :deep(.el-card__body),
 .today-card :deep(.el-card__body) {
-    padding: 0;
+    padding: 0 !important;
     /* 分栏布局需要去掉 body padding 才能贴边 */
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.card-body {
+    flex: 1;
+    min-height: 0;
+    position: relative; /* 🔥 再次声明基准，双重保险 */
+    width: 100%;
 }
 
 /* 列表项样式 */
