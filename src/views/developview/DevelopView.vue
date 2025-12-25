@@ -466,6 +466,10 @@ onBeforeUnmount(() => {
 .chart-card :deep(.el-card__body),
 .commit-section :deep(.el-card__body) {
     padding: 14px 14px;
+    flex: 1;             /* 让 el-card__body 填满 history-card 的剩余空间 */
+    min-height: 0;       /* 允许被压缩，防止被内容撑爆 */
+    display: flex;       /* 让它变成 Flex 容器 */
+    flex-direction: column; /* 垂直排列，为了让你的 .card-body 能生效 */
 }
 
 /* 顶部用户区域 */
@@ -634,8 +638,8 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-height: 0;
-    max-height: calc(100vh - 140px);
+    /* min-height: 0; */
+    height: 85vh;
 }
 
 .commit-section {
@@ -647,12 +651,17 @@ onBeforeUnmount(() => {
 
 .today-card {
     flex: 4;
-    min-height: 220px;
+    min-height: 0px;
+    display: flex;
+    flex-direction: column;
 }
 
 .history-card {
     flex: 6;
-    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .load-more {
@@ -665,9 +674,16 @@ onBeforeUnmount(() => {
 .card-body {
     flex: 1;
     min-height: 0;
+    /* border: 2px solid red; */
+    position: relative;
+    overflow: hidden;
 }
 
 .scroll-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
 }
 
