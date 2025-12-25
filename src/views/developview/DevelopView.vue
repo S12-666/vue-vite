@@ -51,6 +51,23 @@
                                 <span class="percent">{{ lang.percent }}%</span>
                             </div>
                         </div>
+
+                        <div class="stats-head">
+                            <span class="stats-title"></span>
+                            <el-tag size="small" type="info" effect="plain">backend</el-tag>
+                        </div>
+                        <div class="language-bar">
+                            <div v-for="lang in EndlanguageData" :key="lang.name" class="bar-segment"
+                                :style="{ width: lang.percent + '%', backgroundColor: lang.color }"
+                                :title="`${lang.name} ${lang.percent}%`" />
+                        </div>
+                        <div class="language-legend">
+                            <div v-for="lang in EndlanguageData" :key="lang.name" class="legend-item">
+                                <span class="dot" :style="{ backgroundColor: lang.color }"></span>
+                                <span class="name">{{ lang.name }}</span>
+                                <span class="percent">{{ lang.percent }}%</span>
+                            </div>
+                        </div>
                     </div>
                 </el-card>
 
@@ -135,14 +152,20 @@ import CalendarChart from './CalendarChart.vue'
 
 // ===================== 基本信息 =====================
 const USER_NAME = 'S12-666'
-const REPO_NAME = 'vue-vite'
+const Web_NAME = 'vue-vite'
 const BRANCH = 'my-system'
 const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN || ''
+
+const BackEnd_Name = 'my-backend'
+const BackEnd_Branch = 'main'
 
 // ===================== refs =====================
 const currentMonthDate = ref(new Date()) // 重命名更清晰
 const userInfo = ref(null)
+
 const languageData = ref([])
+const EndlanguageData = ref([])
+
 const loading = ref(false)
 const loadingMonth = ref(false) // 单独给月度图表加 loading
 
@@ -234,7 +257,7 @@ const apiFetch = async (url, signal = null) => {
 
 // 获取某一页 Commits
 const fetchCommitsPage = async (page) => {
-    const url = `https://api.github.com/repos/${USER_NAME}/${REPO_NAME}/commits?sha=${BRANCH}&per_page=${perPage}&page=${page}`
+    const url = `https://api.github.com/repos/${USER_NAME}/${Web_NAME}/commits?sha=${BRANCH}&per_page=${perPage}&page=${page}`
     const data = await apiFetch(url)
     // GitHub API 报错时有时返回对象，这里确保返回数组
     return Array.isArray(data) ? data.map(normalizeCommit) : []
@@ -256,7 +279,7 @@ const fetchMonthCommits = async (targetDate) => {
     try {
         while (page <= maxPages) {
             const url =
-                `https://api.github.com/repos/${USER_NAME}/${REPO_NAME}/commits` +
+                `https://api.github.com/repos/${USER_NAME}/${Web_NAME}/commits` +
                 `?sha=${BRANCH}&since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}` +
                 `&per_page=${pageSize}&page=${page}`
 
@@ -299,8 +322,8 @@ const hashColor = (str) => {
     return `#${c}`
 }
 
-const fetchLanguages = async () => {
-    const url = `https://api.github.com/repos/${USER_NAME}/${REPO_NAME}/languages`
+const fetchWebLanguages = async () => {
+    const url = `https://api.github.com/repos/${USER_NAME}/${Web_NAME}/languages`
     const data = await apiFetch(url)
     if (!data || typeof data !== 'object') return
 
@@ -316,6 +339,28 @@ const fetchLanguages = async () => {
             percent: Number(((bytes / totalBytes) * 100).toFixed(1)),
             color: colorMap[name] || hashColor(name)
         }))
+        .sort((a, b) => b.percent - a.percent)
+}
+
+const fetchEndLanguages = async () => {
+    const url = `https://api.github.com/repos/${USER_NAME}/${BackEnd_Name}/languages`;
+    const data = await apiFetch(url);
+    if (!data || typeof data !== 'object') return
+
+    const totalBytes = Object.values(data).reduce((sum, val) => sum + Number(val || 0), 0) || 1
+    const colorMap = {
+        Vue: '#41b883', JavaScript: '#f1e05a', TypeScript: '#3178c6',
+        HTML: '#e34c26', CSS: '#563d7c', Python: '#3572A5',
+        Dockerfile: "#384d54"
+    }
+
+    EndlanguageData.value = Object.entries(data)
+        .map(([name, bytes]) => ({
+            name,
+            percent: Number(((bytes / totalBytes) * 100).toFixed(1)),
+            color: colorMap[name] || hashColor(name)
+        }))
+        .filter(item => item.percent >= 0.5)
         .sort((a, b) => b.percent - a.percent)
 }
 
@@ -401,8 +446,8 @@ const initData = async () => {
         if (timelineData.length < perPage) noMore.value = true
 
         // 语言数据非关键，可以不阻塞主流程，也可以放在 await 里
-        await fetchLanguages()
-
+        await fetchWebLanguages();
+        await fetchEndLanguages();
     } catch (e) {
         console.error(e)
         ElMessage.error(e.message || '初始化数据失败')
@@ -445,6 +490,7 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 85vh;
 }
 
 /* 统一卡片风格 */
@@ -461,8 +507,19 @@ onBeforeUnmount(() => {
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
 }
 
-/* ✅ 统一 body padding（你之前只改了 header） */
-.profile-card :deep(.el-card__body),
+
+.profile-card {
+    flex: none; /* 🔥 关键：高度由内容决定，不拉伸 */
+}
+
+.chart-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+
 .chart-card :deep(.el-card__body),
 .commit-section :deep(.el-card__body) {
     padding: 14px 14px;
@@ -550,7 +607,7 @@ onBeforeUnmount(() => {
 .divider {
     height: 1px;
     background: #eef2f7;
-    margin: 14px 0;
+    margin: 14px 0 0 0;
 }
 
 /* language */
@@ -559,6 +616,7 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
+    margin-top: 10px;
 }
 
 .stats-title {
