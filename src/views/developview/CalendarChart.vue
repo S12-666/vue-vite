@@ -6,125 +6,162 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
-
 import * as echarts from 'echarts/core'
 import { CalendarComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
 import { HeatmapChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 
-// 注册必须组件
+// 注册组件
 echarts.use([CalendarComponent, TooltipComponent, VisualMapComponent, HeatmapChart, CanvasRenderer])
 
 const props = defineProps({
-    /** 日历范围：YYYY-MM 或 YYYY */
-    range: { type: String, default: '2017-04' },
-    data: { type: Array, default: () => [] },
-    cellSize: { type: [Number, Array], default: 40 },
-    max: { type: Number, default: 0 },
-    height: { type: String, default: '340px' },
-    visualMapShow: { type: Boolean, default: true },
-    tooltipPosition: { type: String, default: 'top' }
+    monthKey: { type: String, required: true }, // 格式 '2025-12'
+    commits: { type: Array, default: () => [] },
+    height: { type: String, default: '320px' }
 })
 
 const elRef = ref(null)
 let chart = null
-let ro = null
+let resizeObserver = null
 
 const boxStyle = computed(() => ({ height: props.height }))
 
-function getVirtualData(year) {
-    const start = +echarts.time.parse(year + '-01-01')
-    const end = +echarts.time.parse(+year + 1 + '-01-01')
-    const dayTime = 3600 * 24 * 1000
-    const out = []
-    for (let time = start; time < end; time += dayTime) {
-        out.push([
-            echarts.time.format(time, '{yyyy}-{MM}-{dd}', false),
-            Math.floor(Math.random() * 1000)
-        ])
+// ================== 数据处理 ==================
+const chartData = computed(() => {
+    const map = new Map()
+
+    // 1. 填充当月每一天（保证 0 提交的格子也存在）
+    if (props.monthKey) {
+        const [y, m] = props.monthKey.split('-').map(Number)
+        const daysInMonth = new Date(y, m, 0).getDate() // 获取当月总天数
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+            map.set(dateStr, 0)
+        }
     }
-    return out
-}
 
-function resolveData() {
-    if (props.data && props.data.length > 0) return props.data
+    // 2. 统计实际提交数
+    props.commits.forEach(item => {
+        const d = new Date(item.date)
+        if (isNaN(d.getTime())) return
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-    const year = String(props.range).slice(0, 4)
-    if (/^\d{4}$/.test(year)) return getVirtualData(year)
-    return []
-}
+        if (map.has(dateStr)) {
+            map.set(dateStr, map.get(dateStr) + 1)
+        }
+    })
 
-function resolveMax(data) {
-    if (props.max > 0) return props.max
+    return Array.from(map.entries())
+})
+
+// 动态计算最大值，用于颜色映射
+const maxCount = computed(() => {
     let m = 0
-    for (const item of data) {
-        const v = Number(item?.[1] ?? 0)
-        if (Number.isFinite(v)) m = Math.max(m, v)
+    for (const [, count] of chartData.value) {
+        if (count > m) m = count
     }
-    return Math.max(5, m || 0)
-}
+    return Math.max(5, m) // 至少分为5级
+})
 
+// ================== 渲染逻辑 ==================
 function render() {
     if (!chart) return
 
-    const data = resolveData()
-    const vmax = resolveMax(data)
-
     const option = {
-        tooltip: { position: props.tooltipPosition },
+        tooltip: {
+            position: 'top',
+            formatter: (p) => {
+                return `${p.data[0]}<br/><b>${p.data[1]} contributions</b>`
+            }
+        },
+        // ✅ GitHub 绿色阶配置
         visualMap: {
             min: 0,
-            max: vmax,
-            calculable: true,
-            show: props.visualMapShow,
+            max: maxCount.value,
+            calculable: false,
+            show: true,
             orient: 'horizontal',
             left: 'center',
-            bottom: 12
+            bottom: 0,
+            itemWidth: 12,
+            itemHeight: 12,
+            inRange: {
+                // 0次(灰) -> 少(浅绿) -> 多(深绿)
+                color: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39']
+            },
+            text: ['More', 'Less'],
+            textStyle: { color: '#999', fontSize: 12 }
         },
         calendar: {
-            orient: 'vertical',
-            yearLabel: { margin: 40 },
+            // ✅ 核心布局配置：
+            orient: 'vertical',  // 垂直布局 = 挂历模式 (一周一行，向下排列)
+            range: props.monthKey, // 锁定单月
+
+            top: 40,
+            bottom: 40,
+            left: 'center', // 居中显示
+
+            // ✅ 样式调整：确保是正方形格子
+            cellSize: [50, 50], // [宽, 高] 固定大小，看起来更整齐
+
+            yearLabel: { show: false }, // 不需要显示年份
+            monthLabel: { show: false }, // 不需要显示月份(已经在外部显示了)
+
+            // ✅ 星期标签：放在顶部
             dayLabel: {
-                firstDay: 1,
-                nameMap: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                firstDay: 1, // 周一开始
+                nameMap: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+                margin: 10, // 距离格子的距离
+                color: '#666',
+                fontWeight: 'bold'
             },
-            monthLabel: { nameMap: 'cn', margin: 20 },
-            cellSize: props.cellSize,
-            range: props.range
+
+            // 格子边框样式 (模拟间距)
+            itemStyle: {
+                borderWidth: 4,
+                borderColor: '#fff'
+            },
+            splitLine: { show: false } // 去掉默认分割线
         },
         series: [
             {
                 type: 'heatmap',
                 coordinateSystem: 'calendar',
-                data
+                data: chartData.value,
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 5,
+                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                    }
+                }
             }
         ]
     }
 
-    chart.setOption(option, { notMerge: true })
+    chart.setOption(option)
 }
 
+// ================== 生命周期 ==================
 onMounted(() => {
-    if (!elRef.value) return
-    chart = echarts.init(elRef.value)
-
-    ro = new ResizeObserver(() => chart && chart.resize())
-    ro.observe(elRef.value)
-
-    render()
+    if (elRef.value) {
+        chart = echarts.init(elRef.value)
+        resizeObserver = new ResizeObserver(() => chart.resize())
+        resizeObserver.observe(elRef.value)
+        render()
+    }
 })
 
-watch(
-    () => [props.range, props.data, props.cellSize, props.max, props.visualMapShow, props.tooltipPosition],
-    () => render(),
-    { deep: true }
-)
+watch(() => [props.commits, props.monthKey], render, { deep: true })
 
 onBeforeUnmount(() => {
-    ro?.disconnect()
-    ro = null
+    resizeObserver?.disconnect()
     chart?.dispose()
-    chart = null
+})
+
+defineExpose({
+    resize: () => chart?.resize(),
+    refresh: render
 })
 </script>
 
@@ -132,5 +169,8 @@ onBeforeUnmount(() => {
 .echarts-box {
     width: 100%;
     height: v-bind('boxStyle.height');
+    /* 确保容器居中 */
+    display: flex;
+    justify-content: center;
 }
 </style>
