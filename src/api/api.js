@@ -47,3 +47,11 @@ export function getFQCReport(data) {
         data
     })
 }
+
+export function getHeatingDetial(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/pidas/getHeatingDetial',
+        method: 'post',
+        data
+    })
+}
