@@ -150,23 +150,18 @@ const handleQuery = async () => {
                 detialData.endTime = '';
             }
 
-            // 3. 【核心修改】填充复杂的表格数据 (Section部分)
-            // 遍历我们定义好的 sectionMapping (保持前端显示的列顺序)
             detialData.sections = sectionMapping.map(mappingItem => {
-                // 根据 key (如 'preheating') 从后端 res.section 中取出对应的数据对象
-                // 使用 || {} 防止后端缺少某个段的数据导致报错
                 const backendData = (res.section && res.section[mappingItem.key]) || {};
 
                 return {
-                    name: mappingItem.name, // 保持显示的列名不变
+                    name: mappingItem.name,
                     data: {
-                        // 左边是前端 rowKeys 需要的键，右边是后端返回的键
-                        entryTemp: backendData.entry,       // 对应 Entry Temp
-                        surfaceTemp: backendData.surface,   // 对应 Surface Temp
-                        centerTemp: backendData.center,     // 对应 Center Temp
-                        seatTemp: backendData.seat,         // 对应 Seat Temp
-                        avgTemp: backendData.average,       // 对应 Average Temp
-                        timeInSection: backendData.duration // 对应 Time in Section
+                        entryTemp: backendData.entry,
+                        surfaceTemp: backendData.surface,
+                        centerTemp: backendData.center,   
+                        seatTemp: backendData.seat,     
+                        avgTemp: backendData.average,
+                        timeInSection: backendData.duration
                     }
                 };
             });
@@ -182,8 +177,11 @@ const handleQuery = async () => {
 const handleReset = () => {
     queryParams.slabid = '';
     queryParams.upid = '';
-    Object.assign(detialData, initDetialData()); // 重置表格数据
-    ElMessage.info('已重置');
+    ElMessage({
+        showClose: true,
+        message: '已重置',
+        type: 'info'
+    })
 }
 </script>
 
@@ -233,40 +231,28 @@ const handleReset = () => {
     font-size: 14px;
     color: #303133;
     background: #fff;
-    margin: 20px 0;
+    margin: 10px 0;
     border: 1px solid #dcdfe6;
     border-radius: 4px;
     overflow: hidden;
     /* 圆角溢出隐藏 */
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    /* box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1); */
 }
 
 /* =========== 分割标题 =========== */
 .section-title {
-    text-align: left;
+    text-align: center;
     font-weight: 700;
     color: #409eff;
-    /* Element Plus 主题蓝 */
     font-size: 16px;
     padding: 12px 20px;
     background-color: #f0f9eb;
-    /* 极淡的绿色或蓝色背景 */
     border-top: 1px solid #dcdfe6;
     border-bottom: 1px solid #dcdfe6;
     letter-spacing: 1px;
     display: flex;
     align-items: center;
-}
-
-/* 加一个小竖条装饰 */
-.section-title::before {
-    content: "";
-    display: inline-block;
-    width: 4px;
-    height: 16px;
-    background: #409eff;
-    margin-right: 10px;
-    border-radius: 2px;
+    justify-content: center;
 }
 
 /* =========== 表格通用样式 =========== */
@@ -279,8 +265,7 @@ const handleReset = () => {
 .info-table td,
 .info-table th {
     border: 1px solid #ebeef5;
-    /* 柔和的边框色 */
-    padding: 12px 10px;
+    padding: 7px 10px;
     transition: background-color 0.3s;
 }
 
@@ -290,54 +275,53 @@ const handleReset = () => {
 }
 
 /* =========== 单元格特定样式 =========== */
-
-/* 标签列 (Label) */
 .label,
 .sub-label {
     background-color: #fafafa;
-    /* 极淡灰背景，区分内容 */
     color: #606266;
     font-weight: 600;
     font-size: 13px;
 }
 
-/* 数值列 (Value) */
 .value,
 .sub-value {
     color: #303133;
     font-style: normal;
-    /* 去掉斜体 */
     font-weight: 500;
-    /* 如果是纯数字，用等宽字体更好对齐 */
     font-feature-settings: "tnum";
 }
 
-/* 顶部表格 */
+.value:empty::before {
+    content: "\00a0"; 
+    display: inline-block;
+}
+
 .top-table td {
     width: 16.66%;
     text-align: center;
 }
 
-/* 中间表格 */
 .mid-table .label {
     width: 10%;
+    text-align: center;
 }
 
 .mid-table .value {
     width: 15%;
+    text-align: center;
 }
 
 .main-table thead th {
     background-color: #eef1f6;
     color: #303133;
     font-weight: bold;
-    padding: 15px 0;
+    padding: 10px 0;
     font-size: 15px;
     border-bottom: 2px solid #dcdfe6;
 }
 
 .sub-label {
-    text-align: right;
+    text-align: center;
     padding-right: 15px;
     color: #909399;
     width: 40%;
@@ -345,7 +329,7 @@ const handleReset = () => {
 }
 
 .sub-value {
-    text-align: left;
+    text-align: center;
     padding-left: 15px;
     font-family: Consolas, Menlo, Monaco, "Courier New", monospace;
     font-size: 14px;
