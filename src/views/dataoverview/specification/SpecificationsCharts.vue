@@ -87,6 +87,7 @@ const updateOption = (namesSorted, valuesSorted, source, total) => {
     const pieCenter = ['70%', '50%'];
 
     let option = {
+        fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
         tooltip: {
             trigger: 'item',
         },
@@ -172,12 +173,7 @@ const updateOption = (namesSorted, valuesSorted, source, total) => {
     myChart.setOption(option);
 };
 
-
-const handleResize = () => {
-    if (myChart) {
-        myChart.resize();
-    }
-};
+let resizeObserver = null;
 
 watch(() => props.dateRange, (newRange) => {
     getData(newRange);
@@ -185,16 +181,24 @@ watch(() => props.dateRange, (newRange) => {
 
 onMounted(() => {
     myChart = echarts.init(chartRef.value);
-    getData(props.dateRange);
-    // myChart.setOption(option);
-    window.addEventListener('resize', handleResize);
+    if(props.dateRange && props.dateRange.length === 2) {
+        getData(props.dateRange);
+    };
+    resizeObserver = new ResizeObserver(() => {
+        myChart?.resize();
+    });
+    resizeObserver.observe(chartRef.value);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('resize', handleResize);
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
+    }
 
     if (myChart) {
         myChart.dispose();
+        myChart = null;
     }
 })
 

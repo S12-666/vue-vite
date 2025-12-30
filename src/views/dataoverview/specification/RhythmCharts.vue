@@ -22,12 +22,12 @@ const props = defineProps({
     },
     xData: {
         type: Array,
-        required: true, // ✅ 修正拼写
+        required: true,
         default: () => []
     },
     yData: {
         type: Array,
-        required: true, // ✅ 修正拼写
+        required: true,
         default: () => []
     }
 });
@@ -35,38 +35,41 @@ const props = defineProps({
 const chartRef = ref(null);
 let chartInstance = null;
 
+// 1. 在顶层声明 observer 变量
+let resizeObserver = null;
+
 // ECharts 基础配置
 const baseOptions = {
     textStyle: {
-        fontFamily: 'Futura',
+        fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
     },
     title: {
         text: 'Production Rhythm',
-        textStyle: { fontWeight: 500 }
+        left: 'center',
+        textStyle: { fontWeight: 500, fontSize: 15 }
     },
     tooltip: {
         trigger: 'axis'
     },
     grid: {
-        // 增加 grid 配置，防止 label 被遮挡
         containLabel: true,
         bottom: '10%',
-        left: '5%',
+        left: '3%',
         top: '15%',
-        right: '5%'
+        right: '4%'
     },
     xAxis: {
         type: 'category',
         name: 'Slabid',
         nameLocation: 'middle',
-        nameGap: 30, // ✅ 解决文字重叠
+        nameGap: 30,
         data: []
     },
     yAxis: {
         type: 'value',
         name: 'Time(s)',
         nameLocation: 'middle',
-        nameGap: 40, // ✅ 解决文字重叠
+        nameGap: 40,
     },
     series: []
 };
@@ -78,9 +81,7 @@ const paint = () => {
     let min = Infinity;
     let max = -Infinity;
 
-    // 计算最大最小值
     const newSeries = props.yData.map(d => {
-        // 假设 d.data 是纯数字数组
         if (d.data && d.data.length) {
             min = Math.min(min, ...d.data);
             max = Math.max(max, ...d.data);
@@ -89,12 +90,10 @@ const paint = () => {
             ...d,
             type: 'line',
             showSymbol: false,
-            // 优化线条样式
             lineStyle: { width: 2 }
         };
     });
 
-    // 处理没有数据导致 min/max 为 Infinity 的情况
     if (min === Infinity) min = 0;
     if (max === -Infinity) max = 100;
 
@@ -106,8 +105,8 @@ const paint = () => {
         },
         yAxis: {
             ...baseOptions.yAxis,
-            min: Math.floor(min - 50), // 向下取整
-            max: Math.ceil(max + 50)   // 向上取整
+            min: Math.floor(min - 50),
+            max: Math.ceil(max + 50)
         },
         series: newSeries
     };
@@ -115,32 +114,35 @@ const paint = () => {
     chartInstance.setOption(finalOptions);
 };
 
-// 处理窗口大小变化
-const handleResize = () => {
-    chartInstance && chartInstance.resize();
-};
+watch([() => props.xData, () => props.yData], () => {
+    paint();
+}, { deep: true });
 
-// 生命周期
 onMounted(() => {
     nextTick(() => {
         if (chartRef.value) {
             chartInstance = echarts.init(chartRef.value);
             paint();
-            window.addEventListener('resize', handleResize);
+
+            // 2. 初始化 ResizeObserver 监听容器大小
+            resizeObserver = new ResizeObserver(() => {
+                chartInstance?.resize();
+            });
+            resizeObserver.observe(chartRef.value);
         }
     });
 });
 
 onUnmounted(() => {
-    window.removeEventListener('resize', handleResize);
+    // 3. 销毁 Observer 防止内存泄漏
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
+    }
+
     if (chartInstance) {
         chartInstance.dispose();
         chartInstance = null;
     }
 });
-
-// 监听数据变化
-watch([() => props.xData, () => props.yData], () => {
-    paint();
-}, { deep: true }); // ✅ 深度监听，防止对象内部变化不触发
 </script>
