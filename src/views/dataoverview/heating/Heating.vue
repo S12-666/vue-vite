@@ -66,14 +66,31 @@
             </tbody>
         </table>
     </div>
+
+    <div class="heat-charts">
+        <div class="temp-chart">
+            <TempCurve :curve-data="chartData" />
+        </div>
+        <div class="time-chart">
+            <TimeCurve :curve-data="chartData" />
+        </div>
+    </div>
 </template>
 
 <script setup>
 import { reactive, ref } from 'vue';
 import { getHeatingDetial } from '@/api/api.js';
 import { ElMessage } from 'element-plus';
+import TimeCurve from './TimeCurve.vue';
+import TempCurve from './TempCurve.vue';
 
 const loading = ref(false);
+
+
+const chartData = ref({
+    position: [],
+    time: []
+});
 
 const queryParams = reactive({
     slabid: '',
@@ -158,13 +175,22 @@ const handleQuery = async () => {
                     data: {
                         entryTemp: backendData.entry,
                         surfaceTemp: backendData.surface,
-                        centerTemp: backendData.center,   
-                        seatTemp: backendData.seat,     
+                        centerTemp: backendData.center,
+                        seatTemp: backendData.seat,
                         avgTemp: backendData.average,
                         timeInSection: backendData.duration
                     }
                 };
             });
+
+            if (res.furnace) {
+                chartData.value = {
+                    position: res.furnace.position || [],
+                    time: res.furnace.time || []
+                };
+            } else {
+                chartData.value = {position: [], time: []}
+            }
         }
     } catch (error) {
         console.error('查询异常:', error);
@@ -292,7 +318,7 @@ const handleReset = () => {
 }
 
 .value:empty::before {
-    content: "\00a0"; 
+    content: "\00a0";
     display: inline-block;
 }
 
@@ -340,5 +366,20 @@ const handleReset = () => {
 .sub-value:empty::before {
     content: "-";
     color: #c0c4cc;
+}
+
+.heat-charts{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    height: 400px;
+}
+
+.temp-chart,
+.time-chart {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 </style>
