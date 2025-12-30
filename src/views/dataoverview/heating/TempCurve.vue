@@ -93,7 +93,7 @@ const getBaseOptions = () => ({
         type: 'value',
         name: 'Position(m)',
         nameLocation: 'middle',
-        nameTextStyle: { lineHeight: 40, fontWeight: 500, color: '#333' },
+        nameTextStyle: { lineHeight: 40, fontWeight: 500, color: '#333', fontSize: 15 },
         min: 0,
         axisLabel: { formatter: '{value}' }
     },
@@ -102,7 +102,7 @@ const getBaseOptions = () => ({
         name: 'Temp(°C)',
         min: 0, // 或者 'dataMin' 让曲线更明显
         nameLocation: 'middle',
-        nameTextStyle: { padding: [0, 0, 30, 0], fontWeight: 500, color: '#333' },
+        nameTextStyle: { padding: [0, 0, 30, 0], fontWeight: 500, color: '#333', fontSize: 15 },
         splitLine: { show: true, lineStyle: { type: 'dashed' } } // 虚线网格
     },
     series: []
@@ -185,16 +185,20 @@ const updateChart = () => {
     chartInstance.value.setOption(options, true);
 };
 
+let resizeObserver = null;
+
 const initChart = () => {
     if (chartRef.value) {
         chartInstance.value = echarts.init(chartRef.value);
-        updateChart();
-        window.addEventListener('resize', handleResize);
-    }
-};
+        if (props.curveData && props.curveData.time) {
+            updateChart();
+        }
 
-const handleResize = () => {
-    chartInstance.value?.resize();
+        resizeObserver = new ResizeObserver(() => {
+            chartInstance.value?.resize();
+        });
+        resizeObserver.observe(chartRef.value);
+    }
 };
 
 watch(
@@ -206,7 +210,16 @@ watch(
 onMounted(() => { initChart(); });
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', handleResize);
-    chartInstance.value?.dispose();
+    // 1. 停止观察
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
+    }
+    
+    // 2. 销毁图表
+    if (chartInstance.value) {
+        chartInstance.value.dispose();
+        chartInstance.value = null;
+    }
 });
 </script>

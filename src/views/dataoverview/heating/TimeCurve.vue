@@ -85,7 +85,8 @@ const getBaseOptions = () => ({
         nameTextStyle: {
             lineHeight: 40,
             fontWeight: 500,
-            color: '#333'
+            color: '#333',
+            fontSize: 15
         },
         min: 0,
         axisLabel: {
@@ -100,7 +101,8 @@ const getBaseOptions = () => ({
         nameTextStyle: {
             padding: [0, 0, 40, 0],
             fontWeight: 500,
-            color: '#333'
+            color: '#333',
+            fontSize: 15
         }, // 增加 padding 防止和轴标注重叠
         splitNumber: 5,
         axisLabel: { formatter: val => val.toFixed(2) }
@@ -179,21 +181,20 @@ const updateChart = () => {
     chartInstance.value.setOption(options, true); // true 表示不合并，相当于 clear + set
 };
 
+let resizeObserver = null;
+
 const initChart = () => {
     if (chartRef.value) {
         chartInstance.value = echarts.init(chartRef.value);
-        // 初始化时如果有数据则直接绘制
         if (props.curveData && props.curveData.time) {
             updateChart();
         }
 
-        // 添加 resize 监听
-        window.addEventListener('resize', handleResize);
+        resizeObserver = new ResizeObserver(() => {
+            chartInstance.value?.resize();
+        });
+        resizeObserver.observe(chartRef.value);
     }
-};
-
-const handleResize = () => {
-    chartInstance.value?.resize();
 };
 
 // 监听数据变化
@@ -213,7 +214,13 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', handleResize);
+    // 1. 停止观察
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
+    }
+    
+    // 2. 销毁图表
     if (chartInstance.value) {
         chartInstance.value.dispose();
         chartInstance.value = null;
