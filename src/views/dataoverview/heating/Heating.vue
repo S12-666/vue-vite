@@ -89,7 +89,10 @@ const loading = ref(false);
 
 const chartData = ref({
     position: [],
-    time: []
+    time: [],
+    seg_u: [],
+    seg_d: [],
+    plate: []
 });
 
 const queryParams = reactive({
@@ -186,10 +189,13 @@ const handleQuery = async () => {
             if (res.furnace) {
                 chartData.value = {
                     position: res.furnace.position || [],
-                    time: res.furnace.time || []
+                    time: res.furnace.time || [],
+                    seg_d: res.furnace.seg_d || [],
+                    seg_u: res.furnace.seg_u || [],
+                    plate: res.furnace.plate || []
                 };
             } else {
-                chartData.value = {position: [], time: []}
+                chartData.value = {position: [], time: [], seg_d: [], seg_u: [], plate: []}
             }
         }
     } catch (error) {

@@ -9,7 +9,7 @@ import * as echarts from 'echarts';
 const props = defineProps({
     curveData: {
         type: Object,
-        default: () => ({ position: [], time: [] })
+        default: () => ({ position: [], seg_u: [], seg_d: [], plate: [] })
     }
 });
 
@@ -20,8 +20,6 @@ const boundaryLines = [
     { xAxis: 38.98, name: 'Soak Start' },
 ];
 
-const chartRef = ref(null);
-const chartInstance = shallowRef(null);
 const areaColor = '#7BE188';
 const markAreaConfig = {
     data: [
@@ -44,142 +42,153 @@ const markAreaConfig = {
     ]
 };
 
-// 基础配置 Options
+const chartRef = ref(null);
+const chartInstance = shallowRef(null);
+
 const getBaseOptions = () => ({
     textStyle: {
-        // fontFamily: 'Futura',
-        fontFamily: "Helvetica Neue",
+        fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
     },
     title: {
-        text: 'Furnace Time',
+        text: 'Furnace Temperature', // 标题
         left: 'center',
-        textStyle: { 
-            fontWeight: 500,
+        textStyle: {
+            fontWeight: 700,
             fontSize: 15,
             color: '#333'
         }
     },
+    legend: {
+        data: ['seg_u', 'seg_d', 'plate'],
+        top: 8,
+        right: '5%',
+        textStyle: { color: '#666' },
+        itemGap: 20
+    },
     tooltip: {
         trigger: 'axis',
-        axisPointer: {
-            type: 'cross',
-            snap: false
-        },
+        axisPointer: { type: 'cross', snap: false },
+        // 自定义 Tooltip 显示三条线的数据
         formatter: function (params) {
-            if (Array.isArray(params)) {
-                const p = params[0];
-                return `Position: ${p.value[0]} m<br/>Time: ${p.value[1].toFixed(2)}`;
-            }
-            return '';
+            if (!Array.isArray(params) || params.length === 0) return '';
+            const xVal = params[0].value[0]; // 获取 X 轴位置
+
+            let html = `Position: ${xVal} m<br/>`;
+            params.forEach(item => {
+                // item.marker 是图例的小圆点
+                // item.value[1] 是温度值
+                html += `${item.marker} ${item.seriesName}: ${item.value[1].toFixed(1)} °C<br/>`;
+            });
+            return html;
         }
     },
     grid: {
-        // 稍微调整 grid 防止文字被遮挡
         left: '3%',
         right: '4%',
         bottom: '7%',
+        // top: '18%',
         containLabel: true
     },
     xAxis: {
         type: 'value',
         name: 'Position(m)',
         nameLocation: 'middle',
-        nameTextStyle: { lineHeight: 40 }, // 调整了行高防止重叠
+        nameTextStyle: { lineHeight: 40, fontWeight: 500, color: '#333' },
         min: 0,
-        axisLabel: {
-            formatter: '{value}'
-        }
+        axisLabel: { formatter: '{value}' }
     },
     yAxis: {
         type: 'value',
-        min: 0,
-        name: 'Time',
+        name: 'Temp(°C)',
+        min: 0, // 或者 'dataMin' 让曲线更明显
         nameLocation: 'middle',
-        nameTextStyle: { padding: [0, 0, 20, 0] }, // 增加 padding 防止和轴标注重叠
-        splitNumber: 5,
-        axisLabel: { formatter: val => val.toFixed(2) }
+        nameTextStyle: { padding: [0, 0, 30, 0], fontWeight: 500, color: '#333' },
+        splitLine: { show: true, lineStyle: { type: 'dashed' } } // 虚线网格
     },
     series: []
 });
 
-// 绘图逻辑
 const updateChart = () => {
     if (!chartInstance.value) return;
-    const { position, time } = props.curveData || {};
-    if (!position || !time || position.length === 0) {
+    const rawData = props.curveData || {};
+    const position = rawData.position || [];
+    const source = rawData.furnace || rawData;
+    const seg_u = source.seg_u || [];
+    const seg_d = source.seg_d || [];
+    const plate = source.plate || [];
+    if (position.length === 0) {
         chartInstance.value.clear();
         return;
     }
 
-    const seriesData = position.map((p, index) => {
-        return [p, time[index]];
-    });
+    const dataU = position.map((p, i) => [p, seg_u[i]]);
+    const dataD = position.map((p, i) => [p, seg_d[i]]);
+    const dataP = position.map((p, i) => [p, plate[i]]);
 
-    // 1. 构建 Series
-    const series = [{
-        name: 'time',
-        type: 'line',
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-            type: [5, 8],
-            dashOffset: 5,
-            color: '#4E5969',
-            width: 2
+    // 3. 构建 Series
+    const series = [
+        {
+            name: 'seg_u',
+            type: 'line',
+            smooth: true,
+            symbol: 'emptyCircle',
+            showSymbol: false,
+            data: dataU,
+            itemStyle: { color: '#ff4d4f' }, // 红色代表上部高温
+            lineStyle: { width: 2 },
         },
-        data: seriesData,
-        markArea: markAreaConfig,
-        markLine: {
-            symbol: ['none', 'none'],
-            silent: false,
-            label: {
-                show: false
+        {
+            name: 'seg_d',
+            type: 'line',
+            smooth: true,
+            symbol: 'emptyCircle',
+            showSymbol: false,
+            data: dataD,
+            itemStyle: { color: '#1890ff' },
+            lineStyle: { width: 2 }
+        },
+        {
+            name: 'plate',
+            type: 'line',
+            smooth: true,
+            symbol: 'emptyCircle',
+            showSymbol: false,
+            data: dataP,
+            itemStyle: { color: '#52c41a' }, // 绿色代表板温
+            lineStyle: { width: 3, type: 'solid' }, // 板温加粗一点突出显示
+            z: 10 // 让板温线显示在最上层
+        },
+        {
+            name: 'Boundary Helper',
+            type: 'line',
+            data: [],
+            showSymbol: false,
+            markLine: {
+                symbol: ['none', 'none'],
+                silent: false,
+                label: { show: false },
+                lineStyle: { opacity: 0, width: 20 },
+                // tooltip: { trigger: 'item', formatter: (p) => `${p.name}<br/>Pos: ${p.value}m` },
+                data: boundaryLines
             },
-            emphasis: {
-                label: { show: true, fontWeight: 'bold' },
-                lineStyle: { width: 2, opacity: 1 }
-            },
-            // 开启标线的 Tooltip
-            tooltip: {
-                trigger: 'item',
-                formatter: (params) => {
-                    return `${params.name}<br/>Position: ${params.value} m`;
-                }
-            },
-            data: boundaryLines // 使用上面定义的关键点数据
+            markArea: markAreaConfig,
         }
-    }];
-
-
-    // 3. 计算 Y轴 最大值
-    const maxTime = Math.max(...time);
-    const yAxisMax = isFinite(maxTime) ? maxTime * 1.2 : null;
+    ];
 
     const maxPos = Math.max(...position);
-    const xAxisMax = maxPos > 51.21 ? maxPos : 51.21; // 确保能包住 Soak Heat 的 50
+    const xAxisMax = maxPos > 51.21 ? maxPos : 51.21;
 
-    // 4. 更新配置
     const options = getBaseOptions();
     options.series = series;
     options.xAxis.max = xAxisMax;
-    if (yAxisMax) {
-        options.yAxis.max = yAxisMax;
-    }
 
-    // setOption
-    chartInstance.value.setOption(options, true); // true 表示不合并，相当于 clear + set
+    chartInstance.value.setOption(options, true);
 };
 
-// 初始化图表
 const initChart = () => {
     if (chartRef.value) {
         chartInstance.value = echarts.init(chartRef.value);
-        // 初始化时如果有数据则直接绘制
-        if (props.curveData && props.curveData.time) {
-            updateChart();
-        }
-
-        // 添加 resize 监听
+        updateChart();
         window.addEventListener('resize', handleResize);
     }
 };
@@ -188,27 +197,16 @@ const handleResize = () => {
     chartInstance.value?.resize();
 };
 
-// 监听数据变化
 watch(
     () => props.curveData,
-    () => {
-        nextTick(() => {
-            updateChart();
-        });
-    },
+    () => { nextTick(updateChart); },
     { deep: true }
 );
 
-// 生命周期
-onMounted(() => {
-    initChart();
-});
+onMounted(() => { initChart(); });
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', handleResize);
-    if (chartInstance.value) {
-        chartInstance.value.dispose();
-        chartInstance.value = null;
-    }
+    chartInstance.value?.dispose();
 });
 </script>

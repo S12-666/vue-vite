@@ -47,14 +47,13 @@ const markAreaConfig = {
 // 基础配置 Options
 const getBaseOptions = () => ({
     textStyle: {
-        // fontFamily: 'Futura',
-        fontFamily: "Helvetica Neue",
+        fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
     },
     title: {
         text: 'Furnace Time',
         left: 'center',
-        textStyle: { 
-            fontWeight: 500,
+        textStyle: {
+            fontWeight: 700,
             fontSize: 15,
             color: '#333'
         }
@@ -68,13 +67,12 @@ const getBaseOptions = () => ({
         formatter: function (params) {
             if (Array.isArray(params)) {
                 const p = params[0];
-                return `Position: ${p.value[0]} m<br/>Time: ${p.value[1].toFixed(2)}`;
+                return `Position: ${p.value[0]} m<br/>Time: ${p.value[1].toFixed(2)} min`;
             }
             return '';
         }
     },
     grid: {
-        // 稍微调整 grid 防止文字被遮挡
         left: '3%',
         right: '4%',
         bottom: '7%',
@@ -88,7 +86,7 @@ const getBaseOptions = () => ({
             lineHeight: 40,
             fontWeight: 500,
             color: '#333'
-        }, 
+        },
         min: 0,
         axisLabel: {
             formatter: '{value}'
@@ -97,9 +95,9 @@ const getBaseOptions = () => ({
     yAxis: {
         type: 'value',
         min: 0,
-        name: 'Time',
+        name: 'Time(min)',
         nameLocation: 'middle',
-        nameTextStyle: { 
+        nameTextStyle: {
             padding: [0, 0, 40, 0],
             fontWeight: 500,
             color: '#333'
@@ -123,62 +121,64 @@ const updateChart = () => {
         return [p, time[index]];
     });
 
-    // 1. 构建 Series
-    const series = [{
-        name: 'time',
-        type: 'line',
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-            type: [5, 8],
-            dashOffset: 5,
-            color: '#4E5969',
-            width: 2
+    const series = [
+        {
+            name: 'time',
+            type: 'line',
+            smooth: true,
+            showSymbol: false,
+            symbol: 'emptyCircle',
+            symbolSize: 6,
+            lineStyle: {
+                color: '#4E5969',
+                width: 2,
+            },
+            data: seriesData,
+            markArea: markAreaConfig,
         },
-        data: seriesData,
-        markArea: markAreaConfig,
-        markLine: {
-            symbol: ['none', 'none'],
-            silent: false,
-            label: {
-                show: false
-            },
-            emphasis: {
-                label: { show: true, fontWeight: 'bold' },
-                lineStyle: { width: 2, opacity: 1 }
-            },
-            // 开启标线的 Tooltip
-            tooltip: {
-                trigger: 'item',
-                formatter: (params) => {
-                    return `${params.name}<br/>Position: ${params.value} m`;
-                }
-            },
-            data: boundaryLines // 使用上面定义的关键点数据
+
+        {
+            name: 'Boundary Helper',
+            type: 'line',
+            data: [], // 空数据，不画线
+            showSymbol: false,
+
+            markLine: {
+                symbol: ['none', 'none'],
+                silent: false,
+                label: {
+                    show: false
+                },
+                lineStyle: {
+                    opacity: 0,
+                    width: 20
+                },
+                // tooltip: {
+                //     trigger: 'item',
+                //     formatter: (params) => {
+                //         return `${params.name}<br/>Position: ${params.value} m`;
+                //     }
+                // },
+                data: boundaryLines
+            }
         }
-    }];
+    ];
 
-
-    // 3. 计算 Y轴 最大值
     const maxTime = Math.max(...time);
     const yAxisMax = isFinite(maxTime) ? maxTime * 1.2 : null;
 
     const maxPos = Math.max(...position);
     const xAxisMax = maxPos > 51.21 ? maxPos : 51.21; // 确保能包住 Soak Heat 的 50
 
-    // 4. 更新配置
     const options = getBaseOptions();
     options.series = series;
     options.xAxis.max = xAxisMax;
     if (yAxisMax) {
         options.yAxis.max = yAxisMax;
     }
-
-    // setOption
     chartInstance.value.setOption(options, true); // true 表示不合并，相当于 clear + set
 };
 
-// 初始化图表
 const initChart = () => {
     if (chartRef.value) {
         chartInstance.value = echarts.init(chartRef.value);
