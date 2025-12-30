@@ -241,7 +241,7 @@ const handleReset = () => {
 }
 
 .custom-label {
-    color: #303133;
+    color: #606266;
     font-size: 16px;
     font-family: "microsoft yahei";
     margin-right: 12px;
@@ -263,41 +263,39 @@ const handleReset = () => {
     font-size: 14px;
     color: #303133;
     background: #fff;
-    margin: 10px 0;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
+    margin: 10px 0 20px 0;
+    /* border: 1px solid #919191; */
+    /* border-radius: 4px; */
     overflow: hidden;
-    /* 圆角溢出隐藏 */
-    /* box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1); */
 }
 
 /* =========== 分割标题 =========== */
 .section-title {
     text-align: center;
     font-weight: 700;
-    color: #409eff;
-    font-size: 16px;
-    padding: 12px 20px;
-    background-color: #f0f9eb;
-    border-top: 1px solid #dcdfe6;
-    border-bottom: 1px solid #dcdfe6;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: #000;
+    font-size: 14px;
+    padding: 12px 0px;
+    background-color: #ebeef5;
+    /* letter-spacing: 1px; */
+    border: 1px solid #919191;
+    margin-top: -1px;
+    position: relative;
+    z-index: 1;
 }
 
-/* =========== 表格通用样式 =========== */
 .info-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    /* border-style: hidden; */
+    margin-top: -1px;
 }
 
 .info-table td,
 .info-table th {
-    border: 1px solid #ebeef5;
-    padding: 7px 10px;
+    border: 1px solid #919191;
+    padding: 10px 10px;
     transition: background-color 0.3s;
 }
 
@@ -310,14 +308,14 @@ const handleReset = () => {
 .label,
 .sub-label {
     background-color: #fafafa;
-    color: #606266;
+    color: #000;
     font-weight: 600;
     font-size: 13px;
 }
 
 .value,
 .sub-value {
-    color: #303133;
+    color: #000;
     font-style: normal;
     font-weight: 500;
     font-feature-settings: "tnum";
@@ -326,6 +324,10 @@ const handleReset = () => {
 .value:empty::before {
     content: "\00a0";
     display: inline-block;
+}
+
+.top-table {
+    margin-top: 0;
 }
 
 .top-table td {
@@ -345,19 +347,19 @@ const handleReset = () => {
 
 .main-table thead th {
     background-color: #eef1f6;
-    color: #303133;
+    color: #000;
     font-weight: bold;
     padding: 10px 0;
     font-size: 15px;
-    border-bottom: 2px solid #dcdfe6;
+    /* border-bottom: 2px solid #dcdfe6; */
 }
 
 .sub-label {
     text-align: center;
     padding-right: 15px;
-    color: #909399;
+    color: #000;
     width: 40%;
-    border-right: none;
+    /* border-right: none; */
 }
 
 .sub-value {
@@ -366,7 +368,7 @@ const handleReset = () => {
     font-family: Consolas, Menlo, Monaco, "Courier New", monospace;
     font-size: 14px;
     width: 60%;
-    border-left: 1px dashed #ebeef5;
+    /* border-left: 1px dashed #ebeef5; */
 }
 
 .sub-value:empty::before {
