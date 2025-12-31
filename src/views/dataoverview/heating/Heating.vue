@@ -275,7 +275,7 @@ const handleReset = () => {
     font-weight: 700;
     color: #000;
     font-size: 14px;
-    padding: 12px 0px;
+    padding: 5px 0px;
     background-color: #ebeef5;
     /* letter-spacing: 1px; */
     border: 1px solid #919191;
@@ -295,7 +295,7 @@ const handleReset = () => {
 .info-table td,
 .info-table th {
     border: 1px solid #919191;
-    padding: 10px 10px;
+    padding: 5px 10px;
     transition: background-color 0.3s;
 }
 
@@ -349,7 +349,7 @@ const handleReset = () => {
     background-color: #eef1f6;
     color: #000;
     font-weight: bold;
-    padding: 10px 0;
+    padding: 5px 0;
     font-size: 15px;
     /* border-bottom: 2px solid #dcdfe6; */
 }
