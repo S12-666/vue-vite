@@ -55,3 +55,11 @@ export function getHeatingDetial(data) {
         data
     })
 }
+
+export function getRollingDetial(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/pidas/getRollingDetial',
+        method: 'post',
+        data
+    })
+}
