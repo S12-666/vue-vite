@@ -22,7 +22,7 @@ const getBaseOptions = () => ({
     title: {
         text: 'Change Force & Torque',
         left: '58%',
-        // top: 5,
+        top: 0,
         textStyle: {
             fontWeight: 700,
             fontSize: 15,
@@ -70,7 +70,7 @@ const getBaseOptions = () => ({
         left: '7%',
         right: '7%',
         bottom: '15%',
-        top: '10%',
+        top: '12%',
         containLabel: false
     },
     xAxis: {
@@ -97,7 +97,7 @@ const getBaseOptions = () => ({
             nameTextStyle: { padding: [0, 0, 0, 0], align: 'center', color: '#333', fontWeight: '500', fontSize: 13 },
 
             // 样式修改：去除实线和刻度，去除特定颜色
-            splitLine: { show: true, lineStyle: { type: 'dashed', color: '#E0E6F1' } },
+            splitLine: { show: true, lineStyle: { color: '#E0E6F1' } },
             axisLine: { show: false },
             axisTick: { show: false },
             axisLabel: { color: '#666' }
