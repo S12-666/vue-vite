@@ -20,7 +20,7 @@ const getBaseOptions = () => ({
         fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
     },
     title: {
-        text: 'Change Force & Torque',
+        text: 'Change of Force & Torque',
         left: '58%',
         top: 0,
         textStyle: {

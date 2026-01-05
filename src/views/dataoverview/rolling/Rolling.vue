@@ -191,45 +191,40 @@
         </table>
     </div>
 
-    <!-- <div class="heat-charts">
-        <div class="temp-chart">
-            <TempCurve :curve-data="chartData" />
+    <div class="roll-charts">
+        <div class="short-charts">
+            <div class="ft-chart">
+                <ForceTorqueCurve :curve-data="ftData" />
+            </div>
+            <div class="thick-chart">
+                <WidthThickCurve :curve-data="wtData" />
+            </div>
         </div>
-        <div class="time-chart">
-            <TimeCurve :curve-data="chartData" />
+        <div class="length-chart">
+            <ThickCurve :curve-data="ThickData" />
         </div>
-    </div> -->
+    </div>
 </template>
 
 <script setup>
 import { reactive, ref } from 'vue';
 import { getRollingDetial } from '@/api/api.js';
 import { ElMessage } from 'element-plus';
-
+import ForceTorqueCurve from './ForceTorqueCurve.vue';
+import ThickCurve from './ThickCurve.vue';
+import WidthThickCurve from './WidthThickCurve.vue';
 
 const loading = ref(false);
-
-
-const chartData = ref({
-    position: [],
-    time: [],
-    seg_u: [],
-    seg_d: [],
-    plate: []
-});
 
 const queryParams = reactive({
     slabid: '',
     upid: '19327316000',
 });
 
-// 初始化数据结构，字段名对应 HTML 中的绑定
 const initDetialData = () => ({
-    // 顶部基础信息
     slabId: '',
     upid: '',
     thick: '',
-
     // PID Data
     slabThickness: '',
     slabWidth: '',
@@ -241,15 +236,13 @@ const initDetialData = () => ({
     plateWidth: '',
     plateLength: '',
     controlRoll: '',
-    rsCode: '', // JSON中未找到直接对应，暂留空或映射 crcode
+    rsCode: '',
     adCode: '',
     heatMode: '',
     dischargeTemp: '',
     restartTemp: '',
     finishTemp: '',
-    restartThick: '', // JSON中需确认字段，暂留空
-
-    // Control Rolling
+    restartThick: '',
     furnaceNo: '',
     timeInFurnace: '',
     timeIn2Heat: '',
@@ -268,7 +261,7 @@ const initDetialData = () => ({
 
     // Roll Status
     rmTwId: '',
-    rmTwDia: '', // JSON无直径数据，暂留空
+    rmTwDia: '',
     rmTwPlates: '',
     rmBwId: '',
     rmBwDia: '',
@@ -281,6 +274,31 @@ const initDetialData = () => ({
     fmBwPlates: ''
 });
 
+const ftData = ref({
+    Passes: [],
+    Epsilon: [],
+    ForcePost: [],
+    ForceMeas: [],
+    TorquePost: [],
+    TorqueMeas: []
+})
+
+const wtData = ref({
+    Passes: [],
+    Width: [],
+    Thickness: []
+})
+
+const ThickData = ref({
+    position: [],
+    centerthickness: [],
+    leftthickness: [],
+    rightthickness: [],
+    tgtplatethickness2: null, 
+    maxplatethickness2: null, 
+    minplatethickness2: null
+})
+
 const detialData = reactive(initDetialData());
 
 const handleQuery = async () => {
@@ -291,67 +309,119 @@ const handleQuery = async () => {
 
     loading.value = true;
     try {
-        // 模拟请求，实际请使用 await getRollingDetial(queryParams);
-        // 这里假设 res 就是你提供的 data 对象
         const res = await getRollingDetial(queryParams);
 
         if (res) {
-            ElMessage.success('查询成功');
+            ElMessage({
+                showClose: true,
+                message: '查询成功',
+                type: 'success'
+            })
 
             // --- 1. Top Table ---
-            detialData.slabId = res.slabid;
-            detialData.upid = res.upid;
-            detialData.thick = res.slabthickness; // 假设显示的Thick是板坯厚度
+            detialData.slabId = res.tabledata.slabid;
+            detialData.upid = res.tabledata.upid;
+            detialData.thick = res.tabledata.slabthickness; // 假设显示的Thick是板坯厚度
 
             // --- 2. PID Data ---
-            detialData.slabThickness = res.slabthickness;
-            detialData.slabWidth = res.slabwidth;
-            detialData.slabLength = res.slablength;
-            detialData.steelSpec = res.steelspec;
-            detialData.tappingCode = res.tapping_code;
-            detialData.category = res.productcategory;
+            detialData.slabThickness = res.tabledata.slabthickness;
+            detialData.slabWidth = res.tabledata.slabwidth;
+            detialData.slabLength = res.tabledata.slablength;
+            detialData.steelSpec = res.tabledata.steelspec;
+            detialData.tappingCode = res.tabledata.tapping_code;
+            detialData.category = res.tabledata.productcategory;
 
-            detialData.plateThickness = res.tgtplatethickness2;
-            detialData.plateWidth = res.tgtwidth;
-            detialData.plateLength = res.tgtplatelength2;
-            detialData.controlRoll = res.crcode;
+            detialData.plateThickness = res.tabledata.tgtplatethickness2;
+            detialData.plateWidth = res.tabledata.tgtwidth;
+            detialData.plateLength = res.tabledata.tgtplatelength2;
+            detialData.controlRoll = res.tabledata.crcode;
             detialData.rsCode = ''; // 需确认对应字段
-            detialData.adCode = res.adcontrolcode;
+            detialData.adCode = res.tabledata.adcontrolcode;
 
-            detialData.heatMode = res.heating_pattern_code;
-            detialData.dischargeTemp = res.ave_temp_dis;
-            detialData.restartTemp = res.tgttmrestarttemp1;
-            detialData.finishTemp = res.tgttmplatetemp;
-            // detialData.restartThick = ???; 
+            detialData.heatMode = res.tabledata.heating_pattern_code;
+            detialData.dischargeTemp = res.tabledata.ave_temp_dis;
+            detialData.restartTemp = res.tabledata.tgttmrestarttemp1;
+            detialData.finishTemp = res.tabledata.tgttmplatetemp;
 
             // --- 3. Control Rolling ---
-            detialData.furnaceNo = `${res.fce_no} / ${res.fce_row}`; // 拼一下炉号和排号
-            detialData.timeInFurnace = res.in_fce_time;
-            detialData.timeIn2Heat = res.staying_time_2;
-            detialData.timeInSoak = res.staying_time_soak;
-            detialData.dischargeTS = res.discharge_time;
+            detialData.furnaceNo = `${res.tabledata.fce_no} / ${res.tabledata.fce_row}`; // 拼一下炉号和排号
+            detialData.timeInFurnace = res.tabledata.in_fce_time;
+            detialData.timeIn2Heat = res.tabledata.staying_time_2;
+            detialData.timeInSoak = res.tabledata.staying_time_soak;
+            detialData.dischargeTS = res.tabledata.discharge_time;
 
-            detialData.soakingSurfT = res.sur_temp_entry_soak;
+            detialData.soakingSurfT = res.tabledata.sur_temp_entry_soak;
             // DischargeT 复用上面的 dischargeTemp?
-            detialData.slabWeight = res.slabweight;
+            detialData.slabWeight = res.tabledata.slabweight;
 
-            detialData.thickStdCe = res.thick_std_ce;
-            detialData.thickAveDs = res.thick_ave_ds;
-            detialData.thickAveOs = res.thick_ave_os;
-            detialData.thickMaxCe = res.thick_max_ce;
-            detialData.thickMinCe = res.thick_min_ce;
-            detialData.thickAveCe = res.thick_ave_ce;
+            detialData.thickStdCe = res.tabledata.thick_std_ce;
+            detialData.thickAveDs = res.tabledata.thick_ave_ds;
+            detialData.thickAveOs = res.tabledata.thick_ave_os;
+            detialData.thickMaxCe = res.tabledata.thick_max_ce;
+            detialData.thickMinCe = res.tabledata.thick_min_ce;
+            detialData.thickAveCe = res.tabledata.thick_ave_ce;
 
             // --- 4. Roll Status (根据 JSON 字段匹配) ---
-            detialData.rmTwId = res.topwridrm;
-            detialData.rmTwPlates = res.topwrplatecountrm;
-            detialData.rmBwId = res.botwridrm;
-            detialData.rmBwPlates = res.botwrplatecountrm;
+            detialData.rmTwId = res.tabledata.topwridrm;
+            detialData.rmTwPlates = res.tabledata.topwrplatecountrm;
+            detialData.rmBwId = res.tabledata.botwridrm;
+            detialData.rmBwPlates = res.tabledata.botwrplatecountrm;
 
-            detialData.fmTwId = res.topwridfm;
-            detialData.fmTwPlates = res.topwrplatecountfm;
-            detialData.fmBwId = res.botwridfm;
-            detialData.fmBwPlates = res.botwrplatecountfm;
+            detialData.fmTwId = res.tabledata.topwridfm;
+            detialData.fmTwPlates = res.tabledata.topwrplatecountfm;
+            detialData.fmBwId = res.tabledata.botwridfm;
+            detialData.fmBwPlates = res.tabledata.botwrplatecountfm;
+        }
+
+        if (res.force_torque_curve) {
+            ftData.value.Passes = res.force_torque_curve.Passes || [];
+            ftData.value.Epsilon = res.force_torque_curve.Epsilon || [];
+            ftData.value.ForcePost = res.force_torque_curve.ForcePost || [];
+            ftData.value.ForceMeas = res.force_torque_curve.ForceMeas || [];
+            ftData.value.TorquePost = res.force_torque_curve.TorquePost || [];
+            ftData.value.TorqueMeas = res.force_torque_curve.TorqueMeas || [];
+        } else {
+            ftData.value = {
+                Passes: [],
+                Epsilon: [],
+                ForcePost: [],
+                ForceMeas: [],
+                TorquePost: [],
+                TorqueMeas: []
+            };
+        }
+
+        if (res.width_thick_curve) {
+            wtData.value.Passes = res.width_thick_curve.Passes || [];
+            wtData.value.Width = res.width_thick_curve.Width || [];
+            wtData.value.Thickness = res.width_thick_curve.Thickness || [];
+        } else {
+            wtData.value = {
+                Passes: [],
+                Width: [],
+                Thickness: []
+            };
+
+        }
+
+        if (res.thickness_curve) {
+            ThickData.value.position = res.thickness_curve.position || [];
+            ThickData.value.centerthickness = res.thickness_curve.centerthickness || [];
+            ThickData.value.leftthickness =  res.thickness_curve.leftthickness || [];
+            ThickData.value.rightthickness = res.thickness_curve.rightthickness || [];
+            ThickData.value.tgtplatethickness2 = res.thickness_curve.tgtplatethickness2 || null;
+            ThickData.value.maxplatethickness2 = res.thickness_curve.maxplatethickness2 || null;
+            ThickData.value.minplatethickness2 = res.thickness_curve.minplatethickness2 || null;
+        } else {
+            ThickData.value = {
+                position: [],
+                centerthickness: [],
+                leftthickness: [],
+                rightthickness: [],
+                tgtplatethickness2: null,
+                maxplatethickness2: null,
+                minplatethickness2: null
+            };
         }
     } catch (error) {
         console.error('查询异常:', error);
@@ -413,14 +483,11 @@ const handleReset = () => {
 
 .report-container {
     width: 100%;
-    /* 核心字体栈：优先使用系统现代字体，看起来清晰干净 */
     font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
     font-size: 14px;
     color: #303133;
     background: #fff;
     margin: 10px 0 20px 0;
-    /* border: 1px solid #919191; */
-    /* border-radius: 4px; */
     overflow: hidden;
 }
 
@@ -546,10 +613,30 @@ const handleReset = () => {
     height: 400px;
 }
 
-.temp-chart,
-.time-chart {
+.roll-charts {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     width: 100%;
+}
+
+.short-charts {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+    height: 400px;
+}
+
+.ft-chart,
+.thick-chart {
+    flex: 1;
+    width: 0;
     height: 100%;
-    overflow: hidden;
+}
+
+.length-chart {
+    width: 100%;
+    height: 400px;
 }
 </style>

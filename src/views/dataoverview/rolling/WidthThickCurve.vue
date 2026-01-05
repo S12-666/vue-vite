@@ -20,7 +20,7 @@ const getBaseOptions = () => ({
         fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
     },
     title: {
-        text: 'Change Thick & Width',
+        text: 'Change of Thick & Width',
         left: 'center',
         top: 0,
         textStyle: {
@@ -122,7 +122,7 @@ const updateChart = () => {
     }
 
     const processThick = (dataArray) => {
-        return (dataArray || []).map(val => val !== null ? parseFloat((val * 1000).toFixed(3)) : null);
+        return (dataArray || []).map(val => val !== null ? parseFloat((val * 100).toFixed(3)) : null);
     };
     const series = [
         {
