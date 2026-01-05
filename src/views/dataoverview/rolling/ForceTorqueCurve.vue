@@ -56,11 +56,20 @@ const getBaseOptions = () => ({
             if (!Array.isArray(params) || params.length === 0) return '';
             const xVal = params[0].name;
             let html = `<b>Pass: ${xVal}</b><br/>`;
+            const colorMap = {
+                'Epsilon': '#CD2626',      // 红色
+                'ForcePost': '#32CD32',    // 绿色
+                'ForceMeas': '#32CD32',    // 绿色
+                'TorquePost': '#1E90FF',   // 蓝色
+                'TorqueMeas': '#1E90FF'    // 蓝色
+            };
             params.forEach(item => {
                 const val = item.value;
                 if (val !== undefined && val !== null) {
                     // Tooltip 保持原来的颜色标识，显示处理后的数值
-                    html += `${item.marker} ${item.seriesName}: ${val}<br/>`;
+                    const color = colorMap[item.seriesName] || item.color;
+                    const marker = `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${color};"></span>`;
+                    html += `${marker} ${item.seriesName}: ${val}<br/>`;
                 }
             });
             return html;
