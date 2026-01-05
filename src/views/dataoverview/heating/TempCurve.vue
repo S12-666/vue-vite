@@ -67,16 +67,16 @@ const getBaseOptions = () => ({
     },
     tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'cross', snap: false },
-        // 自定义 Tooltip 显示三条线的数据
+        axisPointer: { type: 'cross', snap: true },
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderColor: '#ccc',
+        borderWidth: 1,
         formatter: function (params) {
             if (!Array.isArray(params) || params.length === 0) return '';
             const xVal = params[0].value[0]; // 获取 X 轴位置
 
             let html = `Position: ${xVal} m<br/>`;
             params.forEach(item => {
-                // item.marker 是图例的小圆点
-                // item.value[1] 是温度值
                 html += `${item.marker} ${item.seriesName}: ${item.value[1].toFixed(1)} °C<br/>`;
             });
             return html;
@@ -93,7 +93,7 @@ const getBaseOptions = () => ({
         type: 'value',
         name: 'Position(m)',
         nameLocation: 'middle',
-        nameTextStyle: { lineHeight: 40, fontWeight: 500, color: '#333', fontSize: 15 },
+        nameTextStyle: { lineHeight: 40, fontWeight: 500, color: '#333', fontSize: 13 },
         min: 0,
         axisLabel: { formatter: '{value}' }
     },
@@ -102,8 +102,9 @@ const getBaseOptions = () => ({
         name: 'Temp(°C)',
         min: 0, // 或者 'dataMin' 让曲线更明显
         nameLocation: 'middle',
-        nameTextStyle: { padding: [0, 0, 30, 0], fontWeight: 500, color: '#333', fontSize: 15 },
-        splitLine: { show: true, lineStyle: { type: 'dashed' } } // 虚线网格
+        nameTextStyle: { padding: [0, 0, 30, 0], fontWeight: 500, color: '#333', fontSize: 13 },
+        // splitLine: { show: true, lineStyle: { type: 'dashed' } } // 虚线网格
+        splitLine: { show: true }
     },
     series: []
 });
@@ -132,6 +133,7 @@ const updateChart = () => {
             type: 'line',
             smooth: true,
             symbol: 'emptyCircle',
+            symbolSize: 10,
             showSymbol: false,
             data: dataU,
             itemStyle: { color: '#ff4d4f' }, // 红色代表上部高温
@@ -142,6 +144,7 @@ const updateChart = () => {
             type: 'line',
             smooth: true,
             symbol: 'emptyCircle',
+            symbolSize: 10,
             showSymbol: false,
             data: dataD,
             itemStyle: { color: '#1890ff' },
@@ -152,6 +155,7 @@ const updateChart = () => {
             type: 'line',
             smooth: true,
             symbol: 'emptyCircle',
+            symbolSize: 10,
             showSymbol: false,
             data: dataP,
             itemStyle: { color: '#52c41a' }, // 绿色代表板温

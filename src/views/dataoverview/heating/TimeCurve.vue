@@ -64,6 +64,9 @@ const getBaseOptions = () => ({
             type: 'cross',
             snap: false
         },
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderColor: '#ccc',
+        borderWidth: 1,
         formatter: function (params) {
             if (Array.isArray(params)) {
                 const p = params[0];
@@ -130,7 +133,7 @@ const updateChart = () => {
             smooth: true,
             showSymbol: false,
             symbol: 'emptyCircle',
-            symbolSize: 6,
+            symbolSize: 10,
             lineStyle: {
                 color: '#4E5969',
                 width: 2,
