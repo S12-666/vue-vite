@@ -22,11 +22,11 @@
             <tbody>
                 <tr>
                     <td class="label">PlateID</td>
-                    <td class="value">{{ detialData.slabId }}</td>
+                    <td class="value">{{ detialData.PlateID }}</td>
                     <td class="label">SlabID</td>
-                    <td class="value">{{ detialData.upid }}</td>
+                    <td class="value">{{ detialData.slabID }}</td>
                     <td class="label">Date</td>
-                    <td class="value">{{ detialData.thick }}</td>
+                    <td class="value">{{ detialData.Date }}</td>
                 </tr>
             </tbody>
         </table>
@@ -37,55 +37,55 @@
             <tbody>
                 <tr>
                     <td class="label">Thickness</td>
-                    <td class="value">{{ detialData.heatMode }}</td>
+                    <td class="value">{{ detialData.Thickness }}</td>
                     <td class="label">Width</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.Width }}</td>
                     <td class="label">Length</td>
-                    <td class="value">{{ detialData.timeInFurnace }}</td>
+                    <td class="value">{{ detialData.Length }}</td>
                     <td class="label">FinishTemp</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.FinishTemp }}</td>
                     <td class="label">FiniTempOrig</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.FiniTempOrig }}</td>
                     <td class="label">CoolStopOrig</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.CoolStopOrig }}</td>
                 </tr>
                 <tr>
                     <td class="label">CoolStop</td>
-                    <td class="value" colspan="3">{{ detialData.heatMode }}</td>
+                    <td class="value" colspan="3">{{ detialData.CoolStop1 }}(temp1), {{ detialData.CoolStop2 }}(temp2)</td>
                     <td class="label">TargetRate</td>
-                    <td class="value" colspan="3">{{ detialData.furnaceNo }}</td>
+                    <td class="value" colspan="3">{{ detialData.TargetRate1 }}(rate1), {{ detialData.TargetRate2 }}(rate2)</td>
                     <td class="label">AccMode</td>
-                    <td class="value">{{ detialData.timeInFurnace }}</td>
+                    <td class="value">{{ detialData.AccMode }}</td>
                     <td class="label">OpMode</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.OpMode }}</td>
                 </tr>
                 <tr>
                     <td class="label">MaterialID</td>
-                    <td class="value">{{ detialData.heatMode }}</td>
+                    <td class="value">{{ detialData.MaterialID }}</td>
                     <td class="label">[B]</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.B }}</td>
                     <td class="label">[C]</td>
-                    <td class="value">{{ detialData.timeInFurnace }}</td>
+                    <td class="value">{{ detialData.C }}</td>
                     <td class="label">[Cr]</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.Cr }}</td>
                     <td class="label">[Cu]</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.Cu }}</td>
                     <td class="label">[Mn]</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.Mn }}</td>
                 </tr>
                 <tr>
                     <td class="label">[Mo]</td>
-                    <td class="value">{{ detialData.heatMode }}</td>
+                    <td class="value">{{ detialData.Mo }}</td>
                     <td class="label">[Nb]</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.Nb }}</td>
                     <td class="label">[Ni]</td>
-                    <td class="value">{{ detialData.timeInFurnace }}</td>
+                    <td class="value">{{ detialData.Ni }}</td>
                     <td class="label">[Si]</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.Si }}</td>
                     <td class="label">[Ti]</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.Ti }}</td>
                     <td class="label">[V]</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.V }}</td>
                 </tr>
             </tbody>
         </table>
@@ -169,10 +169,10 @@
                 <tr>
                     <td class="label">Edge</td>
                     <td class="value">mm</td>
-                    <td class="value">1400</td>
-                    <td class="value">1400</td>
-                    <td class="value">1120.21</td>
-                    <td class="value">1400</td>
+                    <td class="value">{{ detialData.em_pos_abs_1 }}</td>
+                    <td class="value">{{ detialData.em_pos_abs_2 }}</td>
+                    <td class="value">{{ detialData.em_pos_abs_3 }}</td>
+                    <td class="value">{{ detialData.em_pos_abs_4 }}</td>
                     <td class="value"></td>
                     <td class="value"></td>
                     <td class="value"></td>
@@ -198,51 +198,51 @@
             <tbody>
                 <tr>
                     <td class="label">P2Mean</td>
-                    <td class="value">{{ detialData.heatMode }}</td>
+                    <td class="value">{{ detialData.P2Mean }}</td>
                     <td class="label">P2Max</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.P2Max }}</td>
                     <td class="label">P2Min</td>
-                    <td class="value">{{ detialData.timeInFurnace }}</td>
+                    <td class="value">{{ detialData.P2Min }}</td>
                     <td class="label">P2Std</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.P2Std }}</td>
                     <td class="label">P5Mean</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.P5Mean }}</td>
                     <td class="label">P5Max</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.P5Max }}</td>
                     <td class="label">P5Min</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.P5Min }}</td>
                     <td class="label">P5Std</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.P5Std }}</td>
                 </tr>
                 <tr>
                     <td class="label">FHeadTop</td>
-                    <td class="value">{{ detialData.heatMode }}</td>
+                    <td class="value">{{ detialData.FHeadTop }}</td>
                     <td class="label">LHeadTop</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.LHeadTop }}</td>
                     <td class="label">FTailTop</td>
-                    <td class="value">{{ detialData.timeInFurnace }}</td>
+                    <td class="value">{{ detialData.FTailTop }}</td>
                     <td class="label">LTailTop</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.LTailTop }}</td>
                     <td class="label">FHeadBtm</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.FHeadBtm }}</td>
                     <td class="label">LHeadBtm</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.LHeadBtm }}</td>
                     <td class="label">FTailBtm</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.FTailBtm }}</td>
                     <td class="label">LTailBtm</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.LTailBtm }}</td>
                 </tr>
                 <tr>
                     <td class="label">DQ Water</td>
-                    <td class="value">{{ detialData.heatMode }}</td>
+                    <td class="value">{{ detialData.DQWater }}</td>
                     <td class="label">ACC Water</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.ACCWater }}</td>
                     <td class="label">Air Temp</td>
-                    <td class="value">{{ detialData.timeInFurnace }}</td>
+                    <td class="value">{{ detialData.AirTemp }}</td>
                     <td class="label">CRcal</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.CRcal }}</td>
                     <td class="label">CRact</td>
-                    <td class="value">{{ detialData.furnaceNo }}</td>
+                    <td class="value">{{ detialData.CRact }}</td>
                     <td class="value"></td>
                     <td class="value"></td>
                     <td class="value"></td>
@@ -266,31 +266,31 @@
                 <tr>
                     <td class="label">PRE</td>
                     <td class="label">Date</td>
-                    <td class="value">2021-01-04 12:17:30</td>
+                    <td class="value">{{ detialData.Date }}</td>
                     <td class="label">tf_last</td>
-                    <td class="value">746.531</td>
+                    <td class="value">{{ detialData.tf_last }}</td>
                     <td class="label">tr_fm</td>
-                    <td class="value">1.094</td>
+                    <td class="value">{{ detialData.tr_fm }}</td>
                     <td class="label">ts_last</td>
-                    <td class="value">465.42</td>
+                    <td class="value">{{ detialData.ts_last }}</td>
                     <td class="label">vx_last</td>
-                    <td class="value">1.351</td>
+                    <td class="value">{{ detialData.vx_last }}</td>
                     <td class="label">lx_last</td>
-                    <td class="value">11.2</td>
+                    <td class="value">{{ detialData.lx_last }}</td>
                     <td class="label">tw_last</td>
-                    <td class="value">11.377</td>
+                    <td class="value">{{ detialData.tw_last }}</td>
                 </tr>
                 <tr>
                     <td class="label">Tap Code</td>
-                    <td class="value" colspan="2">JU6P24P6</td>
+                    <td class="value" colspan="2">{{ detialData.TapCode }}</td>
                     <td class="label">Plates</td>
-                    <td class="value" colspan="2">243</td>
+                    <td class="value" colspan="2">{{ detialData.Plates }}</td>
                     <td class="label">1st Plate</td>
-                    <td class="value" colspan="2">41384235622</td>
+                    <td class="value" colspan="2">{{ detialData.FirstPlate }}</td>
                     <td class="label">2nd Plate</td>
-                    <td class="value" colspan="2">41384330222</td>
+                    <td class="value" colspan="2">{{ detialData.SecondPlate }}</td>
                     <td class="label">3rd Plate</td>
-                    <td class="value" colspan="2">41384335112</td>
+                    <td class="value" colspan="2">{{ detialData.ThirdPlate }}</td>
                 </tr>
             </tbody>
         </table>
@@ -309,7 +309,7 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
-import { getHeatingDetial } from '@/api/api.js';
+import { getCoolingDetial } from '@/api/api.js';
 import { ElMessage } from 'element-plus';
 // import TimeCurve from './TimeCurve.vue';
 // import TempCurve from './TempCurve.vue';
@@ -330,36 +330,107 @@ const queryParams = reactive({
     upid: '19327316000',
 })
 
-const rowKeys = [
-    { label: 'Entry Temp', key: 'entryTemp' },
-    { label: 'Surface Temp', key: 'surfaceTemp' },
-    { label: 'Center Temp', key: 'centerTemp' },
-    { label: 'Seat Temp', key: 'seatTemp' },
-    { label: 'Average Temp', key: 'avgTemp' },
-    { label: 'Time in Section', key: 'timeInSection' },
-];
-
-const sectionMapping = [
-    { key: 'preheating', name: 'Preheating Section' },
-    { key: 'heating1', name: 'Heating Section 1' },
-    { key: 'heating2', name: 'Heating Section 2' },
-    { key: 'soaking', name: 'Soaking Section' },
-    { key: 'discharging', name: 'Discharging' }
-];
 
 const initDetialData = () => ({
-    slabId: '',
-    upid: '',
-    thick: '',
-    heatMode: '',
-    furnaceNo: '',
-    timeInFurnace: '',
-    startTime: '',
-    endTime: '',
-    sections: sectionMapping.map(item => ({
-        name: item.name,
-        data: {} // 初始为空对象
-    }))
+    PlateID: '',
+    slabID: '',
+    Date: '',
+    Thickness: '',
+    Width: '',
+    Length: '',
+    FinishTemp: '',
+    FiniTempOrig: '',
+    CoolStopOrig: '',
+    CoolStop1: '',
+    CoolStop2: '',
+    TargetRate1: '',
+    TargetRate2: '',
+    AccMode: '',
+    OpMode: '',
+    MaterialID: '',
+    B: '',
+    C: '',
+    Cr: '',
+    Cu: '',
+    Mn: '',
+    Mo: '',
+    Nb: '',
+    Ni: '',
+    Si: '',
+    Ti: '',
+    V: '',
+    vc_t_01: '',
+    vc_t_02: '',
+    vc_t_03: '',
+    vc_t_04: '',
+    vc_t_05: '',
+    vc_t_06: '',
+    vc_t_07: '',
+    vc_t_09: '',
+    vc_t_10: '',
+    vc_t_11: '',
+    vc_t_12: '',
+    vc_t_13: '',
+    vc_t_14: '',
+    vc_t_15: '',
+    vc_t_16: '',
+    vc_t_17: '',
+    vc_t_18: '',
+    vc_t_19: '',
+    vc_b_01: '',
+    vc_b_02: '',
+    vc_b_03: '',
+    vc_b_04: '',
+    vc_b_05: '',
+    vc_b_06: '',
+    vc_b_07: '',
+    vc_b_09: '',
+    vc_b_10: '',
+    vc_b_11: '',
+    vc_b_12: '',
+    vc_b_13: '',
+    vc_b_14: '',
+    vc_b_15: '',
+    vc_b_16: '',
+    vc_b_17: '',
+    vc_b_18: '',
+    vc_b_19: '',
+    em_pos_abs_1: '',
+    em_pos_abs_2: '',
+    em_pos_abs_3: '',
+    em_pos_abs_4: '',
+    P2Mean: '',
+    P2Max: '',
+    P2Min: '',
+    P2Std: '',
+    P5Mean: '',
+    P5Max: '',
+    P5Min: '',
+    P5Std: '',
+    FHeadTop: '',
+    LHeadTop: '',
+    FTailTop: '',
+    LTailTop: '',
+    FHeadBtm: '',
+    LHeadBtm: '',
+    FTailBtm: '',
+    LTailBtm: '',
+    DQWater: '',
+    ACCWater: '',
+    AirTemp: '',
+    CRcal: '',
+    CRact: '',
+    tf_last: '',
+    tr_fm: '',
+    ts_last: '',
+    vx_last: '',
+    lx_last: '',
+    tw_last: '',
+    TapCode: '',
+    Plates: '',
+    FirstPlate: '',
+    SecondPlate: '',
+    ThirdPlate: ''
 });
 
 const detialData = reactive(initDetialData());
@@ -376,57 +447,114 @@ const handleQuery = async () => {
 
     loading.value = true;
     try {
-        const res = await getHeatingDetial(queryParams);
+        const res = await getCoolingDetial(queryParams);
 
         if (res) {
             ElMessage.success('查询成功'); // 简化写法
 
-            // 1. 填充顶部基础信息
-            detialData.slabId = res.slabid;
-            detialData.upid = res.upid;
-            detialData.thick = res.thick;
+            detialData.slabID = res.table_data.slabid;
+            detialData.PlateID = res.table_data.upid;
+            detialData.Date = res.table_data.toc;
+            detialData.Thickness = res.table_data.thick;
+            detialData.Width = res.table_data.width;
+            detialData.Length = res.table_data.length;
+            detialData.FinishTemp = res.table_data.rolling_finish_temp;
+            detialData.FiniTempOrig = res.table_data.cooling_start_temp;
+            detialData.CoolStopOrig = res.table_data.cooling_stop_temp;
+            detialData.CoolStop1 = res.table_data.cooling_stop_temp1;
+            detialData.CoolStop2 = res.table_data.cooling_stop_temp2;
+            detialData.TargetRate1 = res.table_data.cooling_rate1;
+            detialData.TargetRate2 = res.table_data.cooling_rate2;
+            detialData.AccMode = res.table_data.cooling_mode;
+            detialData.OpMode = res.table_data.operate_mode;
+            detialData.MaterialID = res.table_data.material;
+            detialData.B = res.table_data.chemistry_b;
+            detialData.C = res.table_data.chemistry_c;
+            detialData.Cr = res.table_data.chemistry_cr;
+            detialData.Cu = res.table_data.chemistry_cu;
+            detialData.Mn = res.table_data.chemistry_mn;
+            detialData.Mo = res.table_data.chemistry_mo;
+            detialData.Nb = res.table_data.chemistry_nb;
+            detialData.Ni = res.table_data.chemistry_ni;
+            detialData.Si = res.table_data.chemistry_si;
+            detialData.Ti = res.table_data.chemistry_ti;
+            detialData.V = res.table_data.chemistry_v;
 
-            // 2. 填充炉子信息 (注意后端返回的大小写，如 HeatMode)
-            detialData.heatMode = res.HeatMode;
-            detialData.furnaceNo = res.furnaceNo;
-            detialData.timeInFurnace = res.duration;
+            detialData.vc_t_01 = res.table_data.vc_flow_top_01;
+            detialData.vc_t_02 = res.table_data.vc_flow_top_02;
+            detialData.vc_t_03 = res.table_data.vc_flow_top_03;
+            detialData.vc_t_04 = res.table_data.vc_flow_top_04;
+            detialData.vc_t_05 = res.table_data.vc_flow_top_05;
+            detialData.vc_t_06 = res.table_data.vc_flow_top_06;
+            detialData.vc_t_07 = res.table_data.vc_flow_top_07;
+            detialData.vc_t_09 = res.table_data.vc_flow_top_09;
+            detialData.vc_t_10 = res.table_data.vc_flow_top_10;
+            detialData.vc_t_11 = res.table_data.vc_flow_top_11;
+            detialData.vc_t_12 = res.table_data.vc_flow_top_12;
+            detialData.vc_t_13 = res.table_data.vc_flow_top_13;
+            detialData.vc_t_14 = res.table_data.vc_flow_top_14;
+            detialData.vc_t_15 = res.table_data.vc_flow_top_15;
+            detialData.vc_t_16 = res.table_data.vc_flow_top_16;
+            detialData.vc_t_17 = res.table_data.vc_flow_top_17;
+            detialData.vc_t_18 = res.table_data.vc_flow_top_18;
+            detialData.vc_t_19 = res.table_data.vc_flow_top_19;
+            detialData.vc_b_01 = res.table_data.vc_flow_bot_01;
+            detialData.vc_b_02 = res.table_data.vc_flow_bot_02;
+            detialData.vc_b_03 = res.table_data.vc_flow_bot_03;
+            detialData.vc_b_04 = res.table_data.vc_flow_bot_04;
+            detialData.vc_b_05 = res.table_data.vc_flow_bot_05;
+            detialData.vc_b_06 = res.table_data.vc_flow_bot_06;
+            detialData.vc_b_07 = res.table_data.vc_flow_bot_07;
+            detialData.vc_b_09 = res.table_data.vc_flow_bot_09;
+            detialData.vc_b_10 = res.table_data.vc_flow_bot_10;
+            detialData.vc_b_11 = res.table_data.vc_flow_bot_11;
+            detialData.vc_b_12 = res.table_data.vc_flow_bot_12;
+            detialData.vc_b_13 = res.table_data.vc_flow_bot_13;
+            detialData.vc_b_14 = res.table_data.vc_flow_bot_14;
+            detialData.vc_b_15 = res.table_data.vc_flow_bot_15;
+            detialData.vc_b_16 = res.table_data.vc_flow_bot_16;
+            detialData.vc_b_17 = res.table_data.vc_flow_bot_17;
+            detialData.vc_b_18 = res.table_data.vc_flow_bot_18;
+            detialData.vc_b_19 = res.table_data.vc_flow_bot_19;
 
-            // 处理时间范围
-            if (Array.isArray(res.durationRange) && res.durationRange.length >= 2) {
-                detialData.startTime = res.durationRange[0];
-                detialData.endTime = res.durationRange[1];
-            } else {
-                detialData.startTime = '';
-                detialData.endTime = '';
-            }
+            detialData.em_pos_abs_1 = res.table_data.em_pos_abs_1;
+            detialData.em_pos_abs_2 = res.table_data.em_pos_abs_2;
+            detialData.em_pos_abs_3 = res.table_data.em_pos_abs_3;
+            detialData.em_pos_abs_4 = res.table_data.em_pos_abs_4;
 
-            detialData.sections = sectionMapping.map(mappingItem => {
-                const backendData = (res.section && res.section[mappingItem.key]) || {};
+            detialData.P2Mean = res.table_data.avg_p2;
+            detialData.P2Max = res.table_data.max_p2;
+            detialData.P2Min = res.table_data.min_p2;
+            detialData.P2Std = res.table_data.std_p2;
+            detialData.P5Mean = res.table_data.avg_p5;
+            detialData.P5Max = res.table_data.max_p5;
+            detialData.P5Min = res.table_data.min_p5;
+            detialData.P5Std = res.table_data.std_p5;
+            detialData.FHeadTop = res.table_data.mk_factor_head_top;
+            detialData.LHeadTop = res.table_data.mk_length_head_top;
+            detialData.FTailTop = res.table_data.mk_factor_tail_top;
+            detialData.LTailTop = res.table_data.mk_length_tail_top;
+            detialData.FHeadBtm = res.table_data.mk_factor_head_btm;
+            detialData.LHeadBtm = res.table_data.mk_length_head_btm;
+            detialData.FTailBtm = res.table_data.mk_factor_tail_btm;
+            detialData.LTailBtm = res.table_data.mk_length_tail_btm;
+            detialData.DQWater = res.table_data.dq_water_temp;
+            detialData.ACCWater = res.table_data.acc_water_temp;
+            detialData.AirTemp = res.table_data.air_temp;
+            detialData.CRcal = res.table_data.avg_cr_cal;
+            detialData.CRact = res.table_data.avg_cr_act;
 
-                return {
-                    name: mappingItem.name,
-                    data: {
-                        entryTemp: backendData.entry,
-                        surfaceTemp: backendData.surface,
-                        centerTemp: backendData.center,
-                        seatTemp: backendData.seat,
-                        avgTemp: backendData.average,
-                        timeInSection: backendData.duration
-                    }
-                };
-            });
-
-            if (res.furnace) {
-                chartData.value = {
-                    position: res.furnace.position || [],
-                    time: res.furnace.time || [],
-                    seg_d: res.furnace.seg_d || [],
-                    seg_u: res.furnace.seg_u || [],
-                    plate: res.furnace.plate || []
-                };
-            } else {
-                chartData.value = { position: [], time: [], seg_d: [], seg_u: [], plate: [] }
-            }
+            detialData.tf_last = res.table_data.last_rolling_finish_temp;
+            detialData.tr_fm = res.table_data.speed_ratio;
+            detialData.ts_last = res.table_data.last_cooling_stop_temp;
+            detialData.vx_last = res.table_data.last_plate_speed;
+            detialData.lx_last = res.table_data.last_cooling_zone_length;
+            detialData.tw_last = res.table_data.last_water_temp;
+            detialData.TapCode = res.table_data.tapping_code;
+            detialData.Plates = res.table_data.plate_count;
+            detialData.FirstPlate = res.table_data.plate_before_1;
+            detialData.SecondPlate = res.table_data.plate_before_2;
+            detialData.ThirdPlate = res.table_data.plate_before_3;
         }
     } catch (error) {
         console.error('查询异常:', error);
