@@ -47,7 +47,7 @@ const getBaseOptions = () => ({
         formatter: function (params) {
             if (!Array.isArray(params) || params.length === 0) return '';
             const xVal = params[0].name;
-            let html = `<b>Pass: ${xVal}</b><br/>`;
+            let html = `<b>Postition: ${xVal}</b><br/>`;
             const colorMap = {
                 'centerthickness': '#FF3E96',
                 'leftthickness': '#1E90FF',
