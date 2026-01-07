@@ -15,13 +15,17 @@ const chartInstance = shallowRef(null);
 let resizeObserver = null;
 
 const metallurgyColors = [
-    "#2a0000", // 极暗红 (冷)
-    "#680000",
-    "#a80000",
-    "#e31a1c", // 红
-    "#ff7f00", // 橙
-    "#fdbf6f", // 黄
-    "#ffffb2"  // 白炽 (热)
+    "#3d4655", // 区间1: 0-300 (深蓝灰)
+    "#505050", // 区间2: 300-400 (深灰)
+    "#643131", // 区间3: 400-500 (暗褐红)
+    "#940e0e", // 区间4: 500-600 (深红)
+    "#bd1212", // 区间5: 600-650 (红)
+    "#d71717", // 区间6: 650-700 (鲜红)
+    "#eb1c24", // 区间7: 700-750 (正红)
+    "#ef4a25", // 区间8: 750-800 (橘红)
+    "#de6628", // 区间9: 800-850 (橙色)
+    "#de8728", // 区间10: 850-900 (浅橙)
+    "#ea9c29"  // 区间11: 900-950 (金黄橙)
 ];
 
 const getBaseOptions = (minVal, maxVal) => ({
@@ -89,16 +93,15 @@ const getBaseOptions = (minVal, maxVal) => ({
         min: minVal,
         max: maxVal,
         calculable: false,
+        inRange: {
+            color: metallurgyColors
+        },
         text: null,
         orient: 'horizontal',
         right: '3%',
         top: 8,
         itemHeight: 120,
         itemWidth: 20,
-        // textStyle: { color: '#333' },
-        inRange: {
-            color: metallurgyColors // 使用自定义的冶金色谱
-        }
     },
     series: [{
         name: 'Heat',
@@ -125,7 +128,7 @@ const updateChart = () => {
     if (!chartInstance.value) return;
     const rawData = props.scannerData || {};
     console.log(rawData);
-    
+
     const positions = rawData.position || [];
     const rowsData = rawData.data || [];
 
