@@ -58,11 +58,22 @@ const getBaseOptions = () => ({
             color: '#333'
         }
     },
+    legend: {
+        data: ['time'],
+        top: 8,
+        right: '4%',
+        type: 'scroll',
+        itemGap: 15,
+        textStyle: { color: '#666', fontSize: 13},
+    },
     tooltip: {
         trigger: 'axis',
         axisPointer: {
             type: 'cross',
             snap: false
+        },
+        textStyle: {
+            color: '#333'
         },
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         borderColor: '#ccc',
@@ -70,7 +81,7 @@ const getBaseOptions = () => ({
         formatter: function (params) {
             if (Array.isArray(params)) {
                 const p = params[0];
-                return `Position: ${p.value[0]} m<br/>Time: ${p.value[1].toFixed(2)} min`;
+                return `<b>Position: ${p.value[0]} m</b><br/>Time: ${p.value[1].toFixed(2)} min`;
             }
             return '';
         }
@@ -113,7 +124,6 @@ const getBaseOptions = () => ({
     series: []
 });
 
-// 绘图逻辑
 const updateChart = () => {
     if (!chartInstance.value) return;
     const { position, time } = props.curveData || {};
@@ -139,13 +149,12 @@ const updateChart = () => {
                 width: 2,
             },
             data: seriesData,
-            markArea: markAreaConfig,
         },
 
         {
             name: 'Boundary Helper',
             type: 'line',
-            data: [], // 空数据，不画线
+            data: [],
             showSymbol: false,
 
             markLine: {
@@ -158,14 +167,9 @@ const updateChart = () => {
                     opacity: 0,
                     width: 20
                 },
-                // tooltip: {
-                //     trigger: 'item',
-                //     formatter: (params) => {
-                //         return `${params.name}<br/>Position: ${params.value} m`;
-                //     }
-                // },
                 data: boundaryLines
-            }
+            },
+            markArea: markAreaConfig,
         }
     ];
 

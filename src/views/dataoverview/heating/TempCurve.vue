@@ -62,20 +62,31 @@ const getBaseOptions = () => ({
         data: ['seg_u', 'seg_d', 'plate'],
         top: 8,
         right: '5%',
-        textStyle: { color: '#666' },
+        textStyle: { color: '#666', fontSize: 13 },
         itemGap: 20
     },
     tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'cross', snap: true },
+        axisPointer: {
+            type: 'cross',
+            snap: true,
+            crossStyle: {
+                color: '#999',
+                type: 'dashed',
+                width: 1
+            }
+        },
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         borderColor: '#ccc',
         borderWidth: 1,
+        textStyle: {
+            color: '#333'
+        },
         formatter: function (params) {
             if (!Array.isArray(params) || params.length === 0) return '';
             const xVal = params[0].value[0]; // 获取 X 轴位置
 
-            let html = `Position: ${xVal} m<br/>`;
+            let html = `<b>Position: ${xVal} m</b><br/>`;
             params.forEach(item => {
                 html += `${item.marker} ${item.seriesName}: ${item.value[1].toFixed(1)} °C<br/>`;
             });
@@ -95,7 +106,17 @@ const getBaseOptions = () => ({
         nameLocation: 'middle',
         nameTextStyle: { lineHeight: 40, fontWeight: 500, color: '#333', fontSize: 13 },
         min: 0,
-        axisLabel: { formatter: '{value}' }
+        axisLabel: { formatter: '{value}' },
+        axisPointer: {
+            label: {
+                show: true,
+                backgroundColor: '#777',
+                color: '#fff',
+                borderRadius: 3,
+                padding: [3, 5],
+                fontSize: 12
+            }
+        },
     },
     yAxis: {
         type: 'value',
@@ -103,8 +124,17 @@ const getBaseOptions = () => ({
         min: 0, // 或者 'dataMin' 让曲线更明显
         nameLocation: 'middle',
         nameTextStyle: { padding: [0, 0, 30, 0], fontWeight: 500, color: '#333', fontSize: 13 },
-        // splitLine: { show: true, lineStyle: { type: 'dashed' } } // 虚线网格
-        splitLine: { show: true }
+        splitLine: { show: true },
+        axisPointer: {
+            label: {
+                show: true,
+                backgroundColor: '#777',
+                color: '#fff',
+                borderRadius: 3,
+                padding: [3, 5],
+                fontSize: 12
+            }
+        },
     },
     series: []
 });
@@ -219,7 +249,7 @@ onBeforeUnmount(() => {
         resizeObserver.disconnect();
         resizeObserver = null;
     }
-    
+
     // 2. 销毁图表
     if (chartInstance.value) {
         chartInstance.value.dispose();
