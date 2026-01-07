@@ -37,25 +37,39 @@ const getBaseOptions = () => ({
     },
     tooltip: {
         trigger: 'axis',
-        axisPointer: {
-            type: 'line',
-            lineStyle: { color: '#999', type: 'dashed' },
-            snap: true
-        },
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
         borderColor: '#ccc',
         borderWidth: 1,
-        formatter: (params) => {
-            if (!params.length) return '';
-            let html = `<div style="font-weight:bold;border-bottom:1px solid #eee;padding-bottom:5px;margin-bottom:5px;">
-                        Position: ${parseFloat(params[0].axisValue).toFixed(2)} m
-                        </div>`;
+        textStyle: {
+            color: '#333'
+        },
+        axisPointer: {
+            type: 'cross',
+            snap: true,
+            crossStyle: {
+                color: '#999',
+                type: 'dashed',
+                width: 1
+            }
+        },
+        formatter: function (params) {
+            if (!Array.isArray(params) || params.length === 0) return '';
+            const xVal = params[0].name;
+            let html = `<b>Position: ${parseFloat(xVal).toFixed(2)} m</b><br/>`;
+            const colorMap = {
+                'P1': '#5470c6',
+                'P2': '#91cc75',
+                'P3': '#fac858',
+                'P4': '#ee6666',
+                'P6': '#73c0de'
+            };
+
             params.forEach(item => {
-                if (item.value !== undefined && item.value !== null) {
-                    html += `<div style="display:flex;justify-content:space-between;min-width:140px;">
-                                <span>${item.marker} ${item.seriesName}</span>
-                                <span style="font-weight:bold">${Number(item.value).toFixed(1)}°C</span>
-                            </div>`;
+                const val = item.value;
+                if (val !== undefined && val !== null) {
+                    const color = colorMap[item.seriesName] || item.color;
+                    const marker = `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${color};"></span>`;
+                    html += `${marker} ${item.seriesName}: ${Number(val).toFixed(1)}°C<br/>`;
                 }
             });
             return html;
@@ -69,10 +83,10 @@ const getBaseOptions = () => ({
         containLabel: true
     },
     xAxis: {
-        type: 'category', // 【关键】确认为类目轴
+        type: 'category',
         name: 'Position (m)',
         nameLocation: 'middle',
-        nameGap: 25,
+        nameGap: 30,
         nameTextStyle: { fontWeight: 500, color: '#333', fontSize: 13 },
         boundaryGap: false,
         splitLine: { show: false },
@@ -83,6 +97,16 @@ const getBaseOptions = () => ({
         },
         axisTick: { show: true },
         axisLine: { show: true, lineStyle: { color: '#333' } },
+        axisPointer: {
+            label: {
+                show: true,
+                backgroundColor: '#777',
+                color: '#fff',
+                borderRadius: 3,
+                padding: [3, 5],
+                fontSize: 12
+            }
+        },
         data: []
     },
     yAxis: {
@@ -91,12 +115,24 @@ const getBaseOptions = () => ({
         scale: true,
         nameLocation: 'middle',
         nameRotate: 90,
-        nameGap: 40,
+        nameGap: 35,
         nameTextStyle: { align: 'center', color: '#333', fontWeight: '500', fontSize: 13 },
         splitLine: { show: true, lineStyle: { color: '#E0E6F1' } },
         axisLine: { show: true, lineStyle: { color: '#333' } },
         axisTick: { show: true },
-        axisLabel: { color: '#666' }
+        axisLabel: { color: '#666' },
+        axisPointer: {
+            label: {
+                show: true,
+                backgroundColor: '#777',
+                color: '#fff',
+                borderRadius: 3,
+                padding: [3, 5],
+                formatter: function (params) {
+                    return params.value.toFixed(3);
+                }
+            }
+        }
     },
     series: []
 });

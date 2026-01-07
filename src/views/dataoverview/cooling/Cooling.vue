@@ -123,48 +123,48 @@
                 <tr>
                     <td class="label">Spec T</td>
                     <td class="value">l/m2mm</td>
-                    <td class="value">757</td>
-                    <td class="value">757</td>
-                    <td class="value">757</td>
-                    <td class="value">757</td>
-                    <td class="value">360</td>
-                    <td class="value">360</td>
-                    <td class="value">360</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
+                    <td class="value">{{ detialData.vc_b_01 }}</td>
+                    <td class="value">{{ detialData.vc_b_02 }}</td>
+                    <td class="value">{{ detialData.vc_b_03 }}</td>
+                    <td class="value">{{ detialData.vc_b_04 }}</td>
+                    <td class="value">{{ detialData.vc_b_05 }}</td>
+                    <td class="value">{{ detialData.vc_b_06 }}</td>
+                    <td class="value">{{ detialData.vc_b_07 }}</td>
+                    <td class="value">{{ detialData.vc_b_08 }}</td>
+                    <td class="value">{{ detialData.vc_b_09 }}</td>
+                    <td class="value">{{ detialData.vc_b_10 }}</td>
+                    <td class="value">{{ detialData.vc_b_11 }}</td>
+                    <td class="value">{{ detialData.vc_b_12 }}</td>
+                    <td class="value">{{ detialData.vc_b_13 }}</td>
+                    <td class="value">{{ detialData.vc_b_14 }}</td>
+                    <td class="value">{{ detialData.vc_b_15 }}</td>
+                    <td class="value">{{ detialData.vc_b_16 }}</td>
+                    <td class="value">{{ detialData.vc_b_17 }}</td>
+                    <td class="value">{{ detialData.vc_b_18 }}</td>
+                    <td class="value">{{ detialData.vc_b_19 }}</td>
                 </tr>
                 <tr>
                     <td class="label">Spec B</td>
                     <td class="value">l/m2mm</td>
-                    <td class="value">1439</td>
-                    <td class="value">1439</td>
-                    <td class="value">1439</td>
-                    <td class="value">1439</td>
-                    <td class="value">757</td>
-                    <td class="value">757</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
-                    <td class="value">0</td>
+                    <td class="value">{{ detialData.vc_b_01 }}</td>
+                    <td class="value">{{ detialData.vc_b_02 }}</td>
+                    <td class="value">{{ detialData.vc_b_03 }}</td>
+                    <td class="value">{{ detialData.vc_b_04 }}</td>
+                    <td class="value">{{ detialData.vc_b_05 }}</td>
+                    <td class="value">{{ detialData.vc_b_06 }}</td>
+                    <td class="value">{{ detialData.vc_b_07 }}</td>
+                    <td class="value">{{ detialData.vc_b_08 }}</td>
+                    <td class="value">{{ detialData.vc_b_09 }}</td>
+                    <td class="value">{{ detialData.vc_b_10 }}</td>
+                    <td class="value">{{ detialData.vc_b_11 }}</td>
+                    <td class="value">{{ detialData.vc_b_12 }}</td>
+                    <td class="value">{{ detialData.vc_b_13 }}</td>
+                    <td class="value">{{ detialData.vc_b_14 }}</td>
+                    <td class="value">{{ detialData.vc_b_15 }}</td>
+                    <td class="value">{{ detialData.vc_b_16 }}</td>
+                    <td class="value">{{ detialData.vc_b_17 }}</td>
+                    <td class="value">{{ detialData.vc_b_18 }}</td>
+                    <td class="value">{{ detialData.vc_b_19 }}</td>
                 </tr>
                 <tr>
                     <td class="label">Edge</td>
@@ -297,13 +297,13 @@
 
     </div>
 
-    <div class="heat-charts">
-        <!-- <div class="temp-chart">
+    <div class="cool-charts">
+        <div class="temp-chart">
+            <ScannerCurve :curve-data="chartData" />
+        </div>
+        <div class="temp-chart">
             <TempCurve :curve-data="chartData" />
         </div>
-        <div class="time-chart">
-            <TimeCurve :curve-data="chartData" />
-        </div> -->
     </div>
 </template>
 
@@ -311,18 +311,15 @@
 import { reactive, ref } from 'vue';
 import { getCoolingDetial } from '@/api/api.js';
 import { ElMessage } from 'element-plus';
-// import TimeCurve from './TimeCurve.vue';
-// import TempCurve from './TempCurve.vue';
+import TempCurve from './TempCurve.vue';
+import ScannerCurve from './ScannerCurve.vue';
 
 const loading = ref(false);
 
 
 const chartData = ref({
-    position: [],
-    time: [],
-    seg_u: [],
-    seg_d: [],
-    plate: []
+    temp: [],
+    scanner: []
 });
 
 const queryParams = reactive({
@@ -366,6 +363,7 @@ const initDetialData = () => ({
     vc_t_05: '',
     vc_t_06: '',
     vc_t_07: '',
+    vc_t_08: '',
     vc_t_09: '',
     vc_t_10: '',
     vc_t_11: '',
@@ -384,6 +382,7 @@ const initDetialData = () => ({
     vc_b_05: '',
     vc_b_06: '',
     vc_b_07: '',
+    vc_b_08: '',
     vc_b_09: '',
     vc_b_10: '',
     vc_b_11: '',
@@ -487,6 +486,7 @@ const handleQuery = async () => {
             detialData.vc_t_05 = res.table_data.vc_flow_top_05;
             detialData.vc_t_06 = res.table_data.vc_flow_top_06;
             detialData.vc_t_07 = res.table_data.vc_flow_top_07;
+            detialData.vc_t_08 = res.table_data.vc_flow_top_08;
             detialData.vc_t_09 = res.table_data.vc_flow_top_09;
             detialData.vc_t_10 = res.table_data.vc_flow_top_10;
             detialData.vc_t_11 = res.table_data.vc_flow_top_11;
@@ -505,6 +505,7 @@ const handleQuery = async () => {
             detialData.vc_b_05 = res.table_data.vc_flow_bot_05;
             detialData.vc_b_06 = res.table_data.vc_flow_bot_06;
             detialData.vc_b_07 = res.table_data.vc_flow_bot_07;
+            detialData.vc_b_08 = res.table_data.vc_flow_bot_08;
             detialData.vc_b_09 = res.table_data.vc_flow_bot_09;
             detialData.vc_b_10 = res.table_data.vc_flow_bot_10;
             detialData.vc_b_11 = res.table_data.vc_flow_bot_11;
@@ -555,6 +556,14 @@ const handleQuery = async () => {
             detialData.FirstPlate = res.table_data.plate_before_1;
             detialData.SecondPlate = res.table_data.plate_before_2;
             detialData.ThirdPlate = res.table_data.plate_before_3;
+
+            if (res.scanner_data) {
+                chartData.value.scanner = res.scanner_data.scanner;
+                chartData.value.temp = res.scanner_data.temp;
+            } else {
+                chartData.value.scanner = [];
+                chartData.value.temp = [];
+            }
         }
     } catch (error) {
         console.error('查询异常:', error);
@@ -734,7 +743,7 @@ const handleReset = () => {
     color: #c0c4cc;
 }
 
-.heat-charts {
+.cool-charts {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
