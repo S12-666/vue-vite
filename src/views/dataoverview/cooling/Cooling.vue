@@ -195,6 +195,11 @@
         <div class="section-title">Cool Effect</div>
 
         <table class="info-table mid-table">
+            <colgroup>
+                <col style="width: 10%;">
+                <col style="width: 10%;">
+                <col style="width: 12%;">
+            </colgroup>
             <tbody>
                 <tr>
                     <td class="label">P2Mean</td>
@@ -299,7 +304,7 @@
 
     <div class="cool-charts">
         <div class="temp-chart">
-            <ScannerCurve :curve-data="chartData" />
+            <ScannerCurve :scanner-data="chartData.scanner" />
         </div>
         <div class="temp-chart">
             <TempCurve :curve-data="chartData" />
@@ -321,6 +326,8 @@ const chartData = ref({
     temp: [],
     scanner: []
 });
+console.log(chartData);
+
 
 const queryParams = reactive({
     slabid: '',
