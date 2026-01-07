@@ -47,7 +47,15 @@ const getBaseOptions = () => ({
     ],
     tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'cross', snap: true },
+        axisPointer: {
+            type: 'cross',
+            snap: true,
+            crossStyle: {
+                color: '#999',
+                type: 'dashed',
+                width: 1
+            }
+        },
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         borderColor: '#ccc',
         borderWidth: 1,
@@ -91,7 +99,17 @@ const getBaseOptions = () => ({
         boundaryGap: false,
         axisLabel: { formatter: '{value}' },
         axisTick: { show: true },
-        axisLine: { show: true, lineStyle: { color: '#333' } }, // X轴底线保留淡淡的灰色
+        axisLine: { show: true, lineStyle: { color: '#333' } },
+        axisPointer: {
+            label: {
+                show: true,
+                backgroundColor: '#777',
+                color: '#fff',
+                borderRadius: 3,
+                padding: [3, 5],
+                fontSize: 12
+            }
+        },
         data: []
     },
     yAxis: [
@@ -109,7 +127,19 @@ const getBaseOptions = () => ({
             splitLine: { show: true, lineStyle: { color: '#E0E6F1' } },
             axisLine: { show: false },
             axisTick: { show: false },
-            axisLabel: { color: '#666' }
+            axisLabel: { color: '#666' },
+            axisPointer: {
+                label: {
+                    show: true,
+                    backgroundColor: '#777',
+                    color: '#fff',
+                    borderRadius: 3,
+                    padding: [3, 5],
+                    formatter: function (params) {
+                        return params.value.toFixed(3);
+                    }
+                }
+            }
         },
         {
             type: 'value',
@@ -119,12 +149,22 @@ const getBaseOptions = () => ({
             nameRotate: -90,
             nameGap: 35,
             nameTextStyle: { padding: [0, 0, 0, 0], align: 'center', color: '#333', fontWeight: '500', fontSize: 13 },
-
-            // 样式修改：去除实线和刻度，去除特定颜色
             splitLine: { show: false },
             axisLine: { show: false },
             axisTick: { show: false },
-            axisLabel: { formatter: '{value}', color: '#666' }
+            axisLabel: { formatter: '{value}', color: '#666' },
+            axisPointer: {
+                label: {
+                    show: true,
+                    backgroundColor: '#777',
+                    color: '#fff',
+                    borderRadius: 3,
+                    padding: [3, 5],
+                    formatter: function (params) {
+                        return params.value.toFixed(3);
+                    }
+                }
+            }
         }
     ],
     series: []
@@ -203,7 +243,7 @@ const updateChart = () => {
             symbol: 'triangle',
             symbolSize: 10,
             itemStyle: { color: '#fff', borderColor: '#1E90FF', borderWidth: 2 },
-            lineStyle: { width: 2, color: '#1E90FF', type: 'dashed'}
+            lineStyle: { width: 2, color: '#1E90FF', type: 'dashed' }
         }
     ];
 

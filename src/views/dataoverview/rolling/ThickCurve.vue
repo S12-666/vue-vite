@@ -5,7 +5,7 @@ import * as echarts from 'echarts';
 const props = defineProps({
     curveData: {
         type: Object,
-        default: () => ({ position: [], centerthickness: [], leftthickness: [], rightthickness: [], tgtplatethickness2 : null, maxplatethickness2 : null, minplatethickness2 : null })
+        default: () => ({ position: [], centerthickness: [], leftthickness: [], rightthickness: [], tgtplatethickness2: null, maxplatethickness2: null, minplatethickness2: null })
     }
 });
 
@@ -82,7 +82,17 @@ const getBaseOptions = () => ({
         boundaryGap: false,
         axisLabel: { formatter: '{value}' },
         axisTick: { show: true },
-        axisLine: { show: true, lineStyle: { color: '#333' } }, // X轴底线保留淡淡的灰色
+        axisLine: { show: true, lineStyle: { color: '#333' } },
+        axisPointer: {
+            label: {
+                show: true,
+                backgroundColor: '#777',
+                color: '#fff',
+                borderRadius: 3,
+                padding: [3, 5],
+                fontSize: 12
+            }
+        },
         data: []
     },
     yAxis: [
@@ -99,7 +109,17 @@ const getBaseOptions = () => ({
             splitLine: { show: true, lineStyle: { color: '#E0E6F1' } },
             axisLine: { show: false },
             axisTick: { show: false },
-            axisLabel: { color: '#666' }
+            axisLabel: { color: '#666' },
+            axisPointer: {
+                label: {
+                    show: true,
+                    backgroundColor: '#777',
+                    color: '#fff',
+                    borderRadius: 3,
+                    padding: [3, 5],
+                    fontSize: 12
+                }
+            },
         }
     ],
     series: []
@@ -148,27 +168,27 @@ const updateChart = () => {
     }
     const markLineData = [];
     if (maxVal !== null) {
-        markLineData.push({ 
-            yAxis: maxVal, 
-            name: 'Max', 
+        markLineData.push({
+            yAxis: maxVal,
+            name: 'Max',
             lineStyle: { color: '#FF0000', type: 'dashed', width: 1 }, // 红色虚线
-            label: { formatter: 'Max: {c}', position: 'end', color: '#FF0000' } 
+            label: { formatter: 'Max: {c}', position: 'end', color: '#FF0000' }
         });
     }
     if (tgtVal !== null) {
-        markLineData.push({ 
-            yAxis: tgtVal, 
-            name: 'Target', 
+        markLineData.push({
+            yAxis: tgtVal,
+            name: 'Target',
             lineStyle: { color: '#32CD32', type: 'dashed', width: 2 }, // 绿色加粗虚线
-            label: { formatter: 'Target: {c}', position: 'end', color: '#32CD32' } 
+            label: { formatter: 'Target: {c}', position: 'end', color: '#32CD32' }
         });
     }
     if (minVal !== null) {
-        markLineData.push({ 
-            yAxis: minVal, 
-            name: 'Min', 
+        markLineData.push({
+            yAxis: minVal,
+            name: 'Min',
             lineStyle: { color: '#FF0000', type: 'dashed', width: 1 }, // 红色虚线
-            label: { formatter: 'Min: {c}', position: 'end', color: '#FF0000' } 
+            label: { formatter: 'Min: {c}', position: 'end', color: '#FF0000' }
         });
     }
     const series = [
