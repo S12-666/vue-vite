@@ -78,14 +78,15 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted, onActivated } from 'vue';
 import { getHeatingDetial } from '@/api/api.js';
 import { ElMessage } from 'element-plus';
 import TimeCurve from './TimeCurve.vue';
 import TempCurve from './TempCurve.vue';
+import { useRoute } from 'vue-router';
 
 const loading = ref(false);
-
+const route = useRoute();
 
 const chartData = ref({
     position: [],
@@ -215,6 +216,23 @@ const handleReset = () => {
         type: 'info'
     })
 }
+
+const initPageData = () => {
+    const urlUpid = route.query.upid;
+    if (urlUpid) {
+        queryParams.upid = urlUpid;
+        queryParams.slabid = '';
+        handleQuery();
+    }
+}
+
+onMounted(() => {
+    initPageData();
+})
+
+onActivated(() => {
+    initPageData();
+});
 </script>
 
 <style scoped>
