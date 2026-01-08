@@ -71,3 +71,11 @@ export function getCoolingDetial(data) {
         data
     })
 }
+
+export function getFQCDetial(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/pidas/getFQCDetial',
+        method: 'post',
+        data
+    })
+}
