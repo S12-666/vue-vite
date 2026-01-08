@@ -13,6 +13,7 @@
                 <div class="flex-item button-group">
                     <el-button type="primary" @click="handleQuery" :loading="loading">查询</el-button>
                     <el-button @click="handleReset">重置</el-button>
+                    <el-button type="info" plain @click="handleBack" :disabled="!isFromJump">返回</el-button>
                 </div>
             </div>
         </el-form>
@@ -83,10 +84,13 @@ import { getHeatingDetial } from '@/api/api.js';
 import { ElMessage } from 'element-plus';
 import TimeCurve from './TimeCurve.vue';
 import TempCurve from './TempCurve.vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const loading = ref(false);
 const route = useRoute();
+const router = useRouter();
+
+const isFromJump = ref(false);
 
 const chartData = ref({
     position: [],
@@ -196,7 +200,7 @@ const handleQuery = async () => {
                     plate: res.furnace.plate || []
                 };
             } else {
-                chartData.value = {position: [], time: [], seg_d: [], seg_u: [], plate: []}
+                chartData.value = { position: [], time: [], seg_d: [], seg_u: [], plate: [] }
             }
         }
     } catch (error) {
@@ -217,12 +221,21 @@ const handleReset = () => {
     })
 }
 
+const handleBack = () => {
+    if (isFromJump.value) {
+        router.push('/heatingreport');
+    }
+}
+
 const initPageData = () => {
     const urlUpid = route.query.upid;
     if (urlUpid) {
+        isFromJump.value = true;
         queryParams.upid = urlUpid;
         queryParams.slabid = '';
         handleQuery();
+    } else {
+        isFromJump.value = false;
     }
 }
 
@@ -394,7 +407,7 @@ onActivated(() => {
     color: #c0c4cc;
 }
 
-.heat-charts{
+.heat-charts {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
