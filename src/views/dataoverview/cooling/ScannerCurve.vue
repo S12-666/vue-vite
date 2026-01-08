@@ -127,7 +127,6 @@ const getBaseOptions = (minVal, maxVal) => ({
 const updateChart = () => {
     if (!chartInstance.value) return;
     const rawData = props.scannerData || {};
-    console.log(rawData);
 
     const positions = rawData.position || [];
     const rowsData = rawData.data || [];

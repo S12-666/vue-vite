@@ -1,13 +1,16 @@
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, onActivated } from 'vue'
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { getRollingReport } from '@/api/api.js'
-import { getStatusClass } from '@/utils/color_utils/colorSelect.js'
+import { getStatusClass } from '@/utils/color_utils/colorSelect.js';
+import { useRouter } from 'vue-router';
 
-const allTableData = ref([])  //存储接口返回的全部数据
-const filteredTableData = ref([])  // 存储筛选后的数据
-const initialRanges = ref({}) // 记录接口返回的初始范围，用于重置和颜色变化
+const router = useRouter();
+
+const allTableData = ref([]);
+const filteredTableData = ref([]);
+const initialRanges = ref({});
 
 const dialogVisible = ref(false)
 const currentFaultRow = ref({})
@@ -191,6 +194,26 @@ const handleFaultClick = (row) => {
     dialogVisible.value = true  // 打开弹窗
 }
 
+const handleQueryDetails = () => {
+    if (!currentFaultRow.value || !currentFaultRow.value.upid) {
+        ElMessage.warning('当前数据缺少UPID，无法跳转');
+        return;
+    }
+    dialogVisible.value = false;
+    setTimeout(() => {
+        router.push({
+            path: '/rolling',
+            query: {
+                upid: currentFaultRow.value.upid
+            }
+        });
+    }, 350);
+}
+
+onActivated(() => {
+    dialogVisible.value = false;
+    currentFaultRow.value = {};
+});
 </script>
 
 <template>
@@ -308,7 +331,7 @@ const handleFaultClick = (row) => {
         </div>
     </el-config-provider>
 
-    <el-dialog v-model="dialogVisible" title="参数详情" width="30%" align-center custom-class="clean-dialog">
+    <el-dialog v-model="dialogVisible" title="参数详情" width="30%" align-center custom-class="clean-dialog" destroy-on-close>
         <!-- <div class="section-title">关键参数</div> -->
         <div v-if="currentFaultRow">
             <el-descriptions :column="2" border>
@@ -346,7 +369,7 @@ const handleFaultClick = (row) => {
 
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="success" @click="dialogVisible = false">查询详情</el-button>
+                <el-button type="success" @click="handleQueryDetails">查询详情</el-button>
                 <el-button @click="dialogVisible = false">关闭</el-button>
             </span>
         </template>

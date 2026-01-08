@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onActivated, onDeactivated } from 'vue'
+import { ref, reactive, computed, onActivated } from 'vue'
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { getHeatingReport } from '@/api/api.js';
@@ -8,9 +8,9 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-const allTableData = ref([])  //存储接口返回的全部数据
-const filteredTableData = ref([])  // 存储筛选后的数据
-const initialRanges = ref({}) // 记录接口返回的初始范围，用于重置和颜色变化
+const allTableData = ref([]);
+const filteredTableData = ref([]);
+const initialRanges = ref({});
 
 const dialogVisible = ref(false)
 const currentFaultRow = ref({})

@@ -13,6 +13,7 @@
                 <div class="flex-item button-group">
                     <el-button type="primary" @click="handleQuery" :loading="loading">查询</el-button>
                     <el-button @click="handleReset">重置</el-button>
+                    <el-button type="info" plain @click="handleBack" :disabled="!isFromJump">返回</el-button>
                 </div>
             </div>
         </el-form>
@@ -140,11 +141,16 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted, onActivated } from 'vue';
 import { getFQCDetial } from '@/api/api.js';
 import { ElMessage } from 'element-plus';
+import { useRoute, useRouter } from 'vue-router';
 
 const loading = ref(false);
+const route = useRoute();
+const router = useRouter();
+
+const isFromJump = ref(false);
 
 const queryParams = reactive({
     slabid: '',
@@ -231,6 +237,32 @@ const handleReset = () => {
         type: 'info'
     })
 }
+
+const handleBack = () => {
+    if (isFromJump.value) {
+        router.push('/fqcreport');
+    }
+}
+
+const initPageData = () => {
+    const urlUpid = route.query.upid;
+    if (urlUpid) {
+        isFromJump.value = true;
+        queryParams.upid = urlUpid;
+        queryParams.slabid = '';
+        handleQuery();
+    } else {
+        isFromJump.value = false;
+    }
+}
+
+onMounted(() => {
+    initPageData();
+})
+
+onActivated(() => {
+    initPageData();
+});
 </script>
 
 <style scoped>
