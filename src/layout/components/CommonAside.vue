@@ -1,28 +1,33 @@
 <template>
     <el-aside :width="width" class="my-aside">
-        <el-menu  :collapse-transition="false" :unique-opened="true" :default-active="activeMenu"
-            class="el-menu-vertical" :class="{'force-narrow-mode': isCollapse}">
-            <el-menu-item v-for="item in noChildren" :index="item.path" :key="item.path" @click="handleMenu(item)">
-                <!-- <component class="icons" :is="loadIcon(item.icon)"></component> -->
-                <img :src="loadIcon(item.icon)" class="icons" alt="" />
-                <span>{{ item.label }}</span>
-            </el-menu-item>
+        <el-menu :collapse="isCollapse" :collapse-transition="false" :unique-opened="true" :default-active="activeMenu"
+            class="el-menu-vertical">
+            <template v-for="item in list" :key="item.path">
 
-            <el-sub-menu v-for="item in hasChildren" :index="item.path" :key="item.path">
-                <template #title>
+                <el-menu-item v-if="!item.children || item.children.length === 0" :index="item.path"
+                    @click="handleMenu(item)">
                     <img :src="loadIcon(item.icon)" class="icons" alt="" />
-                    <!-- <component class="icons" :is="loadIcon(item.icon)"></component> -->
-                    <span>{{ item.label }}</span>
-                </template>
-
-                <el-menu-item v-for="(subItem, subIndex) in item.children" :index="subItem.path" :key="subItem.path"
-                    @click="handleMenu(subItem)">
-                    <!-- <component class="icons" :is="loadIcon(subItem.icon)"></component> -->
-                    <img :src="loadIcon(subItem.icon)" class="icons" alt="" />
-                    <span>{{ subItem.label }}</span>
+                    <template #title>
+                        <span>{{ item.label }}</span>
+                    </template>
                 </el-menu-item>
 
-            </el-sub-menu>
+                <el-sub-menu v-else :index="item.path">
+                    <template #title>
+                        <img :src="loadIcon(item.icon)" class="icons" alt="" />
+                        <span>{{ item.label }}</span>
+                    </template>
+
+                    <el-menu-item v-for="(subItem, subIndex) in item.children" :index="subItem.path" :key="subItem.path"
+                        @click="handleMenu(subItem)">
+                        <img :src="loadIcon(subItem.icon)" class="icons" alt="" />
+                        <template #title>
+                            <span>{{ subItem.label }}</span>
+                        </template>
+                    </el-menu-item>
+                </el-sub-menu>
+
+            </template>
         </el-menu>
 
         <div class="collapse-btn" @click="handleCollapse">
@@ -44,9 +49,6 @@ const store = useAllDataStore();
 const list = computed(() => store.state.menuList);
 // console.log(list);
 
-const noChildren = computed(() => list.value.filter(item => !item.children));
-const hasChildren = computed(() => list.value.filter(item => item.children));
-// console.log(list.value);
 const isCollapse = computed(() => store.state.isCollapse);
 const width = computed(() => store.state.isCollapse ? "64px" : "180px");
 const handleCollapse = () => {
@@ -118,10 +120,11 @@ const handleMenu = (item) => {
 }
 
 .force-narrow-mode {
+
     // 1. 隐藏所有文字 span
     :deep(span) {
         display: none;
-        opacity: 0; 
+        opacity: 0;
     }
 
     // 2. 隐藏父菜单右侧的小箭头 (那个 > 符号)
@@ -130,12 +133,13 @@ const handleMenu = (item) => {
     }
 
     // 3. 调整父级菜单的 padding，让图标居中
-    :deep(.el-sub-menu__title), :deep(.el-menu-item) {
+    :deep(.el-sub-menu__title),
+    :deep(.el-menu-item) {
         padding: 0 !important;
         display: flex;
         justify-content: center;
         align-items: center;
-        
+
         .icons {
             margin-right: 0; // 去掉图标右边距
         }
@@ -147,13 +151,12 @@ const handleMenu = (item) => {
         .el-menu-item {
             min-width: unset; // 取消 element 默认的最小宽度
             background-color: #f5f7fa; // 给子菜单加个背景色，方便区分层级
-            
+
             // 如果你想让子菜单图标变小一点，表示它是子集
             .icons {
-                transform: scale(0.8); 
+                transform: scale(0.8);
             }
         }
     }
 }
-
 </style>

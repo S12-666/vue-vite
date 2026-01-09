@@ -25,20 +25,6 @@ export default [
                                 url: 'visual/Visual'
                             },
                             {
-                                path: '/limits',
-                                name: 'limits',
-                                label: '权限管理',
-                                icon: 'limits',
-                                url: 'limits/Limits'
-                            },
-                            {
-                                path: '/user',
-                                name: 'user',
-                                label: '用户管理',
-                                icon: 'user',
-                                url: 'user/User'
-                            },
-                            {
                                 path: '/report',
                                 name: 'report',
                                 label: '工序报表',
@@ -122,6 +108,20 @@ export default [
                                 label: '开发日志',
                                 icon: 'github',
                                 url: 'developview/DevelopView'
+                            },
+                            {
+                                path: '/limits',
+                                name: 'limits',
+                                label: '权限管理',
+                                icon: 'limits',
+                                url: 'limits/Limits'
+                            },
+                            {
+                                path: '/user',
+                                name: 'user',
+                                label: '用户管理',
+                                icon: 'user',
+                                url: 'user/User'
                             }
                         ],
                         token: Mock.Random.guid(),
