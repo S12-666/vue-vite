@@ -151,6 +151,7 @@ const route = useRoute();
 const router = useRouter();
 
 const isFromJump = ref(false);
+const sourcePath = ref('');
 
 const queryParams = reactive({
     slabid: '',
@@ -240,19 +241,25 @@ const handleReset = () => {
 
 const handleBack = () => {
     if (isFromJump.value) {
-        router.push('/fqcreport');
+        const backTo = sourcePath.value || '/specification';
+        router.push(backTo);
     }
 }
 
 const initPageData = () => {
     const urlUpid = route.query.upid;
+    const fromPath = route.query.from;
     if (urlUpid) {
         isFromJump.value = true;
+        if (fromPath) {
+            sourcePath.value = fromPath;
+        }
         queryParams.upid = urlUpid;
         queryParams.slabid = '';
         handleQuery();
     } else {
         isFromJump.value = false;
+        sourcePath.value = '';
     }
 }
 

@@ -4,9 +4,10 @@ import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { getFQCReport } from '@/api/api.js'
 import { getStatusClass } from '@/utils/color_utils/colorSelect.js';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 
 const allTableData = ref([]);
 const filteredTableData = ref([]);
@@ -209,7 +210,8 @@ const handleQueryDetails = () => {
         router.push({
             path: '/fqc',
             query: {
-                upid: currentFaultRow.value.upid
+                upid: currentFaultRow.value.upid,
+                from: route.path
             }
         });
     }, 350);
