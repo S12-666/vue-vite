@@ -247,7 +247,7 @@ const initPageData = () => {
 }
 
 onMounted(() => {
-    initPageData();
+    // initPageData();
 })
 
 onActivated(() => {
