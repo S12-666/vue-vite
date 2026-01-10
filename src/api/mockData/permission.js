@@ -20,9 +20,16 @@ export default [
                             {
                                 path: '/visual',
                                 name: 'visual',
-                                label: '可视分析',
+                                label: '智能监控',
                                 icon: 'analysis',
                                 url: 'visual/Visual'
+                            },
+                            {
+                                path: '/prediction',
+                                name: 'prediction',
+                                label: '性能分析',
+                                icon: 'prediction',
+                                url: 'prediction/Prediction'
                             },
                             {
                                 path: '/report',
