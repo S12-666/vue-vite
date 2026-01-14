@@ -79,3 +79,11 @@ export function getFQCDetial(data) {
         data
     })
 }
+
+export function getPredictionUpid(params) {
+    return request({
+        url: '/newbaogangapi/v1.0/prediction/getPredictionUpid',
+        method: 'get',
+        params
+    })
+}
