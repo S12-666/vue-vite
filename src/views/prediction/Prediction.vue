@@ -3,11 +3,13 @@ import { ref, reactive, computed, onActivated } from 'vue'
 import { ElMessage } from 'element-plus';
 import { useRouter, useRoute } from 'vue-router';
 import { loadIcon } from '@/utils/icons_utils/iconLoader.js';
-import { getPredictionUpid } from '@/api/api.js';
+import { buildSankeyFromPredictions } from '@/utils/sankey_utils/sankey_builder.js'
+import { getCategoryMapper } from '@/utils/index_utils/index_group.js'
+import { getPredictionUpid, getPredictionResult } from '@/api/api.js';
+import SankeyDiagram from '@/views/prediction/SankeyDiagram.vue';
 
 const router = useRouter();
 const route = useRoute();
-
 
 const queryParams = reactive({
     upid: '19327316000',
@@ -19,6 +21,15 @@ const searchResult = ref({
     platetype: '',
     p_label: []
 });
+
+const loading = ref(false)
+
+const sankeyData = ref({
+    status_cooling: null,
+    nodes: [],
+    links: [],
+    raw: null
+})
 
 const performanceTags = computed(() => {
     const tagNames = ['pa', 'pf', 'pn', 'ps', 'gs'];
@@ -37,7 +48,7 @@ const performanceTags = computed(() => {
 
 const handleQuery = async () => {
     const params = {
-        upid: queryParams.upid
+        upid: queryParams.upid,
     }
     try {
         const res = await getPredictionUpid(params)
@@ -54,6 +65,47 @@ const handleQuery = async () => {
         ElMessage({
             showClose: true,
             message: '请求数据失败 请检查后台服务器',
+            type: 'error'
+        })
+    }
+}
+
+const handlePrediction = async () => {
+    if (!searchResult.value.upid) {
+        ElMessage.warning('请先查询有效的UPID后再进行预测');
+        return;
+    }
+    loading.value = true
+    const data = {
+        upid: searchResult.value.upid,
+        status_cooling: searchResult.value.status_cooling,
+        platetype: searchResult.value.platetype,
+        label: searchResult.value.p_label
+    }
+    try {
+        const res = await getPredictionResult(data)
+        console.log(res);
+
+        if (res) {
+            ElMessage({
+                showClose: true,
+                message: '预测成功',
+                type: 'success'
+            })
+            const cooling = res.cooling_status;
+            const predictions = res.predictions || res.prediction || {};
+            const mapper = getCategoryMapper(cooling);
+            const { nodes, links } = buildSankeyFromPredictions(predictions, cooling, mapper)
+            sankeyData.value.status_cooling = cooling
+            sankeyData.value.nodes = nodes
+            sankeyData.value.links = links
+            sankeyData.value.raw = predictions
+        }
+    } catch (error) {
+        console.error('预测请求失败', error);
+        ElMessage({
+            showClose: true,
+            message: '预测请求失败 请检查后台服务器',
             type: 'error'
         })
     }
@@ -136,8 +188,44 @@ const handleProcessClick = (type) => {
             </div>
         </div>
         <div class="predict-btn">
-            <el-button type="success" @click="handleQuery">预测</el-button>
+            <el-button type="success" @click="handlePrediction" :loading="loading">预测</el-button>
         </div>
+    </div>
+    <div class="visual">
+        <el-row :gutter="20">
+            <el-col :span="4">
+                <el-card style="width: 100%;">
+                    <template #header>
+                        <div class="card-header">
+                            <span>panel</span>
+                        </div>
+                    </template>
+                    <p v-for="o in 4" :key="o" class="text item">{{ 'List item ' + o }}</p>
+                </el-card>
+            </el-col>
+            <el-col :span="16">
+                <el-card style="width: 100%;">
+                    <template #header>
+                        <div class="card-header">
+                            <span>xGboost+shap</span>
+                        </div>
+                    </template>
+                    <div class="sankey-diagram">
+                        <SankeyDiagram :sankey-data="sankeyData" />
+                    </div>
+                </el-card>
+            </el-col>
+            <el-col :span="4">
+                <el-card style="width: 100%;">
+                    <template #header>
+                        <div class="card-header">
+                            <span>Prediction Result</span>
+                        </div>
+                    </template>
+                    <p>redar</p>
+                </el-card>
+            </el-col>
+        </el-row>
     </div>
 
 </template>
@@ -238,5 +326,33 @@ const handleProcessClick = (type) => {
     display: flex;
     align-items: center;
     margin-left: 100px;
+}
+
+.visual {
+    margin-top: 20px;
+    padding: 10px, 0;
+
+    :deep(.el-card__header) {
+        height: 40px;
+        padding: 10 12px;
+        display: flex;
+        align-items: center;
+        // background-color: #DCDCDC;
+    }
+
+    .card-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .card-header span {
+        font-size: 16px;
+        font-weight: 3000;
+        color: #333;
+        line-height: 1;
+        font-family: "Helvetica Neue, Helvetica, Arial, sans-serif"
+    }
 }
 </style>

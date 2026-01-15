@@ -87,3 +87,12 @@ export function getPredictionUpid(params) {
         params
     })
 }
+
+export function getPredictionResult(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/prediction/singelplate',
+        method: 'post',
+        data,
+        timeout: 60000
+    })
+}
