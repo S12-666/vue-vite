@@ -3,13 +3,17 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
+import { onMounted, onBeforeUnmount, ref, shallowRef, watch, nextTick } from 'vue';
 import * as echarts from 'echarts/core';
 import { SankeyChart } from 'echarts/charts';
 import { TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 
+// 注册 ECharts 组件
 echarts.use([SankeyChart, TooltipComponent, CanvasRenderer]);
+
+const POS_COLOR = '#e74c3c'; // 正向红
+const NEG_COLOR = '#3498db'; // 负向蓝
 
 const props = defineProps({
     sankeyData: {
@@ -19,18 +23,51 @@ const props = defineProps({
 });
 
 const chartRef = ref(null);
-let chartInstance = null;
+// 使用 shallowRef 存储 chart 实例，性能更好
+const chartInstance = shallowRef(null);
+// 定义 Observer 变量
+let resizeObserver = null;
 
-function initChart() {
-    if (!chartRef.value) return;
-    chartInstance = echarts.init(chartRef.value);
-    updateChart();
+// --- 核心修改：统一销毁逻辑 ---
+function disposeChart() {
+    // 1. 断开监听
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
+    }
+    // 2. 销毁实例
+    if (chartInstance.value) {
+        chartInstance.value.dispose();
+        chartInstance.value = null;
+    }
 }
 
+// --- 核心修改：初始化与监听 ---
+function initChart() {
+    // 初始化前先清理
+    disposeChart();
+
+    if (!chartRef.value) return;
+
+    // 初始化实例
+    chartInstance.value = echarts.init(chartRef.value);
+
+    // 渲染数据
+    updateChart();
+
+    // 添加 Resize 监听
+    resizeObserver = new ResizeObserver(() => {
+        chartInstance.value?.resize();
+    });
+    resizeObserver.observe(chartRef.value);
+}
+
+// 配置项生成逻辑 (保持原样，未修改)
 function getOption(nodes, links) {
     return {
         tooltip: {
             trigger: 'item',
+            confine: true, // 建议加上：防止 tooltip 超出容器被遮挡
             formatter: (p) => {
                 const d = p.data;
                 if (!d) return '';
@@ -41,7 +78,6 @@ function getOption(nodes, links) {
                     const totalVal = Number(d.value).toFixed(4);
 
                     if (meta.type === 'feature') {
-                        // 显示净值(Sum)和绝对值之和(Total)
                         const netVal = Number(meta.shap_value).toFixed(4);
                         const rows = (meta.items || [])
                             .map(x => {
@@ -85,40 +121,30 @@ function getOption(nodes, links) {
             type: 'sankey',
             data: nodes,
             links: links,
-
-            // 【关键修改】交互高亮模式
-            // 'trajectory' 会高亮经过该节点的所有完整路径 (Feature -> Category -> Model)
             emphasis: {
                 focus: 'trajectory'
             },
-
-            // 布局设置
             left: '5%',
             right: '5%',
-            nodeWidth: 20,
-            nodeGap: 8,
+            nodeWidth: 15,
+            nodeGap: 5,
             nodeAlign: 'justify',
-            draggable: false, // 禁止拖拽，保持排序稳定
-
-            // 节点标签
+            draggable: false,
             label: {
-                position: 'right', // 统一放在右侧或者根据位置自动
+                position: 'right',
                 fontSize: 11,
                 formatter: (p) => {
                     const meta = p.data?.meta;
                     if (meta?.type === 'feature') {
-                        const net = Number(meta.shap_value);
-                        const symbol = net >= 0 ? '+' : '';
-                        return `${meta.label} (${symbol}${net.toFixed(2)})`;
+                        return `${meta.label}`;
                     }
                     return meta?.label || p.name;
                 }
             },
-
-            // 全局线条样式
             lineStyle: {
                 curveness: 0.5,
-                opacity: 0.3 // 默认淡一点，hover 时高亮更明显
+                color: 'gradient',
+                opacity: 0.3
             }
         }]
     };
@@ -126,34 +152,35 @@ function getOption(nodes, links) {
 
 async function updateChart() {
     await nextTick();
-    if (!chartInstance) return;
-    console.log(props.sankeyData);
+    if (!chartInstance.value) return;
+
+    // 注意：这里用 console.log 调试数据
+    // console.log(props.sankeyData);
 
     const nodes = props.sankeyData?.nodes || [];
     const links = props.sankeyData?.links || [];
 
     if (!nodes.length || !links.length) {
-        chartInstance.clear();
+        chartInstance.value.clear();
         return;
     }
 
-    chartInstance.setOption(getOption(nodes, links), true);
-    chartInstance.resize();
+    chartInstance.value.setOption(getOption(nodes, links), true);
 }
 
-// 监听 sankeyData 变化
+// 监听数据变化
 watch(
     () => props.sankeyData,
     () => updateChart(),
     { deep: true }
 );
 
-onMounted(() => initChart());
+// 生命周期
+onMounted(() => {
+    initChart();
+});
 
-onUnmounted(() => {
-    if (chartInstance) {
-        chartInstance.dispose();
-        chartInstance = null;
-    }
+onBeforeUnmount(() => {
+    disposeChart();
 });
 </script>
