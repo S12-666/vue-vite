@@ -1,5 +1,5 @@
 <template>
-    <div ref="chartRef" style="width: 100%; height: 600px;"></div>
+    <div ref="chartRef" :style="{ width: '100%', height: CHART_CONFIG.height }"></div>
 </template>
 
 <script setup>
@@ -9,11 +9,24 @@ import { SankeyChart } from 'echarts/charts';
 import { TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 
-// 注册 ECharts 组件
 echarts.use([SankeyChart, TooltipComponent, CanvasRenderer]);
 
-const POS_COLOR = '#e74c3c'; // 正向红
-const NEG_COLOR = '#3498db'; // 负向蓝
+// ==========================================
+// 🛠️ 配置区域
+// ==========================================
+const CHART_CONFIG = {
+    height: '450px',
+    top: 10,
+    bottom: 20,
+    left: '1%',
+    right: '12%',
+    nodeWidth: 20,
+    nodeGap: 8,       // 保持固定间距，让数据去填满剩余空间
+    labelThreshold: 0.05
+};
+
+const POS_COLOR = '#e74c3c';
+const NEG_COLOR = '#3498db';
 
 const props = defineProps({
     sankeyData: {
@@ -23,122 +36,129 @@ const props = defineProps({
 });
 
 const chartRef = ref(null);
-// 使用 shallowRef 存储 chart 实例，性能更好
 const chartInstance = shallowRef(null);
-// 定义 Observer 变量
 let resizeObserver = null;
 
-// --- 核心修改：统一销毁逻辑 ---
 function disposeChart() {
-    // 1. 断开监听
     if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
     }
-    // 2. 销毁实例
     if (chartInstance.value) {
         chartInstance.value.dispose();
         chartInstance.value = null;
     }
 }
 
-// --- 核心修改：初始化与监听 ---
 function initChart() {
-    // 初始化前先清理
     disposeChart();
-
     if (!chartRef.value) return;
-
-    // 初始化实例
     chartInstance.value = echarts.init(chartRef.value);
-
-    // 渲染数据
     updateChart();
-
-    // 添加 Resize 监听
-    resizeObserver = new ResizeObserver(() => {
-        chartInstance.value?.resize();
-    });
+    resizeObserver = new ResizeObserver(() => chartInstance.value?.resize());
     resizeObserver.observe(chartRef.value);
 }
 
-// 配置项生成逻辑 (保持原样，未修改)
+// ==========================================
+// 🛠️ Tooltip 修改：使用 rawValue 显示真实值
+// ==========================================
+const getTooltipFormatter = (p) => {
+    const d = p.data;
+    if (!d) return '';
+
+    if (p.dataType === 'node') {
+        const meta = d.meta || {};
+
+        // 【核心修改】优先取 rawValue (真实值)，取不到则取 value
+        // 这样即使图表上的节点被放大了，悬浮显示的数值依然是真实的
+        const realValue = meta.rawValue !== undefined ? meta.rawValue : d.value;
+        const totalVal = Number(realValue).toFixed(4);
+
+        if (meta.type === 'feature') {
+            const netVal = Number(meta.shap_value).toFixed(4);
+            const rows = (meta.items || [])
+                .map(x => {
+                    const s = Number(x.shap_value);
+                    const color = s >= 0 ? POS_COLOR : NEG_COLOR;
+                    return `<span style="color:${color}">●</span> ${x.model}: ${s.toFixed(4)} (val:${x.actual_value})`;
+                }).join('<br/>');
+
+            return `
+                <div style="font-size:13px;">
+                    <b>${meta.label}</b><br/>
+                    真实权重: ${totalVal}<br/>
+                    净 SHAP 值: ${netVal}<br/>
+                    <hr style="margin:5px 0;border:0;border-top:1px solid #ddd"/>
+                    ${rows}
+                </div>
+            `;
+        }
+        return `<div><b>${meta.label}</b><br/>权重: ${totalVal}</div>`;
+    }
+
+    if (p.dataType === 'edge') {
+        // 这里的 Value 是被放大过的，用于展示流量粗细
+        // 如果想显示真实流量，可以在 logic 层把 rawValue 也存进 link.meta
+        const meta = d.meta || {};
+        const signText = meta.sign === 'pos' ? '(+)' : '(-)';
+        return `${d.source} → ${d.target}<br/>${signText}`;
+    }
+    return '';
+};
+
+const getLabelFormatter = (p, isHover = false) => {
+    const meta = p.data?.meta;
+    // 注意：这里的 labelThreshold 判断的是放大后的 value
+    // 如果希望按真实值判断，可以使用 meta.rawValue
+    const value = meta?.rawValue || p.data?.value || 0;
+
+    if (!isHover && value < CHART_CONFIG.labelThreshold) {
+        return '';
+    }
+    if (meta?.type === 'feature') return `${meta.label}`;
+    return meta?.label || p.name;
+};
+
+// ==========================================
+// 🛠️ Option 配置：去除所有高度补偿逻辑
+// ==========================================
 function getOption(nodes, links) {
     return {
         tooltip: {
             trigger: 'item',
-            confine: true, // 建议加上：防止 tooltip 超出容器被遮挡
-            formatter: (p) => {
-                const d = p.data;
-                if (!d) return '';
-
-                // --- 节点 Tooltip ---
-                if (p.dataType === 'node') {
-                    const meta = d.meta || {};
-                    const totalVal = Number(d.value).toFixed(4);
-
-                    if (meta.type === 'feature') {
-                        const netVal = Number(meta.shap_value).toFixed(4);
-                        const rows = (meta.items || [])
-                            .map(x => {
-                                const s = Number(x.shap_value);
-                                const color = s >= 0 ? POS_COLOR : NEG_COLOR;
-                                return `<span style="color:${color}">●</span> ${x.model}: ${s.toFixed(4)} (val:${x.actual_value})`;
-                            })
-                            .join('<br/>');
-
-                        return `
-                            <div style="font-size:13px;">
-                                <b>${meta.label}</b><br/>
-                                绝对值占比权重: ${totalVal}<br/>
-                                净 SHAP 值: ${netVal}<br/>
-                                <hr style="margin:5px 0;border:0;border-top:1px solid #ddd"/>
-                                ${rows}
-                            </div>
-                        `;
-                    }
-                    return `<div><b>${meta.label}</b><br/>权重: ${totalVal}</div>`;
-                }
-
-                // --- 连线 Tooltip ---
-                if (p.dataType === 'edge') {
-                    const meta = d.meta || {};
-                    const val = Number(d.value).toFixed(4);
-                    const signText = meta.sign === 'pos' ? '正向贡献 (+)' : '负向贡献 (-)';
-
-                    if (meta.type === 'f2c') {
-                        return `${meta.feature} → ${meta.category}<br/>${signText}: ${val}`;
-                    }
-                    if (meta.type === 'c2m') {
-                        return `${meta.category} → ${meta.model}<br/>${signText}: ${val}`;
-                    }
-                    return `${d.source} → ${d.target} : ${val}`;
-                }
-                return '';
-            }
+            confine: true,
+            formatter: getTooltipFormatter
         },
         series: [{
             type: 'sankey',
             data: nodes,
             links: links,
-            emphasis: {
-                focus: 'trajectory'
-            },
-            left: '5%',
-            right: '5%',
-            nodeWidth: 15,
-            nodeGap: 5,
+            left: CHART_CONFIG.left,
+            right: CHART_CONFIG.right,
+            top: CHART_CONFIG.top,
+            bottom: CHART_CONFIG.bottom,
+            nodeWidth: CHART_CONFIG.nodeWidth,
+            nodeGap: CHART_CONFIG.nodeGap,
+
+            // 两端对齐：保证左右两列都能顶天立地
             nodeAlign: 'justify',
+
+            // 0 迭代：防止节点乱跑，严格按照数据大小排序
+            layoutIterations: 0,
+
             draggable: false,
+
             label: {
                 position: 'right',
                 fontSize: 11,
-                formatter: (p) => {
-                    const meta = p.data?.meta;
-                    if (meta?.type === 'feature') {
-                        return `${meta.label}`;
-                    }
-                    return meta?.label || p.name;
+                distance: 5,
+                formatter: (p) => getLabelFormatter(p, false)
+            },
+            emphasis: {
+                focus: 'trajectory',
+                label: {
+                    show: true,
+                    formatter: (p) => getLabelFormatter(p, true)
                 }
             },
             lineStyle: {
@@ -154,9 +174,6 @@ async function updateChart() {
     await nextTick();
     if (!chartInstance.value) return;
 
-    // 注意：这里用 console.log 调试数据
-    // console.log(props.sankeyData);
-
     const nodes = props.sankeyData?.nodes || [];
     const links = props.sankeyData?.links || [];
 
@@ -165,22 +182,10 @@ async function updateChart() {
         return;
     }
 
-    chartInstance.value.setOption(getOption(nodes, links), true);
+    chartInstance.value.setOption(getOption(nodes, links), { notMerge: true });
 }
 
-// 监听数据变化
-watch(
-    () => props.sankeyData,
-    () => updateChart(),
-    { deep: true }
-);
-
-// 生命周期
-onMounted(() => {
-    initChart();
-});
-
-onBeforeUnmount(() => {
-    disposeChart();
-});
+watch(() => props.sankeyData, () => updateChart(), { deep: true });
+onMounted(() => initChart());
+onBeforeUnmount(() => disposeChart());
 </script>
