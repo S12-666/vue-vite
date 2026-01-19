@@ -19,10 +19,10 @@ const CHART_CONFIG = {
     top: 10,
     bottom: 20,
     left: '1%',
-    right: '12%',
+    right: '3%',
     nodeWidth: 20,
     nodeGap: 8,       // 保持固定间距，让数据去填满剩余空间
-    labelThreshold: 0.05
+    labelThreshold: 0.15
 };
 
 const POS_COLOR = '#e74c3c';
