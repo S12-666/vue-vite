@@ -96,3 +96,10 @@ export function getPredictionResult(data) {
         timeout: 60000
     })
 }
+
+export function getSystemConfig() {
+    return request({
+        url: '/newbaogangapi/v1.0/prediction/systemconfig',
+        method: 'get',
+    })
+}
