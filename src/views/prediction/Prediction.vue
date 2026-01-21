@@ -5,7 +5,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { loadIcon } from '@/utils/icons_utils/iconLoader.js';
 import { buildSankeyFromPredictions } from '@/utils/sankey_utils/sankey_builder.js'
 import { getCategoryMapper } from '@/utils/index_utils/index_group.js'
-import { getPredictionUpid, getPredictionResult, getSystemConfig } from '@/api/api.js';
+import { getPredictionUpid, getPredictionResult, getSystemConfig, sendPredLabel } from '@/api/api.js';
 import SankeyDiagram from '@/views/prediction/SankeyDiagram.vue';
 import RadarChart from '@/views/prediction/RadarChart.vue';
 import AccuracyChart from './AccuracyChart.vue';
@@ -63,9 +63,7 @@ const submitResultArray = computed(() => {
 });
 
 const handleFormSubmit = () => {
-    // 1. 打开前清空密码
     submitPassword.value = '';
-    // 2. 显示对话框
     submitDialogVisible.value = true;
 };
 
@@ -76,31 +74,44 @@ const handleFinalSubmit = () => {
     }
 
     submitLoading.value = true;
-
-    // 模拟 mockData/permission.js 中的校验逻辑
-    // 这里假设当前操作用户是 superadmin，密码必须是 woshimima
-    setTimeout(() => {
+    setTimeout(async () => {
         if (submitPassword.value === 'woshimima') {
-            ElMessage.success('密码验证通过，准备提交数据...');
+            let finalMsg = '';
+            const userRemark = processForm.remarks ? processForm.remarks.trim() : '';
+            if (processForm.isIntervention) {
+                if (userRemark) {
+                    finalMsg = `人工矫正，${userRemark}`;
+                } else {
+                    finalMsg = '人工矫正';
+                }
+            } else {
+                finalMsg = userRemark;
+            }
 
-            // TODO: 这里写真正的后端提交接口逻辑
-            // const payload = {
-            //     upid: searchResult.value.upid,
-            //     tags: submitResultArray.value,
-            //     remarks: processForm.remarks,
-            //     ...
-            // }
-
-            // 验证成功后关闭对话框
-            submitDialogVisible.value = false;
+            const params = {
+                upid: searchResult.value.upid,
+                pred_label: submitResultArray.value,
+                msg: finalMsg
+            };
+            try {
+                const res = await sendPredLabel(params);
+                if (res && res.success) {
+                    ElMessage.success('数据提交成功');
+                    submitDialogVisible.value = false;
+                } else {
+                    ElMessage.warning(res?.message || '提交失败，请重试');
+                }
+            } catch (error) {
+                console.error('提交接口报错:', error);
+                ElMessage.error('提交失败，请检查网络或后台服务');
+            }
         } else {
             ElMessage.error('密码错误，权限验证失败');
         }
         submitLoading.value = false;
-    }, 500); // 加一点延迟模拟感
+    }, 500);
 };
 
-// 2. 监听器与计算属性
 watch(() => searchResult.value.p_label, (newLabels) => {
     if (newLabels && newLabels.length === 5) {
         order.forEach((key, index) => {
@@ -127,7 +138,6 @@ const performanceTags = computed(() => {
     });
 });
 
-// 3. 业务逻辑函数
 const handleQuery = async () => {
     const params = { upid: queryParams.upid }
     try {
@@ -500,14 +510,18 @@ const handleProcessClick = (type) => {
                 <span class="d-label">提交结果：</span>
                 <span class="d-value code-style">{{ JSON.stringify(submitResultArray) }}</span>
             </div>
-
             <div class="dialog-row">
                 <span class="d-label">备注内容：</span>
                 <span class="d-value text-gray">
                     {{ processForm.remarks || '（无备注）' }}
                 </span>
             </div>
-
+            <div class="dialog-row">
+                <span class="d-label">人工矫正：</span>
+                <span class="d-value code-style">
+                    {{ processForm.isIntervention ? '是' : '否' }}
+                </span>
+            </div>
             <div class="dialog-row input-row">
                 <span class="d-label">用户密码：</span>
                 <el-input v-model="submitPassword" type="password" placeholder="请输入密码验证权限" show-password

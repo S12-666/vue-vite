@@ -103,3 +103,11 @@ export function getSystemConfig() {
         method: 'get',
     })
 }
+
+export function sendPredLabel(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/prediction/sendPredLabel',
+        method: 'post',
+        data
+    })
+}
