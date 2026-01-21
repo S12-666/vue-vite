@@ -83,7 +83,7 @@ const setOption = () => {
 };
 
 watch(() => props.accuracyData, () => {
-    console.log(props.accuracyData);
+    // console.log(props.accuracyData);
     if (myChart) {
         setOption();
     } else {
