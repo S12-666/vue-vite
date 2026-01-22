@@ -6,7 +6,7 @@ const MODEL_DEFAULT_COLOR = '#4b5563' // 模型默认深灰
 // 1. 配置：自定义指标分类颜色
 const CATEGORY_COLORS = {
     'HeatingIndex': '#FF8247',
-    'RollingIndex': '#32CD32',
+    'RollingIndex': '#67c23a',
     'CoolingIndex': '#1E90FF',
     'MeasurTempIndex': '#8B8989',
     'SpecIndex': '#DA70D6'

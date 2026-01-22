@@ -15,9 +15,9 @@ echarts.use([SankeyChart, TooltipComponent, CanvasRenderer]);
 // 🛠️ 配置区域
 // ==========================================
 const CHART_CONFIG = {
-    height: '450px',
+    height: '400px',
     top: 10,
-    bottom: 20,
+    bottom: 10,
     left: '1%',
     right: '3%',
     nodeWidth: 20,
