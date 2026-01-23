@@ -9,6 +9,8 @@ import { getPredictionUpid, getPredictionResult, getSystemConfig, sendPredLabel 
 import SankeyDiagram from '@/views/prediction/SankeyDiagram.vue';
 import RadarChart from '@/views/prediction/RadarChart.vue';
 import AccuracyChart from './AccuracyChart.vue';
+import ModelInfoPanel from './ModelInfoPanel.vue';
+import PCADiagChart from './PCADiagChart.vue';
 import { Monitor, Cpu, Connection, Odometer } from '@element-plus/icons-vue'
 
 const router = useRouter();
@@ -42,6 +44,7 @@ const loading = ref(false)
 const sankeyData = ref({ status_cooling: null, nodes: [], links: [], raw: null })
 const radarData = ref({ indicators: [], values: [], bgColors: [], rawData: [] })
 const accuracyData = ref([]);
+const pcaPredictions = ref({}) 
 
 // 表单数据
 const processForm = reactive({
@@ -193,6 +196,8 @@ const handlePrediction = async () => {
             sankeyData.value.links = links
             sankeyData.value.raw = predictions
 
+            pcaPredictions.value = res.predictions || {}
+
             const indicators = [];
             const values = [];
             const bgColors = [];
@@ -324,7 +329,7 @@ const handleProcessClick = (type) => {
 
     <div class="visual">
         <el-row :gutter="20">
-            <el-col :span="4">
+            <el-col :span="4" class="left-column-wrapper">
                 <el-card class="visual-card">
                     <template #header>
                         <div class="card-header">
@@ -392,6 +397,18 @@ const handleProcessClick = (type) => {
                         </div>
                     </div>
                 </el-card>
+                <el-card class="visual-card flex-grow-card" style="margin-top: 20px;">
+                    <template #header>
+                        <div class="card-header">
+                            <span>Model Insights</span>
+                        </div>
+                    </template>
+
+                    <div style="height: 100%;">
+                        <ModelInfoPanel :prediction-data="searchResult.raw_response || { predictions: sankeyData.raw }"
+                            :is-loading="loading" />
+                    </div>
+                </el-card>
             </el-col>
 
             <el-col :span="16">
@@ -399,7 +416,7 @@ const handleProcessClick = (type) => {
                     <template #header>
                         <div class="card-header"><span>xGboost+shap</span></div>
                     </template>
-                    <div class="sankey-diagram chart-container-large">
+                    <div class="sankey-diagram">
                         <SankeyDiagram :sankey-data="sankeyData" />
                     </div>
                 </el-card>
@@ -408,8 +425,8 @@ const handleProcessClick = (type) => {
                     <template #header>
                         <div class="card-header"><span>PCA-diag</span></div>
                     </template>
-                    <div class="sankey-diagram chart-container-small">
-                        <SankeyDiagram :sankey-data="sankeyData" />
+                    <div class="pca-diagram">
+                        <PCADiagChart :predictions="pcaPredictions" />
                     </div>
                 </el-card>
             </el-col>
@@ -543,6 +560,33 @@ const handleProcessClick = (type) => {
 <style scoped lang="less">
 .visual {
     margin-top: 10px;
+}
+
+.match-height-row {
+    display: flex;
+    flex-wrap: wrap; 
+}
+
+/* 2. 左侧列容器：变成垂直 Flex 布局 */
+.left-column-wrapper {
+    display: flex;
+    flex-direction: column;
+    /* 这里的 height: 100% 确保它跟最高的列（中间列）一样高 */
+}
+
+/* 3. 左侧下方卡片：自动填充剩余空间 */
+.flex-grow-card {
+    flex: 1; /* 关键：占据剩余高度 */
+    display: flex;
+    flex-direction: column;
+    
+    /* 让 Element Plus 的 body 也充满高度 */
+    :deep(.el-card__body) {
+        flex: 1;
+        height: 100%;
+        overflow: hidden; 
+        padding: 10px; 
+    }
 }
 
 .top-search-bar {
@@ -769,6 +813,17 @@ const handleProcessClick = (type) => {
 /* ======================== 
     图表容器 (独立高度控制) 
    ======================== */
+
+.sankey-diagram {
+    height: 400px;
+    width: 100%;
+}
+
+.pca-diagram {
+    height: 300px;
+    width: 100%;
+}
+
 .chart-container-large {
     width: 100%;
     height: 450px;
