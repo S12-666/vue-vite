@@ -118,14 +118,6 @@
                     <td class="label">Ps</td>
                     <td class="label">Gs</td>
                 </tr>
-                <!-- <tr>
-                    <td class="label">Value</td>
-                    <td class="value">{{ detialData.FHeadTop }}</td>
-                    <td class="value">{{ detialData.LHeadTop }}</td>
-                    <td class="value">{{ detialData.FTailTop }}</td>
-                    <td class="value">{{ detialData.LTailTop }}</td>
-                    <td class="value">{{ detialData.FHeadBtm }}</td>
-                </tr> -->
                 <tr>
                     <td class="label">Label</td>
                     <td class="value">{{ detialData.Pa }}</td>
@@ -133,6 +125,18 @@
                     <td class="value">{{ detialData.Pn }}</td>
                     <td class="value">{{ detialData.Ps }}</td>
                     <td class="value">{{ detialData.Gs }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Pred_Label</td>
+                    <td class="value">{{ detialData.pred_pa }}</td>
+                    <td class="value">{{ detialData.pred_pf }}</td>
+                    <td class="value">{{ detialData.pred_pn }}</td>
+                    <td class="value">{{ detialData.pred_ps }}</td>
+                    <td class="value">{{ detialData.pred_gs }}</td>
+                </tr>
+                <tr>
+                    <td class="label">msg</td>
+                    <td class="value" :colspan="5">{{ detialData.msg }}</td>
                 </tr>
             </tbody>
         </table>
@@ -181,7 +185,13 @@ const initDetialData = () => ({
     Pf: '',
     Pn: '',
     Ps: '',
-    Gs: ''
+    Gs: '',
+    pred_pa: '',
+    pred_pf: '',
+    pred_pn: '',
+    pred_ps: '',
+    pred_gs: '',
+    msg: ''
 });
 
 const detialData = reactive(initDetialData());
@@ -220,6 +230,12 @@ const handleQuery = async () => {
             detialData.Pn = res.plabel.pn;
             detialData.Ps = res.plabel.ps;
             detialData.Gs = res.plabel.gs;
+            detialData.pred_pa = res.pred_label.pa;
+            detialData.pred_pf = res.pred_label.pf;
+            detialData.pred_pn = res.pred_label.pn;
+            detialData.pred_ps = res.pred_label.ps;
+            detialData.pred_gs = res.pred_label.gs;
+            detialData.msg = res.msg;
         }
     } catch (error) {
         console.error('查询异常:', error);

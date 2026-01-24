@@ -278,7 +278,7 @@ const handleProcessClick = (type) => {
         ElMessage.warning('缺少UPID');
         return;
     }
-    const pathMap = { 'heating': '/heating', 'rolling': '/rolling', 'cooling': '/cooling' };
+    const pathMap = { 'heating': '/heating', 'rolling': '/rolling', 'cooling': '/cooling', 'fqc': '/fqc' };
     if (pathMap[type]) {
         router.push({ path: pathMap[type], query: { upid: queryParams.upid, from: route.path } });
     }
@@ -308,6 +308,13 @@ const handleProcessClick = (type) => {
                     @click="handleProcessClick('rolling')" />
                 <img v-if="searchResult.upid && searchResult.status_cooling === 0" :src="loadIcon('cooling')"
                     class="process-icon clickable-icon" title="冷却" @click="handleProcessClick('cooling')" />
+            </div>
+        </div>
+        <div class="fqc">
+            <span class="custom-label">FQC:</span>
+            <div class="process-icon-container">
+                <img v-if="searchResult.upid" :src="loadIcon('FQC')" class="process-icon clickable-icon" title="FQC"
+                    @click="handleProcessClick('fqc')" />
             </div>
         </div>
         <div class="steel-spec">
@@ -630,6 +637,19 @@ const handleProcessClick = (type) => {
     display: flex;
     align-items: center;
     margin-left: auto;
+    margin-right: 50px;
+
+    .process-icon-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+}
+
+.fqc {
+    display: flex;
+    align-items: center;
+    // margin-left: auto;
     margin-right: 50px;
 
     .process-icon-container {
