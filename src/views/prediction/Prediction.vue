@@ -11,7 +11,7 @@ import RadarChart from '@/views/prediction/RadarChart.vue';
 import AccuracyChart from './AccuracyChart.vue';
 import ModelInfoPanel from './ModelInfoPanel.vue';
 import PCADiagChart from './PCADiagChart.vue';
-import { Monitor, Cpu, Connection, Odometer } from '@element-plus/icons-vue'
+import { Monitor, Cpu, Connection, Odometer, Menu, Document, PieChart, EditPen } from '@element-plus/icons-vue'
 
 const router = useRouter();
 const route = useRoute();
@@ -39,6 +39,7 @@ const searchResult = ref({
 });
 
 const loading = ref(false)
+const query_loading = ref(false)
 
 // 图表数据
 const sankeyData = ref({ status_cooling: null, nodes: [], links: [], raw: null })
@@ -143,6 +144,7 @@ const performanceTags = computed(() => {
 
 const handleQuery = async () => {
     const params = { upid: queryParams.upid }
+    query_loading.value = true;
     try {
         const [baseRes, configRes] = await Promise.all([
             getPredictionUpid(params),
@@ -164,6 +166,8 @@ const handleQuery = async () => {
     } catch (error) {
         console.error(error);
         ElMessage.error('请求失败');
+    } finally {
+        query_loading.value = false;
     }
 }
 
@@ -294,7 +298,7 @@ const handleProcessClick = (type) => {
                     <el-input v-model="queryParams.upid" placeholder="输入钢板号" clearable class="custom-input" />
                 </div>
                 <div class="flex-item button-group">
-                    <el-button type="primary" @click="handleQuery">查询</el-button>
+                    <el-button type="primary" @click="handleQuery" :loading="query_loading">查询</el-button>
                     <el-button @click="handleReset">重置</el-button>
                 </div>
             </div>
@@ -343,7 +347,7 @@ const handleProcessClick = (type) => {
                             <el-icon class="header-icon">
                                 <Monitor />
                             </el-icon>
-                            <span>Panel</span>
+                            <span>系统面板</span>
                         </div>
                     </template>
                     <div class="system-info-list">
@@ -407,7 +411,8 @@ const handleProcessClick = (type) => {
                 <el-card class="visual-card flex-grow-card" style="margin-top: 20px;">
                     <template #header>
                         <div class="card-header">
-                            <span>Model Insights</span>
+                            <el-icon class="header-icon"><Menu /></el-icon>
+                            <span>模型参数</span>
                         </div>
                     </template>
 
@@ -421,7 +426,8 @@ const handleProcessClick = (type) => {
             <el-col :span="16">
                 <el-card class="visual-card">
                     <template #header>
-                        <div class="card-header"><span>xGboost+shap</span></div>
+                        <el-icon class="header-icon"><Document /></el-icon>
+                        <div class="card-header"><span>Xgboost预测分析</span></div>
                     </template>
                     <div class="sankey-diagram">
                         <SankeyDiagram :sankey-data="sankeyData" />
@@ -430,7 +436,8 @@ const handleProcessClick = (type) => {
 
                 <el-card class="visual-card" style="margin-top: 20px;">
                     <template #header>
-                        <div class="card-header"><span>PCA-diag</span></div>
+                        <el-icon class="header-icon"><Document /></el-icon>
+                        <div class="card-header"><span>PCA预测分析</span></div>
                     </template>
                     <div class="pca-diagram">
                         <PCADiagChart :predictions="pcaPredictions" />
@@ -441,14 +448,17 @@ const handleProcessClick = (type) => {
             <el-col :span="4">
                 <el-card class="visual-card">
                     <template #header>
-                        <div class="card-header"><span>Prediction Result</span></div>
+                        <el-icon class="header-icon">
+                            <PieChart />
+                        </el-icon>
+                        <div class="card-header"><span>预测结果</span></div>
                     </template>
                     <div class="chart-container-large result-container">
                         <div class="radar-diagram">
                             <RadarChart :radar-data="radarData" />
                         </div>
                         <div class="accu-diagram">
-                            <div class="sub-title">Accuracy</div>
+                            <div class="sub-title">准确率</div>
                             <div class="accu-chart-wrapper">
                                 <AccuracyChart :accuracy-data="accuracyData" />
                             </div>
@@ -458,7 +468,8 @@ const handleProcessClick = (type) => {
 
                 <el-card class="visual-card" style="margin-top: 20px;">
                     <template #header>
-                        <div class="card-header"><span>Processing results</span></div>
+                        <el-icon class="header-icon"><EditPen /></el-icon>
+                        <div class="card-header"><span>结果处理</span></div>
                     </template>
                     <div class="result-form-container">
                         <div class="result-form">
@@ -733,6 +744,7 @@ const handleProcessClick = (type) => {
         font-weight: 600;
         color: #333;
         line-height: 1;
+        font-family: "Helvetica Neue, Helvetica, Arial, sans-serif";
     }
 }
 
