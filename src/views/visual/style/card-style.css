@@ -1,0 +1,35 @@
+.visual-card {
+    width: 100%;
+}
+
+:deep(.el-card__header) {
+    height: 40px;
+    padding: 10 12px;
+    display: flex;
+    align-items: center;
+}
+
+:deep(.el-card__body) {
+    padding: 5px 10px;
+}
+
+.card-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    span {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        line-height: 1;
+        font-family: "Helvetica Neue, Helvetica, Arial, sans-serif";
+    }
+}
+
+.header-icon {
+    margin-right: 8px;
+    font-size: 18px;
+    color: #409EFF;
+}

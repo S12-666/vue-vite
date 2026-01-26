@@ -5,8 +5,9 @@
 <script setup>
 import { ref, onMounted, watch, onUnmounted, nextTick, toRaw } from 'vue';
 import * as d3 from 'd3';
+import { chartTooltip } from '@/utils/tooltip_utils/tooltip.js';
 
-const util = { flagColor: ['#67C23A', '#F56C6C', '#909399'] };
+const util = { flagColor: ['#409eff', '#f56c6c', '#b5bac2'] };
 
 const props = defineProps({
     chartData: {
@@ -16,36 +17,24 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['timeBrushed']);
-
 const chartContainer = ref(null);
 let svgInstance = null;
-let brushDebounceTimer = null; // 专门用于 Brush 的定时器
-let resizeObserver = null;     // 专门用于 Resize 的监听器
-let resizeTimer = null;        // 专门用于 Resize 的防抖定时器
+let resizeObserver = null;
+let resizeTimer = null;
 
-const margin = { top: 20, right: 2, bottom: 2, left: 2 };
+// 顶部留白稍微增加一点，给文字更多呼吸空间
+const margin = { top: 30, right: 0, bottom: 0, left: 0 };
 
-// --- 辅助函数 ---
-
-// 1. Brush 的防抖
-const debounceBrush = (fn, delay) => {
-    return (...args) => {
-        if (brushDebounceTimer) clearTimeout(brushDebounceTimer);
-        brushDebounceTimer = setTimeout(() => {
-            fn(...args);
-        }, delay);
-    };
-};
-
-// 2. 日期格式化
-const formatDate = (dateStr) => {
+const formatShortDate = (dateStr) => {
     if (!dateStr) return '';
-    return dateStr.toString().substring(5, 10); // "06-14"
+    const [datePart, timePart] = dateStr.toString().split(' ');
+    const [y, m, d] = datePart.split('-');
+    const h = timePart ? timePart.split(':')[0] : '00';
+    return `${parseInt(m)}.${parseInt(d)} ${h}`;
 };
 
 const initChart = async () => {
     const rawData = toRaw(props.chartData);
-
     if (!rawData || !rawData.endTimeOutput || rawData.endTimeOutput.length === 0) return;
     if (!chartContainer.value) return;
 
@@ -58,8 +47,16 @@ const initChart = async () => {
 
     d3.select(chartContainer.value).selectAll('svg').remove();
 
+    // 数据准备
     const categories = rawData.endTimeOutput.slice();
     const seriesNames = ['good_flag', 'bad_flag', 'no_flag'];
+
+    // 预先计算总数，用于初始化显示
+    const totalCounts = {
+        good_flag: d3.sum(rawData.good_flag || []),
+        bad_flag: d3.sum(rawData.bad_flag || []),
+        no_flag: d3.sum(rawData.no_flag || [])
+    };
 
     const stackedInput = categories.map((cat, i) => ({
         category: cat,
@@ -71,87 +68,189 @@ const initChart = async () => {
     const stackGen = d3.stack().keys(seriesNames);
     const stackedSeries = stackGen(stackedInput);
 
-    // --- 比例尺 ---
-    const xScale = d3.scaleBand()
-        .domain(categories)
-        .range([0, width])
-        .paddingInner(0.1)
-        .paddingOuter(0.05);
-
+    const xScale = d3.scaleBand().domain(categories).range([0, width]).paddingInner(0.1).paddingOuter(0.05);
     const maxY = d3.max(stackedSeries[stackedSeries.length - 1], d => d[1]) || 0;
-    const yScale = d3.scaleLinear()
-        .domain([0, maxY])
-        .range([height, 0]);
+    const yScale = d3.scaleLinear().domain([0, maxY]).range([height, 0]);
+    const colorScale = d3.scaleOrdinal().domain(seriesNames).range(util.flagColor);
 
-    const colorScale = d3.scaleOrdinal()
-        .domain(seriesNames)
-        .range(util.flagColor);
-
-    // --- SVG 创建 ---
     svgInstance = d3.select(chartContainer.value)
         .append('svg')
-        .attr('width', '100%')
-        .attr('height', '100%')
+        .attr('width', '100%').attr('height', '100%')
         .attr('viewBox', `0 0 ${bbox.width} ${bbox.height}`)
-        // 这一行保证 SVG 在容器变窄时不会被裁剪，而是缩放
         .attr('preserveAspectRatio', 'none')
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
+        .append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // 底部基准线
     svgInstance.append('line')
-        .attr('x1', 0)
-        .attr('y1', height)
-        .attr('x2', width)
-        .attr('y2', height)
-        .attr('stroke', '#ccc') // 浅灰色，类似坐标轴颜色
-        .attr('stroke-width', 1)
-        .style('shape-rendering', 'crispEdges');
+        .attr('x1', 0).attr('y1', height).attr('x2', width).attr('y2', height)
+        .attr('stroke', '#BEBEBE').attr('stroke-width', 2).style('shape-rendering', 'crispEdges');
 
-    // --- 绘制图例 (Legend) ---
-    const labelMap = { good_flag: 'Good', bad_flag: 'Bad', no_flag: 'No_Flag' };
+    const labelMap = { good_flag: 'Good', bad_flag: 'Bad', no_flag: 'No_Flag' }; // 名字可以改短点
     const legendGroup = svgInstance.append('g').attr('class', 'legend-group');
 
     let offsetX = 0;
-    const colorBoxSize = 14;
+    const colorBoxSize = 12;
+
+    const gapAfterColor = 6;
+    const gapNameValue = 6;
+    const itemGap = 12;
+
     seriesNames.forEach(key => {
-        const g = legendGroup.append('g').attr('class', 'legend-item');
+        const g = legendGroup.append('g')
+            .attr('class', 'legend-item')
+            .datum(key);
+
         g.append('rect')
             .attr('width', colorBoxSize).attr('height', colorBoxSize)
-            .attr('fill', colorScale(key)).attr('y', -colorBoxSize / 2);
+            .attr('rx', 2).attr('ry', 2) // 圆角稍微美化
+            .attr('fill', colorScale(key))
+            .attr('y', -colorBoxSize / 2 - 1); // 微调垂直居中
 
-        g.append('text')
-            .text(labelMap[key])
-            .attr('x', colorBoxSize + 6).attr('y', 0).attr('dy', '0.35em')
-            .style('font-size', '12px').style('fill', '#333');
+        const nameText = g.append('text')
+            .text(labelMap[key] ?? key)
+            .attr('x', colorBoxSize + gapAfterColor)
+            .attr('y', 0).attr('dy', '0.35em')
+            .style('font-family', '"Helvetica Neue", Helvetica, Arial, sans-serif')
+            .style('font-size', '12px')
+            .style('fill', '#333') // 灰色字体
+            .style('font-weight', '500');
 
-        // 固定间距
+        const nameWidth = nameText.node().getComputedTextLength();
+
+        const valueText = g.append('text')
+            .attr('class', 'legend-value')
+            .text(totalCounts[key])
+            .attr('x', colorBoxSize + gapAfterColor + nameWidth + gapNameValue)
+            .attr('y', 0).attr('dy', '0.35em')
+            .style('font-size', '12px')
+            .style('fill', '#333')
+            .style('font-weight', '600')
+            .style('font-family', '"Helvetica Neue", Helvetica, Arial, sans-serif');
+
+        const valueWidth = valueText.node().getComputedTextLength();
+
         g.attr('transform', `translate(${offsetX}, 0)`);
-        offsetX += (colorBoxSize + 6 + 45 + 15);
+        const itemWidth = colorBoxSize + gapAfterColor + nameWidth + gapNameValue + valueWidth;
+        offsetX += itemWidth + itemGap;
     });
 
-    // 图例右对齐
     const legendX = width - offsetX;
     legendGroup.attr('transform', `translate(${legendX}, ${-15})`);
 
-    // --- 时间标签 ---
-    const timeLabel = svgInstance.append('text')
-        .attr('class', 'chart-time-label')
-        .attr('x', legendX - 20)
+    const dateLabel = svgInstance.append('text')
+        .attr('class', 'date-label')
+        .attr('x', legendX - 30)
         .attr('y', -15)
         .attr('dy', '0.35em')
         .attr('text-anchor', 'end')
-        .style('font-size', '14px')
-        .style('font-weight', 'bold')
+        .style('font-size', '12px')
+        .style('font-weight', '550')
         .style('fill', '#333')
-        .text('');
+        .style('font-family', '"Helvetica Neue", Helvetica, Arial, sans-serif')
+        .text('DateRange: 全量数据');
 
-    if (categories.length > 0) {
-        const startStr = formatDate(categories[0]);
-        const endStr = formatDate(categories[categories.length - 1]);
-        timeLabel.text(`${startStr} 到 ${endStr}`);
-    }
+    const updateStats = (selectedSet) => {
+        let indices = [];
 
-    // --- 绘制柱子 ---
+        if (!selectedSet || selectedSet.size === 0) {
+            indices = categories.map((_, i) => i);
+            const s = formatShortDate(categories[0]);
+            const e = formatShortDate(categories[categories.length - 1]);
+            dateLabel.text(`DateRange: ${s} - ${e}`);
+        } else {
+            categories.forEach((cat, i) => {
+                if (selectedSet.has(cat)) indices.push(i);
+            });
+            const s = formatShortDate(categories[indices[0]]);
+            const e = formatShortDate(categories[indices[indices.length - 1]]);
+            dateLabel.text(`DateRange: ${s} - ${e}`);
+        }
+        const currentSums = { good_flag: 0, bad_flag: 0, no_flag: 0 };
+        indices.forEach(idx => {
+            currentSums.good_flag += (rawData.good_flag?.[idx] || 0);
+            currentSums.bad_flag += (rawData.bad_flag?.[idx] || 0);
+            currentSums.no_flag += (rawData.no_flag?.[idx] || 0);
+        });
+
+        legendGroup.selectAll('.legend-item').each(function (d) {
+            d3.select(this).select('.legend-value')
+                .text(currentSums[d]);
+        });
+    };
+
+    // 初始化运行一次
+    updateStats(null);
+
+    // --- Brush 定义 ---
+    const onBrushMove = (event) => {
+        if (!event || !event.sourceEvent || event.type !== 'brush') return;
+        const selection = event.selection;
+        const allRects = svgInstance.selectAll('.series-group rect');
+
+        if (!selection) {
+            allRects.attr('fill-opacity', 1);
+            updateStats(null);
+            return;
+        }
+
+        const [x0, x1] = selection;
+        const selectedSet = new Set();
+        categories.forEach(cat => {
+            const xPos = xScale(cat);
+            const bw = xScale.bandwidth();
+            if (xPos + bw / 2 >= x0 && xPos + bw / 2 <= x1) selectedSet.add(cat);
+        });
+
+        updateStats(selectedSet);
+
+        allRects.attr('fill-opacity', (d, i) => {
+            return selectedSet.has(categories[i % categories.length]) ? 1 : 0.3;
+        });
+    };
+
+    const onBrushEnd = (event) => {
+        const selection = event.selection;
+        const allRects = svgInstance.selectAll('.series-group rect');
+
+        if (!selection) {
+            allRects.attr('fill-opacity', 1);
+            updateStats(null);
+            emit('timeBrushed', []);
+            return;
+        }
+
+        const [x0, x1] = selection;
+        const selectedSet = new Set();
+        categories.forEach(cat => {
+            const xPos = xScale(cat);
+            const bw = xScale.bandwidth();
+            if (xPos + bw / 2 >= x0 && xPos + bw / 2 <= x1) selectedSet.add(cat);
+        });
+
+        updateStats(selectedSet);
+
+        allRects.attr('fill-opacity', (d, i) => {
+            return selectedSet.has(categories[i % categories.length]) ? 1 : 0.3;
+        });
+
+        if (selectedSet.size > 0) {
+            const sorted = [...selectedSet].sort();
+            emit('timeBrushed', [sorted[0], sorted[sorted.length - 1]]);
+        } else {
+            updateStats(null);
+            emit('timeBrushed', []);
+        }
+    };
+
+    const brush = d3.brushX()
+        .extent([[0, 0], [width, height]])
+        .on('brush', onBrushMove)
+        .on('end', onBrushEnd);
+
+    // 先画 Brush
+    svgInstance.append('g').attr('class', 'x-brush').call(brush);
+
+    // 再画柱子
     const seriesGroup = svgInstance.selectAll('.series-group')
         .data(stackedSeries)
         .enter().append('g')
@@ -164,152 +263,54 @@ const initChart = async () => {
         .attr('x', (d, i) => xScale(categories[i]))
         .attr('y', d => yScale(d[1]))
         .attr('height', d => yScale(d[0]) - yScale(d[1]))
-        .attr('width', xScale.bandwidth()); // 宽度自适应
-
-    const onBrushMove = (event) => {
-        // 如果是程序触发的清除，或者空事件，不做处理
-        if (!event || !event.sourceEvent) return;
-        if (event.type !== 'brush') return;
-
-        const selection = event.selection;
-        const allRects = svgInstance.selectAll('.series-group rect');
-
-        // 如果当前没有选区（比如用户正在双击清空的过程中），全部高亮
-        if (!selection) {
-            allRects.attr('fill-opacity', 1);
-            return;
-        }
-
-        const [x0, x1] = selection;
-        const timePointCount = categories.length;
-        const selectedSet = new Set();
-
-        // 计算哪些柱子在范围内
-        categories.forEach(cat => {
-            const xPos = xScale(cat);
-            const bw = xScale.bandwidth();
-            // 中心点判断法
-            if (xPos + bw / 2 >= x0 && xPos + bw / 2 <= x1) {
-                selectedSet.add(cat);
-            }
+        .attr('width', xScale.bandwidth())
+        .on('mouseover', (event, d) => {
+            const item = d.data;
+            const seriesKey = d3.select(event.target.parentNode).datum().key;
+            const color = colorScale(seriesKey);
+            const html = `
+                <div style="font-weight:600; margin-bottom:6px; font-size:13px;">${item.category}</div>
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <span style="width:8px;height:8px;border-radius:2px;background:${color};"></span>
+                    <span style="color:#666">${labelMap[seriesKey]}:</span>
+                    <span style="font-weight:500; color:#333">${item[seriesKey]}</span>
+                </div>
+                <div style="height:1px; background:rgba(0,0,0,0.15); margin:6px 0;"></div>
+                <div style="display:grid; grid-template-columns: 1fr auto; gap: 8px; font-size:12px; opacity:0.9;">
+                    <span>Good:</span> <span>${item.good_flag}</span>
+                    <span>Bad:</span> <span>${item.bad_flag}</span>
+                    <span>No_flag:</span> <span>${item.no_flag}</span>
+                </div>
+            `;
+            chartTooltip.show(event, html);
+            d3.select(event.target).attr('opacity', 0.8);
+        })
+        .on('mouseout', (event) => {
+            chartTooltip.hide();
+            d3.select(event.target).attr('opacity', 1);
         });
-
-        // 实时更新顶部时间文字 (让用户知道自己选了啥)
-        if (selectedSet.size > 0) {
-            const sorted = [...selectedSet].sort();
-            const startStr = formatDate(sorted[0]);
-            const endStr = formatDate(sorted[sorted.length - 1]);
-            timeLabel.text(`${startStr} 到 ${endStr}`);
-        } else {
-            timeLabel.text('未选择');
-        }
-
-        // 实时更新柱子透明度
-        allRects.attr('fill-opacity', (d, i) => {
-            const timeIndex = i % timePointCount;
-            return selectedSet.has(categories[timeIndex]) ? 1 : 0.3;
-        });
-    };
-
-    // B. 处理最终逻辑 (鼠标松开时触发)
-    // 只有这里才会 emit 数据
-    const onBrushEnd = (event) => {
-        // 这里的 event.selection 是最终的范围
-        const selection = event.selection;
-        const allRects = svgInstance.selectAll('.series-group rect');
-        const timePointCount = categories.length;
-
-        // 1. 情况一：没有选区 (用户点击空白处取消了刷选)
-        if (!selection) {
-            allRects.attr('fill-opacity', 1); // 恢复高亮
-            // 恢复显示全范围时间
-            if (categories.length > 0) {
-                const s = formatDate(categories[0]);
-                const e = formatDate(categories[categories.length - 1]);
-                timeLabel.text(`${s} 到 ${e}`);
-            }
-            // 发送空数组
-            console.log('刷选结束：未选择区域');
-            emit('timeBrushed', []);
-            return;
-        }
-
-        // 2. 情况二：有选区 (计算最终结果)
-        const [x0, x1] = selection;
-        const selectedSet = new Set();
-
-        categories.forEach(cat => {
-            const xPos = xScale(cat);
-            const bw = xScale.bandwidth();
-            if (xPos + bw / 2 >= x0 && xPos + bw / 2 <= x1) {
-                selectedSet.add(cat);
-            }
-        });
-
-        // 再次确认样式 (防止快速拖动时 brushMove 没跟上)
-        allRects.attr('fill-opacity', (d, i) => {
-            const timeIndex = i % timePointCount;
-            return selectedSet.has(categories[timeIndex]) ? 1 : 0.3;
-        });
-
-        if (selectedSet.size > 0) {
-            const sorted = [...selectedSet].sort();
-            // 最终确认文字
-            timeLabel.text(`${formatDate(sorted[0])} 到 ${formatDate(sorted[sorted.length - 1])}`);
-
-            console.log('刷选结束：发送数据', sorted[0], sorted[sorted.length - 1]);
-            // ★★★ 只有在这里才发送事件 ★★★
-            emit('timeBrushed', [sorted[0], sorted[sorted.length - 1]]);
-        } else {
-            // 选区太小没选中任何柱子
-            timeLabel.text('未选择');
-            emit('timeBrushed', []);
-        }
-    };
-
-    const brush = d3.brushX()
-        .extent([[0, 0], [width, height]])
-        // ★★★ 关键修改：分开监听 ★★★
-        .on('brush', onBrushMove)  // 拖动时：只改样式，不发数据
-        .on('end', onBrushEnd);    // 松手时：发送数据
-
-    svgInstance.append('g').attr('class', 'x-brush').call(brush);
-
-    // const brush = d3.brushX()
-    //     .extent([[0, 0], [width, height]])
-    //     .on('brush end', debounceBrush(emitBrushHandler, 50));
-
-    // svgInstance.append('g').attr('class', 'x-brush').call(brush);
 };
 
-const handleResize = () => {
+const handleResize = (entries) => {
+    const entry = entries[0];
+    const { width, height } = entry.contentRect;
     if (resizeTimer) clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-        initChart();
-    }, 100);
+    resizeTimer = setTimeout(() => { initChart(); }, 100);
 };
 
-watch(() => props.chartData, (val) => {
-    if (val) initChart();
-}, { deep: true });
+watch(() => props.chartData, (val) => { if (val) initChart(); }, { deep: true });
 
 onMounted(() => {
     initChart();
     if (chartContainer.value) {
-        resizeObserver = new ResizeObserver(() => {
-            handleResize();
-        });
+        resizeObserver = new ResizeObserver(handleResize);
         resizeObserver.observe(chartContainer.value);
     }
 });
-
 onUnmounted(() => {
-    if (resizeObserver) {
-        resizeObserver.disconnect();
-        resizeObserver = null;
-    }
+    if (resizeObserver) resizeObserver.disconnect();
     if (resizeTimer) clearTimeout(resizeTimer);
-    if (brushDebounceTimer) clearTimeout(brushDebounceTimer);
+    chartTooltip.hide();
 });
 </script>
 
@@ -318,9 +319,10 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     min-height: 120px;
-
     overflow: hidden;
     position: relative;
+    /* 可以在这里设置字体，让 SVG 继承 */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 :deep(svg) {
@@ -328,7 +330,10 @@ onUnmounted(() => {
 }
 
 :deep(.x-brush .selection) {
-    fill: rgba(150, 200, 255, 0.3);
-    stroke: #96c8ff;
+    fill: rgba(64, 158, 255, 0.2);
+    /* Element Plus 风格蓝色 */
+    stroke: #409EFF;
+    stroke-width: 1px;
+    shape-rendering: crispEdges;
 }
 </style>
