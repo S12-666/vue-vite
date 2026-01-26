@@ -111,3 +111,11 @@ export function sendPredLabel(data) {
         data
     })
 }
+
+export function getTrendData(params) {
+    return request({
+        url: '/newbaogangapi/v1.0/visual/gettrendbardata',
+        method: 'get',
+        params
+    })
+}
