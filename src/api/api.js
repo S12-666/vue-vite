@@ -119,3 +119,11 @@ export function getTrendData(params) {
         params
     })
 }
+
+export function getSpecBox(params) {
+    return request({
+        url: '/newbaogangapi/v1.0/visual/getspecbox',
+        method: 'get',
+        params
+    })
+}

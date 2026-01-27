@@ -1,6 +1,6 @@
 <script setup>
-import { ref, reactive, computed, onActivated } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ref } from 'vue';
+import { Monitor } from '@element-plus/icons-vue'; // 记得引入图标
 import TimeBrushD3 from './TimeBrushD3.vue';
 
 const props = defineProps({
@@ -10,10 +10,11 @@ const props = defineProps({
     }
 });
 
-const handleBrush = (range) => {
-    console.log('在 TrendChart 这一层也可以处理刷选事件:', range);
-};
+const emit = defineEmits(['timeBrushed']);
 
+const handleBrush = (range) => {
+    emit('timeBrushed', range);
+};
 </script>
 
 <template>
@@ -35,22 +36,8 @@ const handleBrush = (range) => {
 <style scoped>
 @import '@/views/visual/style/card-style.css';
 
-.month-pick {
-    display: flex;
-    align-items: center;
-
-    span {
-        font-size: 14px;
-        font-weight: 500;
-        font-family: "Helvetica Neue, Helvetica, Arial, sans-serif";
-        margin-right: 10px;
-        white-space: nowrap;
-    }
-}
-
 .trend-chart {
     width: 100%;
-    /* height: 100%; */
-    height: 120px;
+    height: 120px; /* 确保有高度 */
 }
 </style>

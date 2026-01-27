@@ -3,29 +3,57 @@ import { ref, reactive, computed, onActivated } from 'vue';
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { Monitor } from '@element-plus/icons-vue';
-import { getTrendData } from '@/api/api';
+import { getTrendData, getSpecBox } from '@/api/api';
+import VerticalBoxPlot from './VerticalBoxPlot.vue';
 
-const value6 = ref('2021-06')
-const loading = ref(false)
+const value6 = ref('2021-06');
+const loading = ref(false);
+const specDetails = ref([]);
 
 const emit = defineEmits(['query-success']);
+const props = defineProps({
+    brushRange: {
+        type: Array,
+        default: () => []
+    }
+});
+
+const filteredSpecData = computed(() => {
+    if (!props.brushRange || props.brushRange.length === 0) {
+        return [];
+    }
+    const [start, end] = props.brushRange;
+    return specDetails.value.filter(item => {
+        if (!item.toc) return false;
+        const datePart = item.toc ? item.toc.split(' ')[0] : '';
+        return datePart >= start && datePart <= end;
+    });
+});
 
 const handleQuery = async () => {
     if (!value6.value) {
         ElMessage.warning('请先选择月份');
         return;
     }
+
+    loading.value = true;
+    const params = { date: value6.value };
+
     try {
-        loading.value = true;
-        const params = {
-            date: value6.value
-        };
-        const res = await getTrendData(params);
-        if (res) {
-            ElMessage.success('查询成功');
-            emit('query-success', res);
-        }
-        
+        const trendTask = getTrendData(params).then(res => {
+            if (res) {
+                // 将数据抛给父组件(Visual.vue)去渲染 TrendChart
+                emit('query-success', res); 
+            }
+        });
+
+        const specTask = getSpecBox(params).then(res => {
+            if (res) {
+                specDetails.value = res || [];
+            }
+        });
+        await Promise.all([trendTask, specTask]);
+        ElMessage.success('查询成功');
     } catch (error) {
         console.error(error);
         ElMessage.error('查询失败');
@@ -55,6 +83,9 @@ const handleQuery = async () => {
             </div>
             <el-button :loading="loading" @click="handleQuery" style="margin-left: 12px; width: 20%; height: 30px;">查询</el-button>
         </div>
+        <div class="spec-box">
+            <VerticalBoxPlot :full-data="specDetails" :active-data="filteredSpecData"/>
+        </div>
     </el-card>
 </template>
 
@@ -67,6 +98,7 @@ const handleQuery = async () => {
     white-space: nowrap;
     justify-content: space-between;
     width: 100%;
+    margin-bottom: 20px;
 }
 
 .month-pick {
@@ -81,5 +113,10 @@ const handleQuery = async () => {
         white-space: nowrap;
         flex-shrink: 0;
     }
+}
+
+.spec-box {
+    width: 100%;
+    height: 370px;
 }
 </style>
