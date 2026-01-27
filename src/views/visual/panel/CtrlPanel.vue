@@ -43,7 +43,7 @@ const handleQuery = async () => {
         const trendTask = getTrendData(params).then(res => {
             if (res) {
                 // 将数据抛给父组件(Visual.vue)去渲染 TrendChart
-                emit('query-success', res); 
+                emit('query-success', res);
             }
         });
 
@@ -81,10 +81,16 @@ const handleQuery = async () => {
                         style="width: 80%; height: 30px;" value-format="YYYY-MM" />
                 </el-config-provider>
             </div>
-            <el-button :loading="loading" @click="handleQuery" style="margin-left: 12px; width: 20%; height: 30px;">查询</el-button>
+            <el-button :loading="loading" @click="handleQuery"
+                style="margin-left: 12px; width: 20%; height: 30px;">查询</el-button>
         </div>
+        <div class="divider-line1"></div>
         <div class="spec-box">
-            <VerticalBoxPlot :full-data="specDetails" :active-data="filteredSpecData"/>
+            <VerticalBoxPlot :full-data="specDetails" :active-data="filteredSpecData" />
+        </div>
+        <div class="divider-line2"></div>
+        <div class="diag-button">
+            <el-button :loading="loading" style="width: 20%; height: 30px;">分析</el-button>
         </div>
     </el-card>
 </template>
@@ -98,7 +104,7 @@ const handleQuery = async () => {
     white-space: nowrap;
     justify-content: space-between;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .month-pick {
@@ -115,8 +121,30 @@ const handleQuery = async () => {
     }
 }
 
+.divider-line1 {
+    width: 100%;
+    border-top: 1px solid #dcdfe6;
+    /* Element Plus 常用边框灰 */
+    margin: 10px 0 0 0;
+}
+
+.divider-line2 {
+    width: 100%;
+    border-top: 1px solid #dcdfe6;
+    /* Element Plus 常用边框灰 */
+    margin: 0 0 10px 0;
+}
+
 .spec-box {
     width: 100%;
-    height: 370px;
+    height: 300px;
+}
+
+.diag-button {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 5px;
 }
 </style>
