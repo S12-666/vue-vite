@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Monitor } from '@element-plus/icons-vue'; // 记得引入图标
+import { Histogram } from '@element-plus/icons-vue'; // 记得引入图标
 import TimeBrushD3 from './TimeBrushD3.vue';
 
 const props = defineProps({
@@ -22,7 +22,7 @@ const handleBrush = (range) => {
         <template #header>
             <div class="card-header">
                 <el-icon class="header-icon">
-                    <Monitor />
+                    <Histogram />
                 </el-icon>
                 <span>趋势监控</span>
             </div>
