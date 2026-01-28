@@ -3,14 +3,23 @@ import { ref, reactive, computed, onActivated } from 'vue';
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { Monitor } from '@element-plus/icons-vue';
-import { getTrendData, getSpecBox } from '@/api/api';
+import { getTrendData, getSpecBox, getScatterData } from '@/api/api';
 import VerticalBoxPlot from './VerticalBoxPlot.vue';
 
 const value6 = ref('2021-06');
 const loading = ref(false);
+const loading1 = ref(false);
 const specDetails = ref([]);
 
-const emit = defineEmits(['query-success']);
+const filterParams = reactive({
+    tgtthick: "[]",
+    tgtwidth: "[]",
+    tgtlength: "[]",
+    dis_temp: "[]",
+    fm_temp: "[]"
+});
+
+const emit = defineEmits(['query-success', 'scatter-success']);
 const props = defineProps({
     brushRange: {
         type: Array,
@@ -50,6 +59,7 @@ const handleQuery = async () => {
         const specTask = getSpecBox(params).then(res => {
             if (res) {
                 specDetails.value = res || [];
+                Object.keys(filterParams).forEach(k => filterParams[k] = "[]");
             }
         });
         await Promise.all([trendTask, specTask]);
@@ -61,6 +71,44 @@ const handleQuery = async () => {
         loading.value = false;
     }
 }
+
+const handleFilterUpdate = (payload) => {
+    const { key, value } = payload;
+    if (!value || value.length === 0) {
+        filterParams[key] = "[]";
+    } else {
+        filterParams[key] = `[${value[0]}, ${value[1]}]`;
+    }
+    console.log('当前所有筛选条件:', JSON.stringify(filterParams)); 
+};
+
+
+const handleAnalysis = async () => {
+    if (specDetails.value.length === 0) {
+        ElMessage.warning('当前无数据，无法分析');
+        return;
+    }
+    loading1.value = true;
+    const finalPayload = { ...filterParams };
+    if (props.brushRange && props.brushRange.length === 2) {
+        finalPayload.date_range = `['${props.brushRange[0]}', '${props.brushRange[1]}']`; 
+    } else {
+        finalPayload.date_range = "[]";
+    }
+    console.log(finalPayload);
+    try {
+        const res = await getScatterData(finalPayload);
+        if (res) {
+            emit('scatter-success', res);
+            ElMessage.error('分析完成');
+        }
+    } catch (error) {
+        console.error('降维数据查询失败')
+        ElMessage.error('分析失败');
+    } finally {
+        loading1.value = false;
+    }
+};
 </script>
 
 <template>
@@ -86,11 +134,11 @@ const handleQuery = async () => {
         </div>
         <div class="divider-line1"></div>
         <div class="spec-box">
-            <VerticalBoxPlot :full-data="specDetails" :active-data="filteredSpecData" />
+            <VerticalBoxPlot :full-data="specDetails" :active-data="filteredSpecData" @update:filter="handleFilterUpdate"/>
         </div>
         <div class="divider-line2"></div>
         <div class="diag-button">
-            <el-button :loading="loading" style="width: 20%; height: 30px;">分析</el-button>
+            <el-button :loading="loading1" @click="handleAnalysis" style="width: 20%; height: 30px;">分析</el-button>
         </div>
     </el-card>
 </template>

@@ -127,3 +127,12 @@ export function getSpecBox(params) {
         params
     })
 }
+
+export function getScatterData(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/visual/getscatterdata',
+        method: 'post',
+        data,
+        timeout: 60000
+    })
+}

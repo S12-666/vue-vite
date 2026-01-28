@@ -4,10 +4,12 @@ import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import CtrlPanel from './panel/CtrlPanel.vue';
 import TrendChart from './trend/TrendChart.vue';
+import Embedding from './dimenreduc/Embedding.vue';
 
 // 趋势图数据
 const trendData = ref(null);
 const currentBrushRange = ref([]);
+const currentScatterData = ref({});
 
 const handlePanelData = (data) => {
     console.log('父组件收到了数据:', data);
@@ -18,6 +20,15 @@ const handleTimeBrush = (range) => {
     currentBrushRange.value = range;
 };
 
+const handleScatterData = (res) => {
+    console.log('父组件收到了散点图数据:', res);
+    if (res && res.data) {
+        currentScatterData.value = res.data;
+    } else {
+        currentScatterData.value = res;
+    }
+};
+
 
 </script>
 
@@ -25,7 +36,8 @@ const handleTimeBrush = (range) => {
     <div class="visual">
         <el-row :gutter="20">
             <el-col :span="4" class="left-column-wrapper">
-                <CtrlPanel @query-success="handlePanelData" :brush-range="currentBrushRange"/>
+                <CtrlPanel @query-success="handlePanelData" @scatter-success="handleScatterData" :brush-range="currentBrushRange"/>
+                <Embedding style="margin-top: 20px;" :scatter-data="currentScatterData"/>
             </el-col>
             <el-col :span="16" class="center-column-wrapper">
                 <TrendChart :chart-data="trendData" @timeBrushed="handleTimeBrush"/>
