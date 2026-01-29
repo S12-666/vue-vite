@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { HelpFilled } from '@element-plus/icons-vue';
 import ScatterChart from './ScatterChart.vue';
+import { Refresh } from '@element-plus/icons-vue';
 
 const props = defineProps({
     scatterData: {
@@ -9,6 +10,12 @@ const props = defineProps({
         default: () => ({})
     }
 });
+
+const scatterChartRef = ref(null);
+
+const handleResetZoom = () => {
+    scatterChartRef.value?.resetZoom();
+};
 </script>
 
 <template>
@@ -20,9 +27,14 @@ const props = defineProps({
                 </el-icon>
                 <span>降维分析</span>
             </div>
+            <el-button size="small" circle @click="handleResetZoom">
+                <el-icon>
+                    <Refresh />
+                </el-icon>
+            </el-button>
         </template>
         <div class="trend-chart">
-            <ScatterChart :raw-scatter-data="scatterData"/>
+            <ScatterChart ref="scatterChartRef" :raw-scatter-data="scatterData" />
         </div>
     </el-card>
 </template>
@@ -32,6 +44,7 @@ const props = defineProps({
 
 .trend-chart {
     width: 100%;
-    height: 300px; /* 确保有高度 */
+    height: 300px;
+    /* 确保有高度 */
 }
 </style>

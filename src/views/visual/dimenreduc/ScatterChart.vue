@@ -1,17 +1,15 @@
 <template>
     <div class="scatter-container" ref="chartContainer">
         <div ref="svgRef" class="d3-chart"></div>
-
-        <div ref="tooltipRef" class="scatter-tooltip" style="opacity: 0;"></div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import * as d3 from 'd3';
+import { chartTooltip } from '@/utils/tooltip_utils/tooltip.js';
 
 const props = defineProps({
-    // 接收后端返回的原始数据对象
     rawScatterData: {
         type: Object,
         default: () => ({})
@@ -20,157 +18,155 @@ const props = defineProps({
 
 const chartContainer = ref(null);
 const svgRef = ref(null);
-const tooltipRef = ref(null);
 let resizeObserver = null;
+let zoomBehavior = null;
+let svgSelection = null;
 
-// 配置项
-const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+// 定义基础视觉大小 (像素)
+const BASE_RADIUS = 2;       // 点的默认半径
+const BASE_STROKE = 1.5;     // 边框默认粗细
+const HOVER_RADIUS = 6;      // 悬浮时半径
 
-// 核心绘图函数
+const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+
 const initChart = async () => {
-    // 1. 数据转换：将 Object {"0":{...}, "1":{...}} 转换为 Array [{...}, {...}]
     if (!props.rawScatterData || Object.keys(props.rawScatterData).length === 0) return;
 
     const data = Object.values(props.rawScatterData);
-
-    // 清理旧图表
     d3.select(svgRef.value).selectAll('*').remove();
 
-    // 获取容器尺寸
     const width = chartContainer.value.clientWidth;
     const height = chartContainer.value.clientHeight;
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
 
-    // 2. 创建 SVG
-    const svg = d3.select(svgRef.value)
+    const colorMap = {
+        '0': '#f02828', // 红色
+        '1': '#1283f8', // 蓝色
+        '2': '#8f959e'  // 灰色
+    };
+
+    const colorScale = (label) => {
+        return colorMap[String(label)] || '#999';
+    };
+
+    const getLightSolidColor = (hex) => {
+        return d3.interpolateRgb("white", hex)(0.5); 
+    };
+
+    svgSelection = d3.select(svgRef.value)
         .append('svg')
         .attr('width', width)
         .attr('height', height)
-        // 添加缩放行为 (Zoom) 支持
-        .call(d3.zoom().on("zoom", (event) => {
-            g.attr("transform", event.transform);
-        }))
-        .append('g'); // 这里的 g 不应用 margin，我们在内部再包一层
+        .style('background', '#fff')
+        // .style('cursor', 'grab');
 
-    // 创建实际绘图区域 (用于应用 margin 和 zoom)
-    // 为了让 zoom 效果更好，我们通常在 svg 上 zoom，然后变换这个 g
-    const g = svg.append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
+    // Zoom 行为定义
+    zoomBehavior = d3.zoom()
+        .scaleExtent([0.5, 50]) // 允许放大倍数更大，方便看清密集区
+        .on("zoom", handleZoom);
 
-    // 3. 创建比例尺 (Scales)
-    // X轴
+    svgSelection.call(zoomBehavior);
+
+    // 主绘图容器
+    const g = svgSelection.append('g').attr('class', 'main-group');
+
+    // 比例尺计算
     const xExtent = d3.extent(data, d => d.x);
-    const xScale = d3.scaleLinear()
-        .domain([xExtent[0] - 1, xExtent[1] + 1]) // 稍微留点边距
-        .range([0, innerWidth]);
-
-    // Y轴
     const yExtent = d3.extent(data, d => d.y);
+    const xRange = xExtent[1] - xExtent[0];
+    const yRange = yExtent[1] - yExtent[0];
+    const padding = 0.1;
+
+    const xScale = d3.scaleLinear()
+        .domain([xExtent[0] - xRange * padding, xExtent[1] + xRange * padding])
+        .range([margin.left, width - margin.right]);
+
     const yScale = d3.scaleLinear()
-        .domain([yExtent[0] - 1, yExtent[1] + 1])
-        .range([innerHeight, 0]);
+        .domain([yExtent[0] - yRange * padding, yExtent[1] + yRange * padding])
+        .range([height - margin.bottom, margin.top]);
 
-    // 颜色比例尺 (根据 label 分类)
-    // 获取所有唯一的 label
-    const labels = Array.from(new Set(data.map(d => d.label)));
-    const colorScale = d3.scaleOrdinal()
-        .domain(labels)
-        .range(d3.schemeSet2); // 使用 D3 内置的配色方案，也可以自定义 ['red', 'blue']
-
-    // 4. 绘制坐标轴 (Axes)
-    // X Axis
-    g.append("g")
-        .attr("transform", `translate(0,${innerHeight})`)
-        .call(d3.axisBottom(xScale).ticks(5))
-        .attr("class", "axis");
-
-    // Y Axis
-    g.append("g")
-        .call(d3.axisLeft(yScale).ticks(5))
-        .attr("class", "axis");
-
-    // 5. 绘制散点 (Circles)
-    g.selectAll("circle")
+    // 绘制散点
+    const circles = g.selectAll("circle")
         .data(data)
         .enter()
         .append("circle")
         .attr("cx", d => xScale(d.x))
         .attr("cy", d => yScale(d.y))
-        .attr("r", 5) // 半径，可以根据数据量调整，数据量大就小一点
-        .attr("fill", d => colorScale(d.label))
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 1)
-        .attr("opacity", 0.8)
-        .style("cursor", "pointer")
-        // 交互事件
-        .on("mouseover", (event, d) => {
-            // 高亮当前点
-            d3.select(event.currentTarget)
-                .transition().duration(200)
-                .attr("r", 8)
-                .attr("opacity", 1);
+        // 1. 设置填充颜色：使用 colorScale，但透明度低 (0.2)
+        .attr("fill", d => getLightSolidColor(colorScale(d.label)))
+        .attr("fill-opacity", 1)
+        .attr("stroke", d => colorScale(d.label))
+        .attr("r", BASE_RADIUS)
+        .attr("stroke-width", BASE_STROKE)
 
-            // 显示 Tooltip
-            showTooltip(event, d);
+        .on("mouseover", function (event, d) {
+            d3.select(this).raise();
+            const transform = d3.zoomTransform(svgSelection.node());
+            const k = transform.k;
+
+            d3.select(this)
+                // .attr("fill", colorScale(d.label))
+                // // .attr("fill-opacity", 1) // 悬浮时填充变实
+                // .attr("stroke", colorScale(d.label))
+                .attr("stroke-width", 2 / k)
+                .attr("r", HOVER_RADIUS / Math.sqrt(k)); // 悬浮时稍微变大
+
+            const html = `
+                <div><strong>upid:</strong> ${d.upid}</div>
+                <div><strong>Spec:</strong> ${d.steelspec}</div>
+                <div style="font-size:11px; color:#666; margin-top:2px;">${d.toc}</div>
+                <div style="font-size:11px; color:#666;">Label: ${d.label}</div>
+            `;
+            chartTooltip.show(event, html, colorScale(d.label));
         })
-        .on("mouseout", (event, d) => {
-            // 还原点
-            d3.select(event.currentTarget)
-                .transition().duration(200)
-                .attr("r", 5)
-                .attr("opacity", 0.8);
+        .on("mouseout", function (event, d) {
+            const transform = d3.zoomTransform(svgSelection.node());
+            const k = transform.k;
 
-            // 隐藏 Tooltip
-            hideTooltip();
+            d3.select(this)
+                // .attr("fill-opacity", 0.2) // 还原透明度
+                // .attr("fill", getLightSolidColor(colorScale(d.label)))
+                // .attr("stroke", colorScale(d.label)) // 还原为本来的边框颜色
+                .attr("stroke-width", BASE_STROKE / k) // 还原边框粗细
+                .attr("r", BASE_RADIUS / Math.sqrt(k)); // 还原半径
+
+            chartTooltip.hide();
         });
+
+    function handleZoom(e) {
+        g.attr("transform", e.transform);
+        const k = e.transform.k;
+        g.selectAll("circle")
+            .attr("r", BASE_RADIUS / Math.sqrt(k))
+            .attr("stroke-width", BASE_STROKE / k); // 边框建议直接除以 k，防止太粗
+    }
 };
 
-// Tooltip 显示逻辑
-const showTooltip = (event, d) => {
-    const tooltip = d3.select(tooltipRef.value);
-
-    // 这里是你要求展示的三个字段
-    const htmlContent = `
-        <div class="tip-row"><strong>UPID:</strong> ${d.upid}</div>
-        <div class="tip-row"><strong>Time:</strong> ${d.toc}</div>
-        <div class="tip-row"><strong>Spec:</strong> ${d.steelspec}</div>
-        <div class="tip-row"><strong>Label:</strong> ${d.label}</div>
-    `;
-
-    tooltip
-        .style("opacity", 1)
-        .html(htmlContent)
-        // 计算位置，防止超出屏幕
-        .style("left", (event.layerX + 15) + "px")
-        .style("top", (event.layerY - 28) + "px");
+const resetZoom = () => {
+    if (svgSelection && zoomBehavior) {
+        svgSelection.transition()
+            .duration(750)
+            .call(zoomBehavior.transform, d3.zoomIdentity);
+    }
 };
 
-const hideTooltip = () => {
-    d3.select(tooltipRef.value).style("opacity", 0);
-};
+defineExpose({
+    resetZoom
+});
 
-// 监听数据变化
 watch(() => props.rawScatterData, () => {
-    nextTick(() => {
-        initChart();
-    });
+    nextTick(() => { initChart(); });
 }, { deep: true });
 
-// 自适应窗口
 const handleResize = () => { initChart(); };
 
 onMounted(() => {
     initChart();
-    resizeObserver = new ResizeObserver(() => {
-        handleResize();
-    });
-    if (chartContainer.value) {
-        resizeObserver.observe(chartContainer.value);
-    }
+    resizeObserver = new ResizeObserver(() => handleResize());
+    if (chartContainer.value) resizeObserver.observe(chartContainer.value);
 });
 
 onUnmounted(() => {
+    chartTooltip.hide();
     if (resizeObserver) resizeObserver.disconnect();
 });
 </script>
@@ -181,32 +177,11 @@ onUnmounted(() => {
     height: 100%;
     position: relative;
     overflow: hidden;
-    /* 防止 Tooltip 撑开容器 */
+    border-radius: 4px;
 }
 
 .d3-chart {
     width: 100%;
     height: 100%;
-}
-
-/* Tooltip 基础样式 */
-.scatter-tooltip {
-    position: absolute;
-    background-color: rgba(50, 50, 50, 0.9);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    pointer-events: none;
-    /* 让鼠标事件穿透 tooltip，防止闪烁 */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: opacity 0.2s;
-    z-index: 10;
-    min-width: 150px;
-}
-
-.tip-row {
-    margin-bottom: 4px;
-    white-space: nowrap;
 }
 </style>
