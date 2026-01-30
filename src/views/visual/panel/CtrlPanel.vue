@@ -24,7 +24,8 @@ const props = defineProps({
     brushRange: {
         type: Array,
         default: () => []
-    }
+    },
+    reductionMethod: { type: String, default: 'tsne' }
 });
 
 const filteredSpecData = computed(() => {
@@ -89,7 +90,7 @@ const handleAnalysis = async () => {
         return;
     }
     loading1.value = true;
-    const finalPayload = { ...filterParams };
+    const finalPayload = { ...filterParams, method: props.reductionMethod };
     if (props.brushRange && props.brushRange.length === 2) {
         finalPayload.date_range = `['${props.brushRange[0]}', '${props.brushRange[1]}']`; 
     } else {
@@ -100,7 +101,7 @@ const handleAnalysis = async () => {
         const res = await getScatterData(finalPayload);
         if (res) {
             emit('scatter-success', res);
-            ElMessage.error('分析完成');
+            ElMessage.success('分析完成');
         }
     } catch (error) {
         console.error('降维数据查询失败')
@@ -109,6 +110,10 @@ const handleAnalysis = async () => {
         loading1.value = false;
     }
 };
+
+defineExpose({
+    handleAnalysis
+});
 </script>
 
 <template>

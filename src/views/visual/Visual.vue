@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onActivated } from 'vue'
+import { ref, reactive, computed, onActivated, nextTick } from 'vue'
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import CtrlPanel from './panel/CtrlPanel.vue';
@@ -10,6 +10,8 @@ import Embedding from './dimenreduc/Embedding.vue';
 const trendData = ref(null);
 const currentBrushRange = ref([]);
 const currentScatterData = ref({});
+const currentMethod = ref('tsne');
+const ctrlPanelRef = ref(null);
 
 const handlePanelData = (data) => {
     console.log('父组件收到了数据:', data);
@@ -29,15 +31,21 @@ const handleScatterData = (res) => {
     }
 };
 
-
+const handleMethodChange = async (method) => {
+    currentMethod.value = method;
+    await nextTick();
+    if (ctrlPanelRef.value) {
+        ctrlPanelRef.value.handleAnalysis();
+    }
+};
 </script>
 
 <template>
     <div class="visual">
         <el-row :gutter="20">
             <el-col :span="4" class="left-column-wrapper">
-                <CtrlPanel @query-success="handlePanelData" @scatter-success="handleScatterData" :brush-range="currentBrushRange"/>
-                <Embedding style="margin-top: 20px;" :scatter-data="currentScatterData"/>
+                <CtrlPanel ref="ctrlPanelRef" @query-success="handlePanelData" @scatter-success="handleScatterData" :brush-range="currentBrushRange" :reductionMethod="currentMethod"/>
+                <Embedding style="margin-top: 20px;" :scatter-data="currentScatterData" @update:method="handleMethodChange"/>
             </el-col>
             <el-col :span="16" class="center-column-wrapper">
                 <TrendChart :chart-data="trendData" @timeBrushed="handleTimeBrush"/>
