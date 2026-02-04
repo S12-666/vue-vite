@@ -3,7 +3,7 @@ import { ref, reactive, computed, onActivated } from 'vue';
 import { ElConfigProvider, ElMessage } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { Monitor } from '@element-plus/icons-vue';
-import { getTrendData, getSpecBox, getScatterData } from '@/api/api';
+import { getTrendData, getSpecBox, getScatterData, getGanttData } from '@/api/api';
 import VerticalBoxPlot from './VerticalBoxPlot.vue';
 
 const value6 = ref('2021-06');
@@ -80,31 +80,70 @@ const handleFilterUpdate = (payload) => {
     } else {
         filterParams[key] = `[${value[0]}, ${value[1]}]`;
     }
-    console.log('当前所有筛选条件:', JSON.stringify(filterParams)); 
+    console.log('当前所有筛选条件:', JSON.stringify(filterParams));
 };
 
 
-const handleAnalysis = async () => {
-    if (specDetails.value.length === 0) {
-        ElMessage.warning('当前无数据，无法分析');
-        return;
+const handleAnalysis = async (updateType = 'all') => {
+    if (typeof updateType !== 'string') {
+        updateType = 'all';
     }
+
     loading1.value = true;
+
+    // 构造参数 (参数构造逻辑不变)
     const finalPayload = { ...filterParams, method: props.reductionMethod };
     if (props.brushRange && props.brushRange.length === 2) {
-        finalPayload.date_range = `['${props.brushRange[0]}', '${props.brushRange[1]}']`; 
+        finalPayload.date_range = `['${props.brushRange[0]}', '${props.brushRange[1]}']`;
     } else {
         finalPayload.date_range = "[]";
     }
-    console.log(finalPayload);
+    console.log(`执行分析模式: ${updateType}`, finalPayload);
+
     try {
-        const res = await getScatterData(finalPayload);
-        if (res) {
-            emit('scatter-success', res);
-            ElMessage.success('分析完成');
+        const tasks = [];
+
+        // 1. 如果模式是 'all' 或 'scatter'，则添加散点图请求
+        // 我们给 promise 加一个 then，把结果包装成 { type: 'scatter', data: res } 方便后续识别
+        if (updateType === 'all' || updateType === 'scatter') {
+            const task = getScatterData(finalPayload)
+                .then(res => ({ type: 'scatter', data: res }));
+            tasks.push(task);
         }
+
+        // 2. 如果模式是 'all' 或 'gantt'，则添加甘特图请求
+        if (updateType === 'all' || updateType === 'gantt') {
+            const task = getGanttData(finalPayload)
+                .then(res => ({ type: 'gantt', data: res }));
+            tasks.push(task);
+        }
+
+        // 3. 并行执行所有添加的任务
+        const results = await Promise.all(tasks);
+
+        let hasSuccess = false;
+
+        // 4. 遍历结果进行分发
+        results.forEach(result => {
+            if (result.type === 'scatter' && result.data) {
+                emit('scatter-success', result.data);
+                hasSuccess = true;
+            }
+            if (result.type === 'gantt' && result.data) {
+                emit('gantt-success', result.data);
+                hasSuccess = true;
+            }
+        });
+
+        if (hasSuccess) {
+            // 如果只是更新局部，提示语可以简化，或者保持“分析完成”
+            ElMessage.success('分析完成');
+        } else {
+            ElMessage.warning('未能获取有效数据');
+        }
+
     } catch (error) {
-        console.error('降维数据查询失败')
+        console.error('分析请求失败', error);
         ElMessage.error('分析失败');
     } finally {
         loading1.value = false;
@@ -139,7 +178,8 @@ defineExpose({
         </div>
         <div class="divider-line1"></div>
         <div class="spec-box">
-            <VerticalBoxPlot :full-data="specDetails" :active-data="filteredSpecData" @update:filter="handleFilterUpdate"/>
+            <VerticalBoxPlot :full-data="specDetails" :active-data="filteredSpecData"
+                @update:filter="handleFilterUpdate" />
         </div>
         <div class="divider-line2"></div>
         <div class="diag-button">

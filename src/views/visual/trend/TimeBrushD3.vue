@@ -23,7 +23,7 @@ let resizeObserver = null;
 let resizeTimer = null;
 
 // Margin: 底部留出 30px 给统计条活动空间
-const margin = { top: 30, right: 0, bottom: 10, left: 0 };
+const margin = { top: 30, right: 0, bottom: 20, left: 0 };
 
 // 统计条(Pill) 样式配置
 const summaryConfig = {
@@ -228,7 +228,7 @@ const initChart = async () => {
                 const maxX = width - summaryConfig.barWidth / 2;
                 const clampedX = Math.max(minX, Math.min(maxX, centerX));
                 // const posY = height + 6; // 紧贴 X 轴下方 6px
-                const posY = height - 8;
+                const posY = height ;
 
                 summaryGroup
                     .attr('transform', `translate(${clampedX}, ${posY})`)

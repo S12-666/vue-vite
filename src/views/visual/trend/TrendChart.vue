@@ -2,11 +2,16 @@
 import { ref } from 'vue';
 import { Histogram } from '@element-plus/icons-vue'; // 记得引入图标
 import TimeBrushD3 from './TimeBrushD3.vue';
+import GanttChart from './GanttChart.vue';
 
 const props = defineProps({
     chartData: {
         type: Object,
         default: () => null
+    },
+    ganttData: {
+        type: Object,
+        default: () => ({})
     }
 });
 
@@ -30,7 +35,9 @@ const handleBrush = (range) => {
         <div class="trend-chart">
             <TimeBrushD3 :chart-data="props.chartData" @timeBrushed="handleBrush" />
         </div>
-        <div class="spec-chart"></div>
+        <div class="spec-chart">
+            <GanttChart :raw-group-data="props.ganttData" />
+        </div>
         <div class="detail-chart">
         </div>
     </el-card>
@@ -55,7 +62,7 @@ const handleBrush = (range) => {
 }
 
 .trend-chart {
-    height: 120px;
+    height: 100px;
     flex-shrink: 0;
     width: 100%;
 }
@@ -64,6 +71,7 @@ const handleBrush = (range) => {
     flex: 2;
     width: 100%;
     min-height: 0;
+    margin-top: 20px;
 }
 
 .detail-chart {

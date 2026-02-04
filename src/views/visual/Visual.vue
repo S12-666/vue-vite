@@ -1,42 +1,50 @@
 <script setup>
-import { ref, reactive, computed, onActivated, nextTick } from 'vue'
-import { ElConfigProvider, ElMessage } from 'element-plus';
-import zhCn from 'element-plus/es/locale/lang/zh-cn';
-import CtrlPanel from './panel/CtrlPanel.vue';
-import TrendChart from './trend/TrendChart.vue';
-import Embedding from './dimenreduc/Embedding.vue';
-// import PrccessAnalysis from './analysis/PrccessAnalysis.vue';
+import { ref, nextTick } from 'vue'
+import { Monitor } from '@element-plus/icons-vue';
 
-// 趋势图数据
-const trendData = ref(null);
-const currentBrushRange = ref([]);
-const currentScatterData = ref({});
+// 引入组件 (根据你的目录结构)
+import CtrlPanel from './panel/CtrlPanel.vue';
+import TrendChart from './trend/TrendChart.vue'; // 这里面包含了 TimeBrush 和 Gantt
+import Embedding from './dimenreduc/Embedding.vue';
+
+// --- 数据状态 ---
+const trendData = ref(null);         // 传给 TimeBrushD3 的数据
+const currentBrushRange = ref([]);   // 时间刷选的时间范围
+const currentScatterData = ref({});  // 传给 ScatterChart 的数据
+const currentGanttData = ref({});    // 传给 GanttChart 的数据 (新增)
 const currentMethod = ref('tsne');
 const ctrlPanelRef = ref(null);
 
+// --- 事件处理 ---
+
+// 1. 基础查询 (GetTrendData) -> 传给 TrendChart 里的 TimeBrush
 const handlePanelData = (data) => {
-    console.log('父组件收到了数据:', data);
     trendData.value = data;
 };
+
+// 2. 时间刷选回调
 const handleTimeBrush = (range) => {
-    // range 应该是 ["2021-06-01", "2021-06-05"] 这种格式
     currentBrushRange.value = range;
 };
 
+// 3. 分析结果：散点图
 const handleScatterData = (res) => {
-    console.log('父组件收到了散点图数据:', res);
-    if (res && res.data) {
-        currentScatterData.value = res.data;
-    } else {
-        currentScatterData.value = res;
-    }
+    // 兼容处理
+    currentScatterData.value = (res && res.data) ? res.data : res;
 };
 
+// 4. 分析结果：甘特图/条形图 (新增)
+const handleGanttData = (res) => {
+    console.log('Visual收到甘特图数据:', res);
+    currentGanttData.value = (res && res.data) ? res.data : res;
+}
+
+// 5. 降维算法切换 -> 通知 CtrlPanel 只刷新散点图
 const handleMethodChange = async (method) => {
     currentMethod.value = method;
     await nextTick();
     if (ctrlPanelRef.value) {
-        ctrlPanelRef.value.handleAnalysis();
+        ctrlPanelRef.value.handleAnalysis('scatter');
     }
 };
 </script>
@@ -45,13 +53,17 @@ const handleMethodChange = async (method) => {
     <div class="visual">
         <el-row :gutter="20" class="equal-height-row">
             <el-col :span="4" class="left-column-wrapper">
-                <CtrlPanel ref="ctrlPanelRef" @query-success="handlePanelData" @scatter-success="handleScatterData" :brush-range="currentBrushRange" :reductionMethod="currentMethod"/>
-                <Embedding style="margin-top: 20px;" :scatter-data="currentScatterData" @update:method="handleMethodChange"/>
+                <CtrlPanel ref="ctrlPanelRef" @query-success="handlePanelData" @scatter-success="handleScatterData"
+                    @gantt-success="handleGanttData" :brush-range="currentBrushRange"
+                    :reductionMethod="currentMethod" />
+                <Embedding style="margin-top: 20px;" :scatter-data="currentScatterData"
+                    @update:method="handleMethodChange" />
             </el-col>
+
             <el-col :span="16" class="center-column-wrapper">
-                <TrendChart :chart-data="trendData" @timeBrushed="handleTimeBrush"/>
-                <!-- <PrccessAnalysis style="margin-top: 20px;" /> -->
+                <TrendChart :chart-data="trendData" :gantt-data="currentGanttData" @timeBrushed="handleTimeBrush" />
             </el-col>
+
             <el-col :span="4" class="right-column-wrapper">
                 <el-card class="visual-card">
                     <template #header>
@@ -62,7 +74,7 @@ const handleMethodChange = async (method) => {
                             <span>详细分析</span>
                         </div>
                     </template>
-                    <div class="system-info-list">
+                    <div class="card-content">
                     </div>
                 </el-card>
             </el-col>
@@ -71,42 +83,32 @@ const handleMethodChange = async (method) => {
 </template>
 
 <style scoped lang="less">
+/* 保持之前的 Flex 布局样式不变，确保高度对齐 */
 .visual {
-    // 1. 强制行使用 Flex 布局，并拉伸对齐
     :deep(.equal-height-row) {
-        display: flex; 
-        flex-wrap: wrap; // 防止小屏幕布局崩坏
-        align-items: stretch; // 关键：让所有 col 高度一致
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
     }
 
-    // 2. 确保 el-col 本身也是 flex 容器（可选，视内部布局需要而定）
     :deep(.el-col) {
         display: flex;
         flex-direction: column;
-        justify-content: flex-start;
     }
 
-    // 3. 让中间和右侧的内部容器填满拉伸后的高度
     .center-column-wrapper {
-        // 如果 TrendChart 需要填满高度，需要给它的容器设置 100%
-        .full-height-container {
+
+        // 让 TrendChart 填满高度
+        :deep(.visual-card) {
             height: 100%;
-            // 如果图表需要滚动，可以加 overflow-y: auto
+            display: flex;
+            flex-direction: column;
         }
     }
 
     .right-column-wrapper {
-        // 让 el-card 填满整个列的高度
         .visual-card {
-            height: 100%; 
-            display: flex;       // 建议：让 card body 也能利用 flex
-            flex-direction: column;
-            
-            // 修正 Element Plus card body 的高度
-            :deep(.el-card__body) {
-                flex: 1;         // 让内容区域占满剩余空间
-                overflow-y: auto; // 如果内容太多，允许卡片内部滚动
-            }
+            height: 100%;
         }
     }
 }
