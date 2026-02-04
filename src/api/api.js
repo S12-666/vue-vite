@@ -136,3 +136,12 @@ export function getScatterData(data) {
         timeout: 60000
     })
 }
+
+export function getGanttData(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/visual/getganttdata',
+        method: 'post',
+        data,
+        timeout: 60000
+    })
+}
