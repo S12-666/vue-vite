@@ -31,6 +31,8 @@ const parsedData = computed(() => {
             thickMax: Number(value.thick_range?.[1]) || 0,
             widthMin: Number(value.width_range?.[0]) || 0,
             widthMax: Number(value.width_range?.[1]) || 0,
+            lenMin: Number(value.length_range?.[0]) || 0, // 新增：长度解析
+            lenMax: Number(value.length_range?.[1]) || 0, // 新增：长度解析
             platetype: value.platetype || 'Unknown'
         };
     });
@@ -57,6 +59,7 @@ const parsedData = computed(() => {
                 // 初始化极值，反向设置以便 update
                 thickMin: Infinity, thickMax: -Infinity,
                 widthMin: Infinity, widthMax: -Infinity,
+                lenMin: Infinity, lenMax: -Infinity, // 新增：长度极值初始化
                 batchIds: []
             });
         }
@@ -67,6 +70,8 @@ const parsedData = computed(() => {
         group.thickMax = Math.max(group.thickMax, d.thickMax);
         group.widthMin = Math.min(group.widthMin, d.widthMin);
         group.widthMax = Math.max(group.widthMax, d.widthMax);
+        group.lenMin = Math.min(group.lenMin, d.lenMin); // 新增：长度极值比较
+        group.lenMax = Math.max(group.lenMax, d.lenMax); // 新增：长度极值比较
         group.batchIds.push(d.id);
     });
 
@@ -85,6 +90,7 @@ const parsedData = computed(() => {
         tMax: d3.max(rawArray, d => d.thickMax) || 100,
         wMin: d3.min(rawArray, d => d.widthMin) || 0,
         wMax: d3.max(rawArray, d => d.widthMax) || 3000,
+        lMax: d3.max(rawArray, d => d.lenMax) || 100, // 新增：全局最大长度（用于进度条比例）
     };
 
     return { timeData, uniqueCapData, totalCount, globalRanges };
@@ -103,7 +109,7 @@ const drawChart = () => {
     const margin = { top: 0, right: 0, bottom: 0, left: 0 };
 
     const topHeight = 30;
-    const bottomHeight = 100;
+    const bottomHeight = 105; // 【修改】将高度从 100 提升到 120，为长度 L 腾出空间
     const gap = 80;
 
     const CARD_WIDTH = 90;
@@ -185,7 +191,7 @@ const drawChart = () => {
 
             const startTime = d.date_range?.[0] || '未知时间';
             const endTime = d.date_range?.[1] || '未知时间';
-            const rate = ((d.abnormal_rate || 0) * 100).toFixed(1); // 格式化为百分比保留1位小数
+            const rate = ((d.abnormal_rate || 0) * 100).toFixed(1);
             const nums = d.plate_nums || 0;
 
             const htmlContent = `
@@ -208,8 +214,6 @@ const drawChart = () => {
             chartTooltip.show(event, htmlContent, colorScale(d.platetype));
         })
         .on("mousemove", function (event, d) {
-            // 重新调用 show 可以刷新位置
-            // 由于你的 init 里面加了 transition，跟随效果会很平滑
             const startTime = d.date_range?.[0] || '未知时间';
             const endTime = d.date_range?.[1] || '未知时间';
             const rate = ((d.abnormal_rate || 0) * 100).toFixed(1);
@@ -264,27 +268,20 @@ const drawChart = () => {
         });
 
     cardGroups
-        .style("cursor", "pointer") // 1. 鼠标悬浮时变成“点击小手”
+        .style("cursor", "pointer")
         .on("mouseover", function (event, d) {
-            // 卡片边框高亮联动 (增强交互感)
             d3.select(this).select("rect.bg").attr("stroke", "#409EFF").attr("stroke-width", 2);
             if (d.batchIds && d.batchIds.length > 0) {
                 d.batchIds.forEach(batchId => {
-                    // 高亮连线 (这里假设你之前采用的是透明度 0.9，线宽 2.5)
                     d3.select(`#link-${batchId}`)
                         .attr("stroke-opacity", 0.9)
                         .attr("stroke-width", 2);
-
-                    // 高亮上方对应的甘特图方块
                     d3.select(`#top-rect-${batchId}`)
                         .attr("stroke", "#333")
                         .attr("stroke-width", 1);
                 });
             }
-            // 格式化异常率
             const rate = ((d.abnormalRate || 0) * 100).toFixed(1);
-
-            // 组装精简版 Tooltip HTML
             const htmlContent = `
             <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #303133;">
                 ${d.platetype}
@@ -293,12 +290,9 @@ const drawChart = () => {
                 <span style="display:inline-block; width: 50px;">异常率:</span> ${rate}%
             </div>
         `;
-
-            // 调用 tooltip 显示
             chartTooltip.show(event, htmlContent, colorScale(d.platetype));
         })
         .on("mousemove", function (event, d) {
-            // 使 tooltip 能够平滑跟随鼠标
             const rate = ((d.abnormalRate || 0) * 100).toFixed(1);
             const htmlContent = `
             <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #303133;">
@@ -311,26 +305,19 @@ const drawChart = () => {
             chartTooltip.show(event, htmlContent, colorScale(d.platetype));
         })
         .on("mouseout", function (event, d) {
-            // 恢复卡片边框颜色
             d3.select(this).select("rect.bg").attr("stroke", "#dcdfe6").attr("stroke-width", 1);
             if (d.batchIds && d.batchIds.length > 0) {
                 d.batchIds.forEach(batchId => {
-                    // 恢复连线默认状态 (这里假设你之前改成了 0.5)
                     d3.select(`#link-${batchId}`)
                         .attr("stroke-opacity", 0.7)
                         .attr("stroke-width", 1.1);
-
-                    // 恢复上方甘特图方块默认状态
                     d3.select(`#top-rect-${batchId}`)
-                        // 注意这里的 adaptiveGap 变量在 drawChart 作用域内，可以直接使用
                         .attr("stroke", adaptiveGap < 1 ? "#fff" : "none")
                         .attr("stroke-width", 0.5);
                 });
             }
-            // 隐藏 Tooltip
             chartTooltip.hide();
         })
-        // 【预留位置】后续为您实现点击功能的入口
         .on("click", function (event, d) {
             console.log("点击了卡片，准备下钻或弹出详情:", d.platetype);
         })
@@ -339,6 +326,7 @@ const drawChart = () => {
             bottomOffset.value -= e.deltaY;
             updateVisuals();
         });
+
     // 卡片背景
     cardGroups.append("rect").attr("class", "bg")
         .attr("width", CARD_WIDTH).attr("height", bottomHeight)
@@ -352,7 +340,6 @@ const drawChart = () => {
         .attr("x", 4)
         .attr("y", 18)
         .attr("text-anchor", "start")
-        // .text(d => d.platetype)
         .text(d => d.platetype.length > 9 ? d.platetype.substring(0, 9) + '...' : d.platetype)
         .attr("fill", "#303133")
         .style("font-size", "10px")
@@ -375,7 +362,6 @@ const drawChart = () => {
 
     cardGroups.each(function (d) {
         const gItem = d3.select(this);
-
         const pieData = pieGenerator([d.abnormalRate, 1 - d.abnormalRate]);
 
         const pieGroup = gItem.append("g")
@@ -386,35 +372,87 @@ const drawChart = () => {
             .enter()
             .append("path")
             .attr("d", arcGenerator)
-            .attr("fill", (slice, i) => { // 这里 i 是 pieData 的索引
+            .attr("fill", (slice, i) => {
                 return i === 0 ? "#F56C6C" : "#E4E7ED";
             })
             .append("title")
-            // 【关键修复】这里的 text 回调也需要接收 i
             .text((slice, i) => i === 0 ? `异常率: ${(d.abnormalRate * 100).toFixed(1)}%` : "正常");
     });
 
-    // === 范围可视化 (Box Plot) ===
-    const rangeScaleX = d3.scaleLinear().domain([0, 1]).range([10, CARD_WIDTH - 10]);
-    const safeNorm = (val, min, max) => (max === min) ? 0.5 : (val - min) / (max - min);
-
+    // === 范围可视化 (树状分支 + 子弹图/进度条) ===
     cardGroups.each(function (d) {
         const gItem = d3.select(this);
-        // T
-        gItem.append("text").attr("x", 5).attr("y", 50).text("T").attr("fill", "#909399").style("font-size", "8px");
-        gItem.append("line").attr("x1", 15).attr("x2", CARD_WIDTH - 5).attr("y1", 48).attr("y2", 48).attr("stroke", "#ebeef5");
-        const tx1 = rangeScaleX(safeNorm(d.thickMin, globalRanges.tMin, globalRanges.tMax));
-        const tx2 = rangeScaleX(safeNorm(d.thickMax, globalRanges.tMin, globalRanges.tMax));
-        gItem.append("rect").attr("x", tx1).attr("y", 46).attr("width", Math.max(tx2 - tx1, 2)).attr("height", 4).attr("fill", "#4facfe");
-        gItem.append("text").attr("x", CARD_WIDTH / 2).attr("y", 60).text(`${d.thickMin}-${d.thickMax}`).attr("text-anchor", "middle").attr("fill", "#4facfe").style("font-size", "8px");
 
-        // W
-        gItem.append("text").attr("x", 5).attr("y", 80).text("W").attr("fill", "#909399").style("font-size", "8px");
-        gItem.append("line").attr("x1", 15).attr("x2", CARD_WIDTH - 5).attr("y1", 78).attr("y2", 78).attr("stroke", "#ebeef5");
-        const wx1 = rangeScaleX(safeNorm(d.widthMin, globalRanges.wMin, globalRanges.wMax));
-        const wx2 = rangeScaleX(safeNorm(d.widthMax, globalRanges.wMin, globalRanges.wMax));
-        gItem.append("rect").attr("x", wx1).attr("y", 76).attr("width", Math.max(wx2 - wx1, 2)).attr("height", 4).attr("fill", "#67c23a");
-        gItem.append("text").attr("x", CARD_WIDTH / 2).attr("y", 90).text(`${d.widthMin}-${d.widthMax}`).attr("text-anchor", "middle").attr("fill", "#67c23a").style("font-size", "8px");
+        const startY = 48; // 第一条（T）的 Y 坐标
+        const rowGap = 22; // 每行的间距
+        const barX = 18;   // 进度条的起始 X 坐标
+        const barW = CARD_WIDTH - 24; // 进度条宽度
+        const barH = 14;   // 进度条高度
+
+        const lineTopY = startY - (barH / 2) - 3; 
+        const lineBottomY = (startY + rowGap * 2) + (barH / 2) + 3; 
+        const lineX = barX - 1; 
+
+        // 只画一根笔直的线
+        const pathData = `M ${lineX} ${lineTopY} L ${lineX} ${lineBottomY}`;
+        gItem.append("path")
+            .attr("d", pathData)
+            .attr("stroke", "#909399") // 树状分支线颜色
+            .attr("stroke-width", 1.5)
+            .attr("fill", "none");
+
+        // 配置 T, W, L 三个指标的数据与样式
+        const metrics = [
+            { label: 'T', min: d.thickMin, max: d.thickMax, gMax: globalRanges.tMax, unit: 'mm', y: startY },
+            { label: 'W', min: d.widthMin, max: d.widthMax, gMax: globalRanges.wMax, unit: 'm', y: startY + rowGap },
+            { label: 'L', min: d.lenMin, max: d.lenMax, gMax: globalRanges.lMax, unit: 'm', y: startY + rowGap * 2 }
+        ];
+
+        metrics.forEach(m => {
+            // 取该钢种范围的平均值作为展示值
+            const val = (m.min + m.max) / 2;
+            const barY = m.y - barH / 2;
+
+            // 1. 左侧文本标签 (T, W, L)
+            gItem.append("text")
+                .attr("x", 13)
+                .attr("y", m.y + 4) // 微调垂直居中
+                .attr("text-anchor", "end")
+                .text(m.label)
+                .attr("fill", "#909399") // 橙黄色标签
+                .style("font-size", "10px")
+                .style("font-weight", "bold");
+
+            // 2. 进度条背景框
+            gItem.append("rect")
+                .attr("x", barX)
+                .attr("y", barY)
+                .attr("width", barW)
+                .attr("height", barH)
+                .attr("fill", "#ffffff")
+                .attr("stroke", "#DCDFE6") // 浅灰色边框
+                .attr("stroke-width", 1);
+
+            // 3. 内部进度色块
+            const ratio = m.gMax > 0 ? (val / m.gMax) : 0;
+            const fillWidth = Math.min(ratio * barW, barW); // 防止超出边框
+            gItem.append("rect")
+                .attr("x", barX)
+                .attr("y", barY)
+                .attr("width", fillWidth)
+                .attr("height", barH)
+                .attr("fill", "#D4E4F7"); // 浅蓝色进度条
+
+            // 4. 居中显示的数值和单位
+            let displayVal = val.toFixed(2);
+            gItem.append("text")
+                .attr("x", barX + barW / 2)
+                .attr("y", m.y + 3) // 微调对齐进度条中间
+                .attr("text-anchor", "middle")
+                .attr("fill", "#606266")
+                .style("font-size", "9px")
+                .text(`${displayVal} ${m.unit}`);
+        });
     });
 
     // ==========================================
@@ -469,7 +507,6 @@ const drawChart = () => {
         .attr("width", containerWidth)
         .attr("height", bottomHeight)
         .attr("fill", "transparent")
-        // .style("cursor", "grab")
         .lower()
         .on("wheel", (e) => {
             e.preventDefault();
