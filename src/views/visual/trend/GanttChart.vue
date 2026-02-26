@@ -199,16 +199,16 @@ const drawChart = () => {
                     platetype: ${d.platetype}
                 </div>
                 <div style="margin-bottom: 4px; color: #606266;">
-                    <span style="display:inline-block; width: 50px;">Range:</span> ${startTime}
+                    <span style="display:inline-block;">Range:</span> ${startTime}
                 </div>
                 <div style="margin-bottom: 4px; color: #606266;">
-                    <span style="display:inline-block; width: 50px;"></span>- ${endTime}
+                    <span style="display:inline-block;"></span>- ${endTime}
                 </div>
                 <div style="margin-bottom: 4px; color: #606266;">
-                    <span style="display:inline-block; width: 50px;">plates:</span> ${nums}
+                    <span style="display:inline-block;">plates:</span> ${nums}
                 </div>
                 <div style="color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
-                    <span style="display:inline-block; width: 50px;">异常率:</span> ${rate}%
+                    <span style="display:inline-block;">异常率:</span> ${rate}%
                 </div>
             `;
             chartTooltip.show(event, htmlContent, colorScale(d.platetype));
@@ -222,16 +222,16 @@ const drawChart = () => {
                     platetype: ${d.platetype}
                 </div>
                 <div style="margin-bottom: 4px; color: #606266;">
-                    <span style="display:inline-block; width: 50px;">range:</span> ${startTime}
+                    <span style="display:inline-block;">range:</span> ${startTime}
                 </div>
                 <div style="margin-bottom: 4px; color: #606266;">
-                    <span style="display:inline-block; width: 50px;"></span>- ${endTime}
+                    <span style="display:inline-block;"></span>- ${endTime}
                 </div>
                 <div style="margin-bottom: 4px; color: #606266;">
-                    <span style="display:inline-block; width: 50px;">plates:</span> ${d.plate_nums || 0}
+                    <span style="display:inline-block;">plates:</span> ${d.plate_nums || 0}
                 </div>
                 <div style="color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
-                    <span style="display:inline-block; width: 50px;">abnormal:</span> ${rate}%
+                    <span style="display:inline-block;">异常率:</span> ${rate}%
                 </div>
             `;
             chartTooltip.show(event, htmlContent, colorScale(d.platetype));
@@ -281,27 +281,59 @@ const drawChart = () => {
                         .attr("stroke-width", 1);
                 });
             }
+            const formatRange = (min, max, unit) => {
+                if (min === max) return `${min.toFixed(2)} ${unit}`;
+                return `${min.toFixed(2)} - ${max.toFixed(2)} ${unit}`;
+            };
+            const tRange = formatRange(d.thickMin, d.thickMax, 'mm');
+            const wRange = formatRange(d.widthMin, d.widthMax, 'm');
+            const lRange = formatRange(d.lenMin, d.lenMax, 'm');
             const rate = ((d.abnormalRate || 0) * 100).toFixed(1);
             const htmlContent = `
-            <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #303133;">
-                ${d.platetype}
-            </div>
-            <div style="color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
-                <span style="display:inline-block; width: 50px;">异常率:</span> ${rate}%
-            </div>
-        `;
+                <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #303133;">
+                    ${d.platetype}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266; font-size: 11px;">
+                    <span style="display:inline-block;  color: #606266; font-weight: bold;">Thick:</span> ${tRange}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266; font-size: 11px;">
+                    <span style="display:inline-block;  color: #606266; font-weight: bold;">Width:</span> ${wRange}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266; font-size: 11px;">
+                    <span style="display:inline-block;  color: #606266; font-weight: bold;">Length:</span> ${lRange}
+                </div>
+                <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #EBEEF5; color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
+                    <span style="display:inline-block;">异常率:</span> ${rate}%
+                </div>
+            `;
             chartTooltip.show(event, htmlContent, colorScale(d.platetype));
         })
         .on("mousemove", function (event, d) {
+            const formatRange = (min, max, unit) => {
+                if (min === max) return `${min.toFixed(2)} ${unit}`;
+                return `${min.toFixed(2)} - ${max.toFixed(2)} ${unit}`;
+            };
+            const tRange = formatRange(d.thickMin, d.thickMax, 'mm');
+            const wRange = formatRange(d.widthMin, d.widthMax, 'm');
+            const lRange = formatRange(d.lenMin, d.lenMax, 'm');
             const rate = ((d.abnormalRate || 0) * 100).toFixed(1);
             const htmlContent = `
-            <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #303133;">
-                ${d.platetype}
-            </div>
-            <div style="color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
-                <span style="display:inline-block; width: 50px;">异常率:</span> ${rate}%
-            </div>
-        `;
+                <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #303133;">
+                    ${d.platetype}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266; font-size: 11px;">
+                    <span style="display:inline-block;  color: #606266; font-weight: bold;">Thick:</span> ${tRange}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266; font-size: 11px;">
+                    <span style="display:inline-block;  color: #606266; font-weight: bold;">Width:</span> ${wRange}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266; font-size: 11px;">
+                    <span style="display:inline-block;  color: #606266; font-weight: bold;">Length:</span> ${lRange}
+                </div>
+                <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #EBEEF5; color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
+                    <span style="display:inline-block;">异常率:</span> ${rate}%
+                </div>
+            `;
             chartTooltip.show(event, htmlContent, colorScale(d.platetype));
         })
         .on("mouseout", function (event, d) {
@@ -389,9 +421,9 @@ const drawChart = () => {
         const barW = CARD_WIDTH - 24; // 进度条宽度
         const barH = 14;   // 进度条高度
 
-        const lineTopY = startY - (barH / 2) - 3; 
-        const lineBottomY = (startY + rowGap * 2) + (barH / 2) + 3; 
-        const lineX = barX - 1; 
+        const lineTopY = startY - (barH / 2) - 3;
+        const lineBottomY = (startY + rowGap * 2) + (barH / 2) + 3;
+        const lineX = barX - 1;
 
         // 只画一根笔直的线
         const pathData = `M ${lineX} ${lineTopY} L ${lineX} ${lineBottomY}`;
@@ -434,14 +466,33 @@ const drawChart = () => {
                 .attr("stroke-width", 1);
 
             // 3. 内部进度色块
-            const ratio = m.gMax > 0 ? (val / m.gMax) : 0;
-            const fillWidth = Math.min(ratio * barW, barW); // 防止超出边框
+            const minRatio = m.gMax > 0 ? (m.min / m.gMax) : 0;
+            const maxRatio = m.gMax > 0 ? (m.max / m.gMax) : 0;
+            const avgRatio = m.gMax > 0 ? (val / m.gMax) : 0;
+
+            // 计算色块的起点 X 坐标和宽度
+            const blockX = barX + minRatio * barW;
+            // 确保宽度至少有 2px（当 min 和 max 完全一样时，也能看到一条线）
+            const blockW = Math.max((maxRatio - minRatio) * barW, 2);
+
+            // (A) 画波动范围块 (稍深的浅蓝色)
             gItem.append("rect")
-                .attr("x", barX)
-                .attr("y", barY)
-                .attr("width", fillWidth)
-                .attr("height", barH)
-                .attr("fill", "#D4E4F7"); // 浅蓝色进度条
+                .attr("x", blockX)
+                .attr("y", barY + 2) // 上下各缩进 2px，形成悬浮的精美感
+                .attr("width", blockW)
+                .attr("height", barH - 4)
+                .attr("fill", "#a0cfff") // Element-UI 的次级亮蓝色
+                .attr("rx", 1); // 加 1px 的微小圆角，视觉更柔和
+
+            // (B) 画平均值基准线 (深蓝色粗线)
+            const avgLineX = barX + avgRatio * barW;
+            gItem.append("line")
+                .attr("x1", avgLineX)
+                .attr("x2", avgLineX)
+                .attr("y1", barY)
+                .attr("y2", barY + barH)
+                .attr("stroke", "#409EFF") // 经典的深蓝色
+                .attr("stroke-width", 2);
 
             // 4. 居中显示的数值和单位
             let displayVal = val.toFixed(2);
