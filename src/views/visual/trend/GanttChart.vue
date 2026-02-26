@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch, computed, nextTick, onBeforeUnmount } from 'vue';
 import * as d3 from 'd3';
+import { chartTooltip } from '@/utils/tooltip_utils/tooltip.js';
 
 const props = defineProps({
     rawGroupData: { type: Object, default: () => ({}) }
@@ -164,6 +165,7 @@ const drawChart = () => {
         .data(layoutData)
         .enter()
         .append("rect")
+        .attr("id", d => `top-rect-${d.id}`)
         .attr("x", d => d._drawX)
         .attr("y", 0)
         .attr("width", d => Math.max(d._drawW, 1))
@@ -180,12 +182,62 @@ const drawChart = () => {
             d3.select(`#link-${d.id}`).attr("stroke-opacity", 0.9).attr("stroke-width", 2);
             const safeId = d.platetype.replace(/[^a-zA-Z0-9]/g, '_');
             d3.select(`#bottom-${safeId}`).select("rect.bg").attr("stroke", "#409EFF").attr("stroke-width", 2);
+
+            const startTime = d.date_range?.[0] || '未知时间';
+            const endTime = d.date_range?.[1] || '未知时间';
+            const rate = ((d.abnormal_rate || 0) * 100).toFixed(1); // 格式化为百分比保留1位小数
+            const nums = d.plate_nums || 0;
+
+            const htmlContent = `
+                <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #303133;">
+                    platetype: ${d.platetype}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266;">
+                    <span style="display:inline-block; width: 50px;">Range:</span> ${startTime}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266;">
+                    <span style="display:inline-block; width: 50px;"></span>- ${endTime}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266;">
+                    <span style="display:inline-block; width: 50px;">plates:</span> ${nums}
+                </div>
+                <div style="color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
+                    <span style="display:inline-block; width: 50px;">异常率:</span> ${rate}%
+                </div>
+            `;
+            chartTooltip.show(event, htmlContent, colorScale(d.platetype));
+        })
+        .on("mousemove", function (event, d) {
+            // 重新调用 show 可以刷新位置
+            // 由于你的 init 里面加了 transition，跟随效果会很平滑
+            const startTime = d.date_range?.[0] || '未知时间';
+            const endTime = d.date_range?.[1] || '未知时间';
+            const rate = ((d.abnormal_rate || 0) * 100).toFixed(1);
+            const htmlContent = `
+                <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #303133;">
+                    platetype: ${d.platetype}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266;">
+                    <span style="display:inline-block; width: 50px;">range:</span> ${startTime}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266;">
+                    <span style="display:inline-block; width: 50px;"></span>- ${endTime}
+                </div>
+                <div style="margin-bottom: 4px; color: #606266;">
+                    <span style="display:inline-block; width: 50px;">plates:</span> ${d.plate_nums || 0}
+                </div>
+                <div style="color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
+                    <span style="display:inline-block; width: 50px;">abnormal:</span> ${rate}%
+                </div>
+            `;
+            chartTooltip.show(event, htmlContent, colorScale(d.platetype));
         })
         .on("mouseout", function (event, d) {
             d3.select(this).attr("stroke", adaptiveGap < 1 ? "#fff" : "none").attr("stroke-width", 0.5);
-            d3.select(`#link-${d.id}`).attr("stroke-opacity", 0.2).attr("stroke-width", 1);
+            d3.select(`#link-${d.id}`).attr("stroke-opacity", 0.7).attr("stroke-width", 1.1);
             const safeId = d.platetype.replace(/[^a-zA-Z0-9]/g, '_');
             d3.select(`#bottom-${safeId}`).select("rect.bg").attr("stroke", "#dcdfe6").attr("stroke-width", 1);
+            chartTooltip.hide();
         });
 
     // ==========================================
@@ -211,6 +263,82 @@ const drawChart = () => {
             return `translate(${x}, 0)`;
         });
 
+    cardGroups
+        .style("cursor", "pointer") // 1. 鼠标悬浮时变成“点击小手”
+        .on("mouseover", function (event, d) {
+            // 卡片边框高亮联动 (增强交互感)
+            d3.select(this).select("rect.bg").attr("stroke", "#409EFF").attr("stroke-width", 2);
+            if (d.batchIds && d.batchIds.length > 0) {
+                d.batchIds.forEach(batchId => {
+                    // 高亮连线 (这里假设你之前采用的是透明度 0.9，线宽 2.5)
+                    d3.select(`#link-${batchId}`)
+                        .attr("stroke-opacity", 0.9)
+                        .attr("stroke-width", 2);
+
+                    // 高亮上方对应的甘特图方块
+                    d3.select(`#top-rect-${batchId}`)
+                        .attr("stroke", "#333")
+                        .attr("stroke-width", 1);
+                });
+            }
+            // 格式化异常率
+            const rate = ((d.abnormalRate || 0) * 100).toFixed(1);
+
+            // 组装精简版 Tooltip HTML
+            const htmlContent = `
+            <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #303133;">
+                ${d.platetype}
+            </div>
+            <div style="color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
+                <span style="display:inline-block; width: 50px;">异常率:</span> ${rate}%
+            </div>
+        `;
+
+            // 调用 tooltip 显示
+            chartTooltip.show(event, htmlContent, colorScale(d.platetype));
+        })
+        .on("mousemove", function (event, d) {
+            // 使 tooltip 能够平滑跟随鼠标
+            const rate = ((d.abnormalRate || 0) * 100).toFixed(1);
+            const htmlContent = `
+            <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #303133;">
+                ${d.platetype}
+            </div>
+            <div style="color: ${rate > 0 ? '#F56C6C' : '#67C23A'};">
+                <span style="display:inline-block; width: 50px;">异常率:</span> ${rate}%
+            </div>
+        `;
+            chartTooltip.show(event, htmlContent, colorScale(d.platetype));
+        })
+        .on("mouseout", function (event, d) {
+            // 恢复卡片边框颜色
+            d3.select(this).select("rect.bg").attr("stroke", "#dcdfe6").attr("stroke-width", 1);
+            if (d.batchIds && d.batchIds.length > 0) {
+                d.batchIds.forEach(batchId => {
+                    // 恢复连线默认状态 (这里假设你之前改成了 0.5)
+                    d3.select(`#link-${batchId}`)
+                        .attr("stroke-opacity", 0.7)
+                        .attr("stroke-width", 1.1);
+
+                    // 恢复上方甘特图方块默认状态
+                    d3.select(`#top-rect-${batchId}`)
+                        // 注意这里的 adaptiveGap 变量在 drawChart 作用域内，可以直接使用
+                        .attr("stroke", adaptiveGap < 1 ? "#fff" : "none")
+                        .attr("stroke-width", 0.5);
+                });
+            }
+            // 隐藏 Tooltip
+            chartTooltip.hide();
+        })
+        // 【预留位置】后续为您实现点击功能的入口
+        .on("click", function (event, d) {
+            console.log("点击了卡片，准备下钻或弹出详情:", d.platetype);
+        })
+        .on("wheel", function (e) {
+            e.preventDefault();
+            bottomOffset.value -= e.deltaY;
+            updateVisuals();
+        });
     // 卡片背景
     cardGroups.append("rect").attr("class", "bg")
         .attr("width", CARD_WIDTH).attr("height", bottomHeight)
@@ -221,20 +349,23 @@ const drawChart = () => {
 
     // 文字：钢种名称
     cardGroups.append("text")
-        .attr("x", 8)
-        .attr("y", 20)
+        .attr("x", 4)
+        .attr("y", 18)
         .attr("text-anchor", "start")
-        .text(d => d.platetype)
+        // .text(d => d.platetype)
+        .text(d => d.platetype.length > 9 ? d.platetype.substring(0, 9) + '...' : d.platetype)
         .attr("fill", "#303133")
         .style("font-size", "10px")
-        .style("font-weight", "bold");
+        .style("font-weight", "bold")
+        .append("title")
+        .text(d => d.platetype);
 
     // 文字：总数量
     cardGroups.append("text")
-        .attr("x", 8)
-        .attr("y", 32)
+        .attr("x", 4)
+        .attr("y", 30)
         .attr("text-anchor", "start")
-        .text(d => `${d.totalCount}块`)
+        .text(d => `${d.totalCount}`)
         .attr("fill", "#909399")
         .style("font-size", "9px");
 
@@ -248,7 +379,7 @@ const drawChart = () => {
         const pieData = pieGenerator([d.abnormalRate, 1 - d.abnormalRate]);
 
         const pieGroup = gItem.append("g")
-            .attr("transform", `translate(${CARD_WIDTH - 15}, 20)`);
+            .attr("transform", `translate(${CARD_WIDTH - 12}, 18)`);
 
         pieGroup.selectAll("path")
             .data(pieData)
@@ -321,8 +452,8 @@ const drawChart = () => {
             .attr("id", d => `link-${d.id}`)
             .attr("fill", "none")
             .attr("stroke", d => colorScale(d.platetype))
-            .attr("stroke-width", 1)
-            .attr("stroke-opacity", 0.15);
+            .attr("stroke-width", 1.1)
+            .attr("stroke-opacity", 0.7);
 
         links.merge(linksEnter).attr("d", getPath);
         links.exit().remove();
@@ -334,10 +465,12 @@ const drawChart = () => {
     // 4. 事件监听 (仅下层滚动)
     // ==========================================
     bottomClipper.append("rect")
+        .attr("class", "scroll-bg")
         .attr("width", containerWidth)
         .attr("height", bottomHeight)
         .attr("fill", "transparent")
-        .style("cursor", "grab")
+        // .style("cursor", "grab")
+        .lower()
         .on("wheel", (e) => {
             e.preventDefault();
             bottomOffset.value -= e.deltaY;
