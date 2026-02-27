@@ -6,7 +6,7 @@ import { chartTooltip } from '@/utils/tooltip_utils/tooltip.js';
 const props = defineProps({
     rawGroupData: { type: Object, default: () => ({}) }
 });
-
+const emit = defineEmits(['cardClick']);
 const chartRef = ref(null);
 // 滚动偏移量（只有下层需要滚动）
 const bottomOffset = ref(0);
@@ -238,7 +238,7 @@ const drawChart = () => {
         })
         .on("mouseout", function (event, d) {
             d3.select(this).attr("stroke", adaptiveGap < 1 ? "#fff" : "none").attr("stroke-width", 0.5);
-            d3.select(`#link-${d.id}`).attr("stroke-opacity", 0.7).attr("stroke-width", 1.1);
+            d3.select(`#link-${d.id}`).attr("stroke-opacity", 0.5).attr("stroke-width", 1);
             const safeId = d.platetype.replace(/[^a-zA-Z0-9]/g, '_');
             d3.select(`#bottom-${safeId}`).select("rect.bg").attr("stroke", "#dcdfe6").attr("stroke-width", 1);
             chartTooltip.hide();
@@ -341,8 +341,8 @@ const drawChart = () => {
             if (d.batchIds && d.batchIds.length > 0) {
                 d.batchIds.forEach(batchId => {
                     d3.select(`#link-${batchId}`)
-                        .attr("stroke-opacity", 0.7)
-                        .attr("stroke-width", 1.1);
+                        .attr("stroke-opacity", 0.5)
+                        .attr("stroke-width", 1);
                     d3.select(`#top-rect-${batchId}`)
                         .attr("stroke", adaptiveGap < 1 ? "#fff" : "none")
                         .attr("stroke-width", 0.5);
@@ -351,7 +351,30 @@ const drawChart = () => {
             chartTooltip.hide();
         })
         .on("click", function (event, d) {
-            console.log("点击了卡片，准备下钻或弹出详情:", d.platetype);
+            // console.log("点击了卡片，准备下钻或弹出详情:", d);
+            let filteredUpids = [];
+            if (d.batchIds && d.batchIds.length > 0) {
+                d.batchIds.forEach(batchId => {
+                    const batchData = props.rawGroupData[batchId];
+                    if (batchData && batchData.upids) {
+                        // 遍历 upids 对象里的每一个 upid 键值对
+                        Object.entries(batchData.upids).forEach(([upidKey, upidValue]) => {
+                            // 判断：如果 label 不等于 1，才把 upidKey 加入数组
+                            if (upidValue.label !== 1) {
+                                filteredUpids.push(upidKey);
+                            }
+                        });
+                    }
+                });
+            }
+            filteredUpids = [...new Set(filteredUpids)];
+
+            // console.log(`点击了卡片 ${d.platetype}，提取到 ${filteredUpids.length} 个 upid:`, filteredUpids);
+            emit('cardClick', {
+                platetype: d.platetype,
+                upids: filteredUpids,
+                cardData: d 
+            });
         })
         .on("wheel", function (e) {
             e.preventDefault();
@@ -541,8 +564,8 @@ const drawChart = () => {
             .attr("id", d => `link-${d.id}`)
             .attr("fill", "none")
             .attr("stroke", d => colorScale(d.platetype))
-            .attr("stroke-width", 1.1)
-            .attr("stroke-opacity", 0.7);
+            .attr("stroke-width", 1)
+            .attr("stroke-opacity", 0.5);
 
         links.merge(linksEnter).attr("d", getPath);
         links.exit().remove();

@@ -15,6 +15,9 @@ const currentGanttData = ref({});    // 传给 GanttChart 的数据 (新增)
 const currentMethod = ref('tsne');
 const ctrlPanelRef = ref(null);
 
+// 你已经定义好了这个，现在我们来使用它
+const currentHighlightUpids = ref([]);
+
 // --- 事件处理 ---
 
 // 1. 基础查询 (GetTrendData) -> 传给 TrendChart 里的 TimeBrush
@@ -47,6 +50,13 @@ const handleMethodChange = async (method) => {
         ctrlPanelRef.value.handleAnalysis('scatter');
     }
 };
+
+// 6. 新增：接收 TrendChart 冒泡上来的甘特图卡片点击事件
+const handleGanttCardClick = (payload) => {
+    console.log('Visual 层收到高亮数据:', payload.upids);
+    // 更新高亮数组
+    currentHighlightUpids.value = payload.upids || [];
+};
 </script>
 
 <template>
@@ -56,12 +66,14 @@ const handleMethodChange = async (method) => {
                 <CtrlPanel ref="ctrlPanelRef" @query-success="handlePanelData" @scatter-success="handleScatterData"
                     @gantt-success="handleGanttData" :brush-range="currentBrushRange"
                     :reductionMethod="currentMethod" />
+
                 <Embedding style="margin-top: 20px;" :scatter-data="currentScatterData"
-                    @update:method="handleMethodChange" />
+                    :highlight-upids="currentHighlightUpids" @update:method="handleMethodChange" @clear-highlight="currentHighlightUpids = []"/>
             </el-col>
 
             <el-col :span="16" class="center-column-wrapper">
-                <TrendChart :chart-data="trendData" :gantt-data="currentGanttData" @timeBrushed="handleTimeBrush" />
+                <TrendChart :chart-data="trendData" :gantt-data="currentGanttData" @timeBrushed="handleTimeBrush"
+                    @cardClick="handleGanttCardClick" />
             </el-col>
 
             <el-col :span="4" class="right-column-wrapper">

@@ -8,11 +8,14 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import * as d3 from 'd3';
 import { chartTooltip } from '@/utils/tooltip_utils/tooltip.js';
-
 const props = defineProps({
     rawScatterData: {
         type: Object,
         default: () => ({})
+    },
+    highlightUpids: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -21,6 +24,7 @@ const svgRef = ref(null);
 let resizeObserver = null;
 let zoomBehavior = null;
 let svgSelection = null;
+let circlesSelection = null;
 
 // 定义基础视觉大小 (像素)
 const BASE_RADIUS = 2;       // 点的默认半径
@@ -85,7 +89,7 @@ const initChart = async () => {
         .range([height - margin.bottom, margin.top]);
 
     // 绘制散点
-    const circles = g.selectAll("circle")
+    circlesSelection = g.selectAll("circle")
         .data(data)
         .enter()
         .append("circle")
@@ -140,6 +144,39 @@ const initChart = async () => {
             .attr("stroke-width", BASE_STROKE / k); // 边框建议直接除以 k，防止太粗
     }
 };
+
+watch(() => props.highlightUpids, (newUpids) => {
+    if (!circlesSelection) return;    
+    // 如果没有选中的高亮数据，恢复原状
+    if (!newUpids || newUpids.length === 0) {
+        circlesSelection
+            .transition()
+            .duration(300) // 加上 300ms 丝滑过渡
+            .attr("opacity", 1)
+            .attr("stroke-width", function() {
+                // 恢复原有的 stroke-width，需结合当前 zoom 比例
+                const transform = d3.zoomTransform(svgSelection.node());
+                return BASE_STROKE / transform.k;
+            });
+        return;
+    }
+
+    // 性能优化：将数组转为 Set，这样判断一个 d.upid 是否存在的速度是 O(1)
+    const highlightSet = new Set(newUpids);
+
+    // D3 批量更新：在 highlightSet 中的高亮，不在的变暗
+    circlesSelection
+        .transition()
+        .duration(300)
+        .attr("opacity", d => highlightSet.has(d.upid) ? 1 : 0.1) // 非目标点透明度降到 0.05 (非常淡)
+        .attr("stroke-width", function(d) {
+            const transform = d3.zoomTransform(svgSelection.node());
+            const baseK = transform.k;
+            // 可选：目标点的边框可以稍微加粗一点点更加醒目
+            return highlightSet.has(d.upid) ? (BASE_STROKE * 1.5 / baseK) : (BASE_STROKE / baseK);
+        });
+}, { deep: true });
+
 
 const resetZoom = () => {
     if (svgSelection && zoomBehavior) {

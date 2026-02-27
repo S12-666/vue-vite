@@ -3,36 +3,35 @@ import { ref } from 'vue';
 import { HelpFilled } from '@element-plus/icons-vue';
 import ScatterChart from './ScatterChart.vue';
 
-const emit = defineEmits(['update:method']);
+// 1. 新增 'clear-highlight' 事件
+const emit = defineEmits(['update:method', 'clear-highlight']);
+
 const props = defineProps({
     scatterData: {
         type: Object,
         default: () => ({})
+    },
+    highlightUpids: {
+        type: Array,
+        default: () => []
     }
 });
 
-
 const value = ref('tsne')
 const options = [
-    {
-        value: 'tsne',
-        label: 't-SNE',
-    },
-    {
-        value: 'pca',
-        label: 'PCA',
-    }
+    { value: 'tsne', label: 't-SNE' },
+    { value: 'pca', label: 'PCA' }
 ]
 
 const scatterChartRef = ref(null);
 
 const handleResetZoom = () => {
+    // 2. 恢复散点图的物理缩放
     scatterChartRef.value?.resetZoom();
+    // 3. 触发事件，通知父组件把高亮数组清空
+    emit('clear-highlight');
 };
 
-// const handleMethodChange = (newVal) => {
-//     emit('update:method', newVal);
-// };
 </script>
 
 <template>
@@ -44,12 +43,14 @@ const handleResetZoom = () => {
                 </el-icon>
                 <span>降维分析</span>
             </div>
-            <el-select v-model="value" @change="val => emit('update:method', val)" placeholder="Select" size="small" class="select">
+            <el-select v-model="value" @change="val => emit('update:method', val)" placeholder="Select" size="small"
+                class="select">
                 <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
         </template>
         <div class="trend-chart">
-            <ScatterChart ref="scatterChartRef" :raw-scatter-data="scatterData" />
+            <ScatterChart ref="scatterChartRef" :raw-scatter-data="scatterData"
+                :highlight-upids="props.highlightUpids" />
         </div>
     </el-card>
 </template>

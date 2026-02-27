@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue';
 import { Histogram } from '@element-plus/icons-vue'; // 记得引入图标
+import { getDetailData } from '@/api/api';
 import TimeBrushD3 from './TimeBrushD3.vue';
 import GanttChart from './GanttChart.vue';
+// import DetialChart from './DetialChart.vue';
 
 const props = defineProps({
     chartData: {
@@ -15,10 +17,28 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['timeBrushed']);
+const emit = defineEmits(['timeBrushed', 'cardClick']);
+
+const detailData = ref(null);
 
 const handleBrush = (range) => {
     emit('timeBrushed', range);
+};
+
+const handleGanttCardClick = async (payload) => {
+    const { platetype, upids, cardData } = payload;
+    // console.log(`准备请求 ${platetype} 的数据，包含以下 upids:`, upids);
+    emit('cardClick', payload);
+    // try {
+    //     const res = await getDetailData({
+    //         type: platetype,
+    //         upids: upids // 传回后端的数组 ["21614022000", "21614040000", "21614041000"]
+    //     });
+        
+    //     detailData.value = res.data;
+    // } catch (error) {
+    //     console.error('获取详情数据失败:', error);
+    // }
 };
 </script>
 
@@ -36,7 +56,7 @@ const handleBrush = (range) => {
             <TimeBrushD3 :chart-data="props.chartData" @timeBrushed="handleBrush" />
         </div>
         <div class="spec-chart">
-            <GanttChart :raw-group-data="props.ganttData" />
+            <GanttChart :raw-group-data="props.ganttData" @cardClick="handleGanttCardClick"/>
         </div>
         <div class="detail-chart">
         </div>
