@@ -1,11 +1,10 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { Monitor } from '@element-plus/icons-vue';
-
-// 引入组件 (根据你的目录结构)
 import CtrlPanel from './panel/CtrlPanel.vue';
 import TrendChart from './trend/TrendChart.vue'; // 这里面包含了 TimeBrush 和 Gantt
 import Embedding from './dimenreduc/Embedding.vue';
+import ProccessAnalysis from './analysis/ProccessAnalysis.vue';
 
 // --- 数据状态 ---
 const trendData = ref(null);         // 传给 TimeBrushD3 的数据
@@ -53,8 +52,6 @@ const handleMethodChange = async (method) => {
 
 // 6. 新增：接收 TrendChart 冒泡上来的甘特图卡片点击事件
 const handleGanttCardClick = (payload) => {
-    // console.log('Visual 层收到高亮数据:', payload.upids);
-    // 更新高亮数组
     currentHighlightUpids.value = payload.upids || [];
 };
 </script>
@@ -77,18 +74,7 @@ const handleGanttCardClick = (payload) => {
             </el-col>
 
             <el-col :span="4" class="right-column-wrapper">
-                <el-card class="visual-card">
-                    <template #header>
-                        <div class="card-header">
-                            <el-icon class="header-icon">
-                                <Monitor />
-                            </el-icon>
-                            <span>详细分析</span>
-                        </div>
-                    </template>
-                    <div class="card-content">
-                    </div>
-                </el-card>
+                <ProccessAnalysis />
             </el-col>
         </el-row>
     </div>

@@ -360,9 +360,9 @@ const drawChart = () => {
                         // 遍历 upids 对象里的每一个 upid 键值对
                         Object.entries(batchData.upids).forEach(([upidKey, upidValue]) => {
                             // 判断：如果 label 不等于 1，才把 upidKey 加入数组
-                            if (upidValue.label !== 1) {
-                                filteredUpids.push(upidKey);
-                            }
+                            // if (upidValue.label !== 1) {
+                            filteredUpids.push(upidKey);
+                            // }
                         });
                     }
                 });

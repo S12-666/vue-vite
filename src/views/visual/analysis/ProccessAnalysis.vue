@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Histogram } from '@element-plus/icons-vue';
+import { Promotion } from '@element-plus/icons-vue';
 
 
 
@@ -11,9 +11,9 @@ import { Histogram } from '@element-plus/icons-vue';
         <template #header>
             <div class="card-header">
                 <el-icon class="header-icon">
-                    <Histogram />
+                    <Promotion />
                 </el-icon>
-                <span>监控分析</span>
+                <span>预测&诊断分析</span>
             </div>
         </template>
         <div class="trend-chart">
