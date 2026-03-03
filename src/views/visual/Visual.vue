@@ -53,7 +53,7 @@ const handleMethodChange = async (method) => {
 
 // 6. 新增：接收 TrendChart 冒泡上来的甘特图卡片点击事件
 const handleGanttCardClick = (payload) => {
-    console.log('Visual 层收到高亮数据:', payload.upids);
+    // console.log('Visual 层收到高亮数据:', payload.upids);
     // 更新高亮数组
     currentHighlightUpids.value = payload.upids || [];
 };
@@ -112,9 +112,12 @@ const handleGanttCardClick = (payload) => {
 
         // 让 TrendChart 填满高度
         :deep(.visual-card) {
-            height: 100%;
+            flex: 1;
+            min-height: 0;
+            // height: 100%;
             display: flex;
             flex-direction: column;
+            margin: 0;
         }
     }
 

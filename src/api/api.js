@@ -142,6 +142,15 @@ export function getGanttData(data) {
         url: '/newbaogangapi/v1.0/visual/getganttdata',
         method: 'post',
         data,
+        timeout: 100000
+    })
+}
+
+export function getDetailData(data) {
+    return request({
+        url: '/newbaogangapi/v1.0/visual/getdetaildata',
+        method: 'post',
+        data,
         timeout: 60000
     })
 }
