@@ -13,6 +13,7 @@ const currentScatterData = ref({});  // 传给 ScatterChart 的数据
 const currentGanttData = ref({});    // 传给 GanttChart 的数据 (新增)
 const currentMethod = ref('tsne');
 const ctrlPanelRef = ref(null);
+const selectedPlateData = ref(null);
 
 // 你已经定义好了这个，现在我们来使用它
 const currentHighlightUpids = ref([]);
@@ -54,6 +55,10 @@ const handleMethodChange = async (method) => {
 const handleGanttCardClick = (payload) => {
     currentHighlightUpids.value = payload.upids || [];
 };
+
+const onPlateSelected = (plateData) => {
+    selectedPlateData.value = plateData;
+};
 </script>
 
 <template>
@@ -70,11 +75,11 @@ const handleGanttCardClick = (payload) => {
 
             <el-col :span="16" class="center-column-wrapper">
                 <TrendChart :chart-data="trendData" :gantt-data="currentGanttData" @timeBrushed="handleTimeBrush"
-                    @cardClick="handleGanttCardClick" />
+                    @cardClick="handleGanttCardClick" @plateClicked="onPlateSelected"/>
             </el-col>
 
             <el-col :span="4" class="right-column-wrapper">
-                <ProccessAnalysis />
+                <ProccessAnalysis :plate-data="selectedPlateData" />
             </el-col>
         </el-row>
     </div>
@@ -94,22 +99,26 @@ const handleGanttCardClick = (payload) => {
         flex-direction: column;
     }
 
-    .center-column-wrapper {
-
-        // 让 TrendChart 填满高度
-        :deep(.visual-card) {
-            flex: 1;
-            min-height: 0;
-            // height: 100%;
-            display: flex;
-            flex-direction: column;
-            margin: 0;
-        }
+    .left-column-wrapper {
+        /* 保持默认，无需特殊处理 */
     }
 
-    .right-column-wrapper {
-        .visual-card {
-            height: 100%;
+    /* 核心魔法：剥离中间和右侧撑开高度的能力 */
+    .center-column-wrapper, .right-column-wrapper {
+        position: relative; /* 将 column 设置为绝对定位的基准 */
+
+        /* :deep(> *) 会选中 TrendChart 和 ProccessAnalysis 的最外层根节点 */
+        :deep(> *) {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            /* 因为 el-row 的 gutter="20"，el-col 左右自带 10px padding */
+            /* 用 left 和 right 完美抵消，防止内容贴边 */
+            width: calc(100% - 20px);
+            left: 10px;
+            right: 10px;
+            height: auto;
+            margin: 0;
         }
     }
 }
