@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick, shallowRef } from 'vue';
+import { ref, watch, onMounted, onUnmounted, nextTick, shallowRef } from 'vue';
 import * as d3 from 'd3';
 import { chartTooltip } from '@/utils/tooltip_utils/tooltip.js';
 
@@ -36,8 +36,6 @@ const props = defineProps({
 
 // ==== 状态管理 ====
 const upid = ref('--');
-
-// 💡 修改点 2：恢复为空数组和空字符串，初始化时不包含任何骨架数据
 const metricsData = ref([]);
 const activeMetricId = ref('');
 
@@ -63,6 +61,7 @@ const switchMetric = (id) => {
     }
 };
 
+// ==== 渲染顶部 D3 矩形导航色块 ====
 const renderMetricsNav = () => {
     if (!metricsNavRef.value || !metricsData.value.length) return;
 
@@ -98,14 +97,17 @@ const renderMetricsNav = () => {
         .on('mousemove', (event, d) => {
             event.stopPropagation();
             const borderColor = LABEL_COLORS[d.labelStatus] || LABEL_COLORS[2];
+
+            // 💡 统一展示异常概率
             const htmlContent = `
                 <div style="font-weight: bold; font-size: 13px; color: #333; margin-bottom: 4px;">
                     ${d.name.toUpperCase()}
                 </div>
                 <div style="font-size: 12px; color: #606266;">
-                    当前值: <span style="color:${borderColor}; font-weight:bold;">${d.displayValue.toFixed(2)}${d.unit}</span>
+                    异常概率: <span style="color:${borderColor}; font-weight:bold;">${d.abnormalProb.toFixed(2)}%</span>
                 </div>
             `;
+
             chartTooltip.show(event, htmlContent, borderColor);
             if (activeMetricId.value !== d.id) {
                 d3.select(event.currentTarget).attr('stroke', '#333').attr('stroke-width', 1);
@@ -119,6 +121,7 @@ const renderMetricsNav = () => {
         });
 };
 
+// ==== 计算瀑布图累加数据 ====
 const getWaterfallData = () => {
     const metric = metricsData.value.find(m => m.id === activeMetricId.value);
     if (!metric) return [];
@@ -141,7 +144,7 @@ const getWaterfallData = () => {
 
 // ==== 解析数据 ====
 watch(() => props.shapData, (newData) => {
-    // 💡 修改点 3：如果传入的是 null 或空数据，清空组件状态
+    // 💡 纯粹的按需显示：如果没有数据，清空状态，v-if 会自动卸载 DOM
     if (!newData || !newData.predictions) {
         metricsData.value = [];
         activeMetricId.value = '';
@@ -161,15 +164,15 @@ watch(() => props.shapData, (newData) => {
     const parsedMetrics = [];
     for (const [key, detail] of Object.entries(newData.predictions)) {
         const isPCA = detail.model_metrics?.model_type === 'PCA_Reconstruction';
-        let displayValue = isPCA ? detail.instance_metrics.current_score : (detail.abnormal_prob * 100);
-        let unit = isPCA ? ' 分' : '%';
-        let labelStatus = isPCA ? (!detail.instance_metrics.is_safe ? 0 : 1) : (displayValue > 50 ? 0 : 1);
+
+        // 💡 统一使用异常概率
+        let abnormalProb = (detail.abnormal_prob || 0) * 100;
+        let labelStatus = isPCA ? (!detail.instance_metrics?.is_safe ? 0 : 1) : (abnormalProb > 50 ? 0 : 1);
 
         parsedMetrics.push({
             id: key,
             name: nameMap[key] || key,
-            displayValue: displayValue,
-            unit: unit,
+            abnormalProb: abnormalProb, // 统一存为概率
             labelStatus: labelStatus,
             baseValue: detail.shap_base_value,
             features: (detail.top_features || []).slice(0, 10).map(f => ({
@@ -186,12 +189,12 @@ watch(() => props.shapData, (newData) => {
         if (!activeMetricId.value || !parsedMetrics.find(m => m.id === activeMetricId.value)) {
             activeMetricId.value = parsedMetrics[0].id;
         }
-        // 确保 DOM (由于 v-if) 挂载完成后，再执行 D3 渲染
+
+        // 确保 v-if 渲染完成 DOM 后，再执行 D3 绘制和绑定 Observer
         nextTick(() => {
             renderMetricsNav();
             renderChart();
 
-            // 手动重新绑定 ResizeObserver 到新渲染出来的 chartsAreaRef
             if (chartsAreaRef.value && resizeObserver) {
                 resizeObserver.observe(chartsAreaRef.value);
             }
@@ -199,7 +202,7 @@ watch(() => props.shapData, (newData) => {
     }
 }, { immediate: true, deep: true });
 
-// ==== 全新的水平双向柱状图渲染 ====
+// ==== 渲染水平双向柱状图 (SHAP风格) ====
 const renderChart = () => {
     if (!chartRef.value) return;
     const { width, height } = containerSize.value;
@@ -207,7 +210,7 @@ const renderChart = () => {
 
     const data = getWaterfallData();
 
-    // 💡 修改点 4：恢复拦截逻辑，没有数据直接清空 SVG 不画任何东西
+    // 拦截无数据的情况
     if (!data.length) {
         d3.select(chartRef.value).selectAll('*').remove();
         return;
@@ -311,7 +314,7 @@ const renderChart = () => {
         .attr('fill', d => d.val >= 0 ? '#F56C6C' : '#409EFF');
 };
 
-// 💡 监听图表容器出现，绑定观察者
+// ==== 尺寸监听与生命周期 ====
 watch(chartsAreaRef, (newEl) => {
     if (newEl && resizeObserver) {
         resizeObserver.disconnect();
@@ -320,7 +323,6 @@ watch(chartsAreaRef, (newEl) => {
 });
 
 onMounted(() => {
-    // 💡 修改点 5：移除初始主动调用的 render 方法，完全靠 watch 拿到数据后驱动
     resizeObserver = new ResizeObserver(entries => {
         if (rafId) cancelAnimationFrame(rafId);
         rafId = requestAnimationFrame(() => {
@@ -330,7 +332,6 @@ onMounted(() => {
                 if (width !== containerSize.value.width || height !== containerSize.value.height) {
                     containerSize.value.width = width;
                     containerSize.value.height = height;
-                    // 只有尺寸改变且存在数据时才会重绘
                     if (metricsData.value.length > 0) {
                         renderChart();
                     }
