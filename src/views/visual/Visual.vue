@@ -5,6 +5,7 @@ import CtrlPanel from './panel/CtrlPanel.vue';
 import TrendChart from './trend/TrendChart.vue'; // 这里面包含了 TimeBrush 和 Gantt
 import Embedding from './dimenreduc/Embedding.vue';
 import ProccessAnalysis from './analysis/ProccessAnalysis.vue';
+import { getPredictionResult } from '@/api/api.js';
 
 // --- 数据状态 ---
 const trendData = ref(null);         // 传给 TimeBrushD3 的数据
@@ -14,6 +15,7 @@ const currentGanttData = ref({});    // 传给 GanttChart 的数据 (新增)
 const currentMethod = ref('tsne');
 const ctrlPanelRef = ref(null);
 const selectedPlateData = ref(null);
+const currentShapData = ref(null);
 
 // 你已经定义好了这个，现在我们来使用它
 const currentHighlightUpids = ref([]);
@@ -59,6 +61,33 @@ const handleGanttCardClick = (payload) => {
 const onPlateSelected = (plateData) => {
     selectedPlateData.value = plateData;
 };
+
+const fetchPredictionData = async (params) => {
+    console.log('Visual 收到预测请求，组装参数:', params);
+    try {
+        // 严格按照后端的标准请求体组装
+        const requestData = {
+            upid: params.upid,
+            status_cooling: Number(params.status_cooling),
+            platetype: params.platetype,
+            label: params.label
+        };
+        console.log(requestData);
+        
+        
+        // 发送请求
+        const res = await getPredictionResult(requestData);
+        
+        if (res) {
+            currentShapData.value = res;
+            console.log('✅ 预测数据获取成功:', currentShapData.value);
+        } else {
+            console.error('❌ 获取预测数据失败:', res.msg);
+        }
+    } catch (error) {
+        console.error('🌐 网络请求报错:', error);
+    }
+};
 </script>
 
 <template>
@@ -75,11 +104,11 @@ const onPlateSelected = (plateData) => {
 
             <el-col :span="16" class="center-column-wrapper">
                 <TrendChart :chart-data="trendData" :gantt-data="currentGanttData" @timeBrushed="handleTimeBrush"
-                    @cardClick="handleGanttCardClick" @plateClicked="onPlateSelected"/>
+                    @cardClick="handleGanttCardClick" @plateClicked="onPlateSelected" @predict-clicked="fetchPredictionData"/>
             </el-col>
 
             <el-col :span="4" class="right-column-wrapper">
-                <ProccessAnalysis :plate-data="selectedPlateData" />
+                <ProccessAnalysis :plate-data="selectedPlateData" :shap-data="currentShapData"/>
             </el-col>
         </el-row>
     </div>
