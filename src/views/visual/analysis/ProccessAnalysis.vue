@@ -8,6 +8,10 @@ const props = defineProps({
     plateData: {
         type: Object,
         default: () => null
+    },
+    shapData: {
+        type: Object,
+        default: () => null
     }
 });
 </script>
@@ -24,7 +28,7 @@ const props = defineProps({
         </template>
         <div class="charts-wrapper">
             <div class="shap-chart-container">
-                <SHAPChart />
+                <SHAPChart :shap-data="props.shapData"/>
             </div>
 
             <div class="pca-chart-container">
@@ -60,7 +64,7 @@ const props = defineProps({
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    /* gap: 15px; */
     overflow: hidden;
     /* 防止溢出 */
     min-height: 0;

@@ -17,7 +17,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['timeBrushed', 'cardClick', 'plateClicked']);
+const emit = defineEmits(['timeBrushed', 'cardClick', 'plateClicked', 'predict-clicked']);
 
 const detailData = ref(null);
 
@@ -44,6 +44,10 @@ const handleGanttCardClick = async (payload) => {
 const handleSinglePlateClick = (plate) => {
     emit('plateClicked', plate);
 };
+
+const handlePredictClick = (params) => {
+    emit('predict-clicked', params);
+};
 </script>
 
 <template>
@@ -63,7 +67,7 @@ const handleSinglePlateClick = (plate) => {
             <GanttChart :raw-group-data="props.ganttData" @cardClick="handleGanttCardClick" />
         </div>
         <div class="detail-chart">
-            <DetialChart :detail-data="detailData" @plateClick="handleSinglePlateClick"/>
+            <DetialChart :detail-data="detailData" @plateClick="handleSinglePlateClick" @predict-clicked="handlePredictClick"/>
         </div>
     </el-card>
 </template>

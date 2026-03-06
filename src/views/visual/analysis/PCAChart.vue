@@ -448,7 +448,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 8px;
+    /* padding-bottom: 8px; */
     margin-bottom: 8px;
     flex-shrink: 0;
 }
@@ -457,7 +457,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    padding: 4px;
     border: 1px solid #dcdfe6;
     border-radius: 4px;
     background-color: #f8f9fa;

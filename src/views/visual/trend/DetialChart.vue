@@ -10,6 +10,8 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['plateClick']);
+
 const wrapperRef = ref(null);
 const chartRef = ref(null);
 let resizeObserver = null;
@@ -81,13 +83,14 @@ const renderChart = () => {
         .attr('fill', '#ffffff')
         .attr('stroke', d => (d.status_cooling == 0 || d.status_cooling === '0') ? '#409eff' : '#dcdfe6')
         .attr('stroke-width', 1)
-        .on('mousemove', (event, d) => {
-            // 获取鼠标相对于当前 svg 组的 X 坐标
+        .on('mousemove', function (event, d) {
             const pointerX = d3.pointer(event)[0];
-            // 只有鼠标在左侧元数据区域时才显示
+
             if (pointerX < indicatorStartX) {
-            const isCooled = (d.status_cooling == 0 || d.status_cooling === '0');
-                const tooltipBorderColor = isCooled ? '#409eff' : '#dcdfe6'; // 蓝色 或 灰色
+                // d3.select(this).style('cursor', 'pointer'); 
+
+                const isCooled = (d.status_cooling == 0 || d.status_cooling === '0');
+                const tooltipBorderColor = isCooled ? '#409eff' : '#dcdfe6';
                 const htmlContent = `
                     <div style="line-height: 1.6;">
                         <div><b>tgtlength:</b> ${d.tgtlength !== undefined ? d.tgtlength : '-'}</div>
@@ -98,12 +101,22 @@ const renderChart = () => {
                 `;
                 chartTooltip.show(event, htmlContent, tooltipBorderColor);
             } else {
-                // 如果鼠标移动到了右侧条形图的空白背景上，隐藏左侧 tooltip
+                // 如果鼠标移动到了右侧条形图的空白背景上，恢复默认鼠标，并隐藏 tooltip
+                d3.select(this).style('cursor', 'default');
                 chartTooltip.hide();
             }
         })
         .on('mouseout', () => {
             chartTooltip.hide();
+            // d3.select(this).style('cursor', 'default');
+        })
+        .on('click', (event, d) => {
+            const pointerX = d3.pointer(event)[0];
+            // 确保只有点击了左侧区域（虚线左侧），才触发联动分析
+            if (pointerX < indicatorStartX) {
+                emit('plateClick', d);
+            }
+            console.log('点击了背景框，UPID:', d.upid, '鼠标X位置:', pointerX);
         });
 
     // ================= 左侧元素渲染 =================
@@ -155,7 +168,7 @@ const renderChart = () => {
             .attr('rx', 2)
             .attr('fill', d => LABEL_COLORS[d.val] || '#dcdfe6')
             .on('mousemove', (event, d) => {
-                event.stopPropagation(); 
+                event.stopPropagation();
                 const labelName = LABEL_NAMES[d.index] || `标签 ${d.index + 1}`;
                 const borderColor = LABEL_COLORS[d.val] || '#dcdfe6';
                 const htmlContent = `
@@ -201,6 +214,13 @@ const renderChart = () => {
             .on('click', (event, rowData) => {
                 // 点击事件现在绑定在这个大方块上
                 console.log('点击了预测区域, 对应的 UPID 为:', rowData.upid);
+                emit('predict-clicked', {
+                    upid: rowData.upid,
+                    status_cooling: rowData.status_cooling, // 注意：原来你写的是 status_cooling
+                    platetype: rowData.platetype,           // 钢种，之前写的是 type
+                    // 如果前端 rowData 里本身就有 label 数组就传过去，如果没有可以先传默认值
+                    label: rowData.label || [2, 2, 2, 2, 2]
+                });
             });
 
         // 3. 绘制实际的图标路径 (不需要再绑定事件和 cursor 了，因为它在 hit-area 上方，事件会穿透或被其组捕获)
