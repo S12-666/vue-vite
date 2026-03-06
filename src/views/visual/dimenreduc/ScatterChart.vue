@@ -8,6 +8,7 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import * as d3 from 'd3';
 import { chartTooltip } from '@/utils/tooltip_utils/tooltip.js';
+
 const props = defineProps({
     rawScatterData: {
         type: Object,
@@ -33,6 +34,37 @@ const HOVER_RADIUS = 6;      // 悬浮时半径
 
 const margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
+// ==========================================
+// 🌟 核心优化：抽离高亮逻辑，支持复用
+// ==========================================
+const applyHighlight = (upids, animate = false) => {
+    if (!circlesSelection || !svgSelection) return;
+
+    // 获取当前缩放比例，保证边框粗细正确
+    const transform = d3.zoomTransform(svgSelection.node());
+    const baseK = transform.k;
+
+    // 选择器：是否应用过渡动画
+    const selection = animate
+        ? circlesSelection.transition().duration(300)
+        : circlesSelection;
+
+    // 如果没有高亮数据，全部恢复原状
+    if (!upids || upids.length === 0) {
+        selection
+            .attr("opacity", 1)
+            .attr("stroke-width", BASE_STROKE / baseK);
+        return;
+    }
+
+    const highlightSet = new Set(upids);
+
+    // 应用高亮样式
+    selection
+        .attr("opacity", d => highlightSet.has(d.upid) ? 1 : 0.1)
+        .attr("stroke-width", d => highlightSet.has(d.upid) ? (BASE_STROKE * 1.5 / baseK) : (BASE_STROKE / baseK));
+};
+
 const initChart = async () => {
     if (!props.rawScatterData || Object.keys(props.rawScatterData).length === 0) return;
 
@@ -48,32 +80,24 @@ const initChart = async () => {
         '2': '#8f959e'  // 灰色
     };
 
-    const colorScale = (label) => {
-        return colorMap[String(label)] || '#999';
-    };
+    const colorScale = (label) => colorMap[String(label)] || '#999';
 
-    const getLightSolidColor = (hex) => {
-        return d3.interpolateRgb("white", hex)(0.5); 
-    };
+    const getLightSolidColor = (hex) => d3.interpolateRgb("white", hex)(0.5);
 
     svgSelection = d3.select(svgRef.value)
         .append('svg')
         .attr('width', width)
         .attr('height', height)
-        .style('background', '#fff')
-        // .style('cursor', 'grab');
+        .style('background', '#fff');
 
-    // Zoom 行为定义
     zoomBehavior = d3.zoom()
-        .scaleExtent([0.5, 50]) // 允许放大倍数更大，方便看清密集区
+        .scaleExtent([0.5, 50])
         .on("zoom", handleZoom);
 
     svgSelection.call(zoomBehavior);
 
-    // 主绘图容器
     const g = svgSelection.append('g').attr('class', 'main-group');
 
-    // 比例尺计算
     const xExtent = d3.extent(data, d => d.x);
     const yExtent = d3.extent(data, d => d.y);
     const xRange = xExtent[1] - xExtent[0];
@@ -88,31 +112,25 @@ const initChart = async () => {
         .domain([yExtent[0] - yRange * padding, yExtent[1] + yRange * padding])
         .range([height - margin.bottom, margin.top]);
 
-    // 绘制散点
     circlesSelection = g.selectAll("circle")
         .data(data)
         .enter()
         .append("circle")
         .attr("cx", d => xScale(d.x))
         .attr("cy", d => yScale(d.y))
-        // 1. 设置填充颜色：使用 colorScale，但透明度低 (0.2)
         .attr("fill", d => getLightSolidColor(colorScale(d.label)))
         .attr("fill-opacity", 1)
         .attr("stroke", d => colorScale(d.label))
         .attr("r", BASE_RADIUS)
         .attr("stroke-width", BASE_STROKE)
-
         .on("mouseover", function (event, d) {
             d3.select(this).raise();
             const transform = d3.zoomTransform(svgSelection.node());
             const k = transform.k;
 
             d3.select(this)
-                // .attr("fill", colorScale(d.label))
-                // // .attr("fill-opacity", 1) // 悬浮时填充变实
-                // .attr("stroke", colorScale(d.label))
                 .attr("stroke-width", 2 / k)
-                .attr("r", HOVER_RADIUS / Math.sqrt(k)); // 悬浮时稍微变大
+                .attr("r", HOVER_RADIUS / Math.sqrt(k));
 
             const html = `
                 <div><strong>upid:</strong> ${d.upid}</div>
@@ -126,12 +144,14 @@ const initChart = async () => {
             const transform = d3.zoomTransform(svgSelection.node());
             const k = transform.k;
 
+            // 注意这里：鼠标移出时，只恢复大小和边框，不要修改 opacity，否则会破坏高亮状态
             d3.select(this)
-                // .attr("fill-opacity", 0.2) // 还原透明度
-                // .attr("fill", getLightSolidColor(colorScale(d.label)))
-                // .attr("stroke", colorScale(d.label)) // 还原为本来的边框颜色
-                .attr("stroke-width", BASE_STROKE / k) // 还原边框粗细
-                .attr("r", BASE_RADIUS / Math.sqrt(k)); // 还原半径
+                .attr("stroke-width", function () {
+                    // 如果当前存在高亮且是高亮项，边框要保持稍粗
+                    const isHighlighted = props.highlightUpids?.includes(d.upid);
+                    return isHighlighted ? (BASE_STROKE * 1.5 / k) : (BASE_STROKE / k);
+                })
+                .attr("r", BASE_RADIUS / Math.sqrt(k));
 
             chartTooltip.hide();
         });
@@ -141,42 +161,25 @@ const initChart = async () => {
         const k = e.transform.k;
         g.selectAll("circle")
             .attr("r", BASE_RADIUS / Math.sqrt(k))
-            .attr("stroke-width", BASE_STROKE / k); // 边框建议直接除以 k，防止太粗
+            .attr("stroke-width", function (d) {
+                // 缩放时也要尊重高亮状态的粗细
+                const isHighlighted = props.highlightUpids?.includes(d.upid);
+                return isHighlighted ? (BASE_STROKE * 1.5 / k) : (BASE_STROKE / k);
+            });
+    }
+
+    // ==========================================
+    // 🌟 核心优化：图表初始化完成后，立刻应用一次高亮状态 (无动画)
+    // ==========================================
+    if (props.highlightUpids && props.highlightUpids.length > 0) {
+        applyHighlight(props.highlightUpids, false);
     }
 };
 
+// 监听 highlightUpids 变化，使用带动画的方式应用高亮
 watch(() => props.highlightUpids, (newUpids) => {
-    if (!circlesSelection) return;    
-    // 如果没有选中的高亮数据，恢复原状
-    if (!newUpids || newUpids.length === 0) {
-        circlesSelection
-            .transition()
-            .duration(300) // 加上 300ms 丝滑过渡
-            .attr("opacity", 1)
-            .attr("stroke-width", function() {
-                // 恢复原有的 stroke-width，需结合当前 zoom 比例
-                const transform = d3.zoomTransform(svgSelection.node());
-                return BASE_STROKE / transform.k;
-            });
-        return;
-    }
-
-    // 性能优化：将数组转为 Set，这样判断一个 d.upid 是否存在的速度是 O(1)
-    const highlightSet = new Set(newUpids);
-
-    // D3 批量更新：在 highlightSet 中的高亮，不在的变暗
-    circlesSelection
-        .transition()
-        .duration(300)
-        .attr("opacity", d => highlightSet.has(d.upid) ? 1 : 0.1) // 非目标点透明度降到 0.05 (非常淡)
-        .attr("stroke-width", function(d) {
-            const transform = d3.zoomTransform(svgSelection.node());
-            const baseK = transform.k;
-            // 可选：目标点的边框可以稍微加粗一点点更加醒目
-            return highlightSet.has(d.upid) ? (BASE_STROKE * 1.5 / baseK) : (BASE_STROKE / baseK);
-        });
+    applyHighlight(newUpids, true);
 }, { deep: true });
-
 
 const resetZoom = () => {
     if (svgSelection && zoomBehavior) {
@@ -186,14 +189,13 @@ const resetZoom = () => {
     }
 };
 
-defineExpose({
-    resetZoom
-});
+defineExpose({ resetZoom });
 
 watch(() => props.rawScatterData, () => {
     nextTick(() => { initChart(); });
 }, { deep: true });
 
+// 这里不用防抖，因为 ResizeObserver 已经很敏捷了，但如果点太多卡顿可以加 requestAnimationFrame
 const handleResize = () => { initChart(); };
 
 onMounted(() => {
