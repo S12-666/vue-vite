@@ -210,6 +210,79 @@ const handleQueryDetails = () => {
     }, 350);
 }
 
+// 新增：导出功能
+const handleExport = () => {
+    if (!filteredTableData.value || filteredTableData.value.length === 0) {
+        ElMessage.warning('当前没有可导出的数据');
+        return;
+    }
+
+    // 1. 定义导出的表头和对应的数据字段 (根据你的 el-table-column 提取)
+    const headers = {
+        upid: 'UPID',
+        slabid: 'SlabID',
+        thick: 'Thick(mm)',
+        ave_temp_entry_pre: 'Pre Heat EntT',
+        ave_temp_pre: 'Pre Heat AveT',
+        staying_time_pre: 'Pre Heat Time',
+        ave_temp_entry_1: '1st Heat EntT',
+        ave_temp_1: '1st Heat AveT',
+        staying_time_1: '1st Heat Time',
+        ave_temp_entry_2: '2nd Heat EntT',
+        ave_temp_2: '2nd Heat AveT',
+        staying_time_2: '2nd Heat Time',
+        ave_temp_entry_soak: 'Soak Heat EntT',
+        ave_temp_soak: 'Soak Heat AveT',
+        staying_time_soak: 'Soak Heat Time',
+        ave_temp_dis: 'DisTemp',
+        alltime: 'AllTime',
+        discharge_time: 'DisTime',
+        steelspec: 'steelSpec',
+        label: 'Fault' // 这里的 label 字段表示是否有故障，导出时可以根据需要转换成更友好的文本
+    };
+
+    const keys = Object.keys(headers);
+    
+    // 2. 拼接表头行
+    const headerRow = keys.map(k => headers[k]).join(',');
+
+    // 3. 拼接数据行 (处理了 null/undefined 并在字段外加双引号防止内容包含逗号导致错位)
+    const dataRows = filteredTableData.value.map(row => {
+        return keys.map(k => {
+            let val = row[k] !== undefined && row[k] !== null ? row[k] : '';
+            return `"${val}"`;
+        }).join(',');
+    });
+
+    // 4. 组合成完整的 CSV 文本。前面加上 \uFEFF (BOM头) 是为了防止 Excel 打开中文乱码
+    const csvContent = '\uFEFF' + [headerRow, ...dataRows].join('\n');
+
+    // 5. 创建 Blob 对象并触发下载
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // 生成带时间戳的文件名
+    const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `加热报表_${timestamp}.csv`);
+    
+    // 隐式点击下载
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    
+    // 清理 DOM 和释放内存
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    ElMessage({
+        showClose: true,
+        message: `成功导出 ${filteredTableData.value.length} 条数据`,
+        type: 'success'
+    });
+};
+
 onActivated(() => {
     dialogVisible.value = false;
     currentFaultRow.value = {};
@@ -240,6 +313,7 @@ onActivated(() => {
                 <div class="flex-item button-group">
                     <el-button type="primary" @click="handleQuery">查询</el-button>
                     <el-button @click="handleReset">重置</el-button>
+                    <el-button type="success" plain @click="handleExport">导出</el-button>
                 </div>
                 <div class="title">
                     加热报表
