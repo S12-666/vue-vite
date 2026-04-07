@@ -104,7 +104,7 @@ const getBaseOptions = () => ({
         type: 'value',
         name: 'Position(m)',
         nameLocation: 'middle',
-        nameTextStyle: { lineHeight: 40, fontWeight: 500, color: '#333', fontSize: 13 },
+        nameTextStyle: { lineHeight: 40, fontWeight: 500, color: '#333', fontSize: 15 },
         min: 0,
         axisLabel: { formatter: '{value}' },
         axisPointer: {
@@ -123,7 +123,7 @@ const getBaseOptions = () => ({
         name: 'Temp(°C)',
         min: 0, // 或者 'dataMin' 让曲线更明显
         nameLocation: 'middle',
-        nameTextStyle: { padding: [0, 0, 30, 0], fontWeight: 500, color: '#333', fontSize: 13 },
+        nameTextStyle: { padding: [0, 0, 30, 0], fontWeight: 500, color: '#333', fontSize: 15 },
         splitLine: { show: true },
         axisPointer: {
             label: {
