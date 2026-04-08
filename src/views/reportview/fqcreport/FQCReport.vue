@@ -381,7 +381,7 @@ onActivated(() => {
             <el-table-column prop="toc" label="toc" min-width="90" align="center" />
             <el-table-column prop="tgthick" label="tgThick" width="70" align="center" />
             <el-table-column prop="thick" label="thick" width="70" align="center" />
-            <el-table-column prop="tglength" label="tgLength" width="70" align="center" />
+            <el-table-column prop="tglength" label="tgLength" width="80" align="center" />
             <el-table-column prop="length" label="length" width="70" align="center" />
             <el-table-column prop="tgwidth" label="tgWidth" width="70" align="center" />
             <el-table-column prop="width" label="width" width="70" align="center" />
@@ -677,7 +677,7 @@ onActivated(() => {
 }
 
 :deep(.heating-table) {
-    font-size: 12px;
+    font-size: 14px;
 }
 
 :deep(.heating-table .el-table__header th) {
@@ -690,6 +690,7 @@ onActivated(() => {
 :deep(.heating-table .el-table__body td) {
     height: 40px;
     padding: 0;
+    color: #000000;
 }
 
 :deep(.heating-table .el-table__body tr:hover > td) {

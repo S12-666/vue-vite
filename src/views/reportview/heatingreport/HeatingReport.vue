@@ -676,7 +676,7 @@ onActivated(() => {
 }
 
 :deep(.heating-table) {
-    font-size: 12px;
+    font-size: 14px;
 }
 
 :deep(.heating-table .el-table__header th) {
@@ -689,6 +689,7 @@ onActivated(() => {
 :deep(.heating-table .el-table__body td) {
     height: 40px;
     padding: 0;
+    color: #000000;
 }
 
 :deep(.heating-table .el-table__body tr:hover > td) {

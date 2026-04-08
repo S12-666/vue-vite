@@ -379,12 +379,12 @@ onActivated(() => {
             <el-table-column prop="length" label="tgLen" width="70" align="center" />
             <el-table-column prop="width" label="tgWid" width="70" align="center" />
             <el-table-column prop="weight" label="weight" width="70" align="center" />
-            <el-table-column prop="dis_code" label="Grade" width="80" align="center" />
+            <el-table-column prop="dis_code" label="Grade" width="90" align="center" />
             <el-table-column prop="cr_code" label="CR" width="70" align="center" />
             <el-table-column prop="rm_passes" label="RM" width="70" align="center" />
             <el-table-column prop="fm_passes" label="FM" width="70" align="center" />
-            <el-table-column prop="ave_temp_dis" label="DisTemp" width="70" align="center" />
-            <el-table-column prop="fm_start_temp" label="FMTemp" width="70" align="center" />
+            <el-table-column prop="ave_temp_dis" label="DisTemp" width="80" align="center" />
+            <el-table-column prop="fm_start_temp" label="FMTemp" width="80" align="center" />
             <el-table-column prop="tg_temp" label="tgTemp" width="70" align="center" />
             <el-table-column prop="r_start_time" label="RollingStartTime" min-width="90" align="center" />
             <el-table-column prop="r_end_time" label="RollingEndTime" min-width="90" align="center" />
@@ -664,7 +664,7 @@ onActivated(() => {
 }
 
 :deep(.heating-table) {
-    font-size: 12px;
+    font-size: 14px;
 }
 
 :deep(.heating-table .el-table__header th) {
@@ -677,6 +677,7 @@ onActivated(() => {
 :deep(.heating-table .el-table__body td) {
     height: 40px;
     padding: 0;
+    color: #000000;
 }
 
 :deep(.heating-table .el-table__body tr:hover > td) {
