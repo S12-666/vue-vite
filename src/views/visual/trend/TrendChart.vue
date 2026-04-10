@@ -57,7 +57,7 @@ const handlePredictClick = (params) => {
                 <el-icon class="header-icon">
                     <Histogram />
                 </el-icon>
-                <span>趋势监控</span>
+                <span>质量监控</span>
             </div>
         </template>
         <div class="trend-chart">
