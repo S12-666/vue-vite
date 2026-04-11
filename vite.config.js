@@ -24,16 +24,11 @@ export default defineConfig({
     port: 8080,
     proxy: {
       '/pidasApi': {
-        target: 'http://172.29.175.6:5500',
+        target: 'http://172.20.110.176:5900',
         changeOrigin: true
       },
-      'nodeApi': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/nodeApi/, '/api')
-      },
       '/newbaogangapi': {
-        target: 'http://172.29.175.6:5500',
+        target: 'http://172.20.110.176:5900',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/newbaogangapi/, '/api')
       }

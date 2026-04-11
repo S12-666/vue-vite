@@ -1,42 +1,256 @@
 <script setup>
-import { reactive, getCurrentInstance, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { reactive, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ElMessage } from 'element-plus';
 import { useAllDataStore } from "@/stores";
-import { useRoute, useRouter } from 'vue-router';
-import { getMenu } from '../api/mockData/mockapi';
+import { useRouter } from 'vue-router';
 
 const loginForm = reactive({
     username: 'superadmin',
     password: 'woshimima'
 });
-const { proxy } = getCurrentInstance();
+
 const store = useAllDataStore();
 const router = useRouter();
+
+const superadminMenu = [
+    {
+        path: '/visual',
+        name: 'visual',
+        label: '智能监控',
+        icon: 'analysis',
+        url: 'visual/Visual'
+    },
+    {
+        path: '/prediction',
+        name: 'prediction',
+        label: '性能分析',
+        icon: 'prediction',
+        url: 'prediction/Prediction'
+    },
+    {
+        path: '/report',
+        name: 'report',
+        label: '工序报表',
+        icon: 'report',
+        children: [
+            {
+                path: '/heatingreport',
+                name: 'heatingreport',
+                label: '加热报表',
+                icon: 'heating',
+                url: 'reportview/heatingreport/HeatingReport'
+            },
+            {
+                path: '/rollingreport',
+                name: 'rollingreport',
+                label: '轧制报表',
+                icon: 'rolling',
+                url: 'reportview/rollingreport/RollingReport'
+            },
+            {
+                path: '/coolingreport',
+                name: 'coolingreport',
+                label: '冷却报表',
+                icon: 'cooling',
+                url: 'reportview/coolingreport/CoolingReport'
+            },
+            {
+                path: '/fqcreport',
+                name: 'fqcreport',
+                label: 'FQC报表',
+                icon: 'FQC',
+                url: 'reportview/fqcreport/FQCReport'
+            },
+        ]
+    },
+    {
+        path: 'dataoverview',
+        label: '数据概览',
+        icon: 'dataoverview',
+        children: [
+            {
+                path: '/specification',
+                name: 'specification',
+                label: '规格参数',
+                icon: 'spec',
+                url: 'dataoverview/specification/Specification'
+            },
+            {
+                path: '/heating',
+                name: 'heating',
+                label: '加热工序',
+                icon: 'heating',
+                url: 'dataoverview/heating/Heating'
+            },
+            {
+                path: '/rolling',
+                name: 'rolling',
+                label: '轧制工序',
+                icon: 'rolling',
+                url: 'dataoverview/rolling/Rolling'
+            },
+            {
+                path: '/cooling',
+                name: 'cooling',
+                label: '冷却工序',
+                icon: 'cooling',
+                url: 'dataoverview/cooling/Cooling'
+            },
+            {
+                path: '/fqc',
+                name: 'fqc',
+                label: '质量检查',
+                icon: 'FQC',
+                url: 'dataoverview/fqc/FQC'
+            },
+        ]
+    },
+    {
+        path: 'develop',
+        name: 'develop',
+        label: '开发日志',
+        icon: 'github',
+        url: 'developview/DevelopView'
+    },
+    {
+        path: '/limits',
+        name: 'limits',
+        label: '权限管理',
+        icon: 'limits',
+        url: 'limits/Limits'
+    },
+    {
+        path: '/user',
+        name: 'user',
+        label: '用户管理',
+        icon: 'user',
+        url: 'user/User'
+    }
+];
+
+const adminMenu = [
+    {
+        path: '/visual',
+        name: 'visual',
+        label: '可视分析',
+        icon: 'analysis',
+        url: 'visual/Visual'
+    },
+    {
+        path: '/report',
+        name: 'report',
+        label: '工序报表',
+        icon: 'report',
+        children: [
+            {
+                path: '/heatingreport',
+                name: 'heatingreport',
+                label: '加热报表',
+                icon: 'heating',
+                url: 'reportview/heatingreport/HeatingReport'
+            },
+            {
+                path: '/rollingreport',
+                name: 'rollingreport',
+                label: '轧制报表',
+                icon: 'rolling',
+                url: 'reportview/rollingreport/RollingReport'
+            },
+            {
+                path: '/coolingreport',
+                name: 'coolingreport',
+                label: '冷却报表',
+                icon: 'cooling',
+                url: 'reportview/coolingreport/CoolingReport'
+            },
+            {
+                path: '/fqcreport',
+                name: 'fqcreport',
+                label: 'FQC报表',
+                icon: 'FQC',
+                url: 'reportview/fqcreport/FQCReport'
+            },
+        ]
+    },
+    {
+        path: 'dataoverview',
+        label: '数据概览',
+        icon: 'dataoverview',
+        children: [
+            {
+                path: '/specification',
+                name: 'specification',
+                label: '规格参数',
+                icon: 'spec',
+                url: 'dataoverview/specification/Specification'
+            },
+            {
+                path: '/heating',
+                name: 'heating',
+                label: '加热工序',
+                icon: 'heating',
+                url: 'dataoverview/heating/Heating'
+            },
+            {
+                path: '/rolling',
+                name: 'rolling',
+                label: '轧制工序',
+                icon: 'rolling',
+                url: 'dataoverview/rolling/Rolling'
+            },
+            {
+                path: '/cooling',
+                name: 'cooling',
+                label: '冷却工序',
+                icon: 'cooling',
+                url: 'dataoverview/cooling/Cooling'
+            },
+            {
+                path: '/fqc',
+                name: 'fqc',
+                label: '质量检查',
+                icon: 'FQC',
+                url: 'dataoverview/fqc/FQC'
+            },
+        ]
+    }
+];
+
 const handleLogin = async () => {
     try {
-        const res = await getMenu(loginForm);
-        console.log(res, 'res');
+        let res = null;
 
-        if (res && res.menuList) {
-            store.updateMenuList(res.menuList);
-            store.state.token = res.token;
-
-            // 添加动态路由
-            store.addMenu(router);
-
-            // 等路由注册完成再跳转
-            await nextTick();
-            router.push("/visual");
-            // console.log(router);
-
+        if (loginForm.username === 'superadmin' && loginForm.password === 'woshimima') {
+            res = {
+                token: 'mock-superadmin-token',
+                menuList: superadminMenu
+            };
+        } else if (loginForm.username === 'admin' && loginForm.password === 'woshimima') {
+            res = {
+                token: 'mock-admin-token',
+                menuList: adminMenu
+            };
         } else {
-            console.error("菜单数据为空");
+            ElMessage.error('账号或密码错误');
+            return;
         }
+
+        store.updateMenuList(res.menuList);
+        store.state.token = res.token;
+
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('menuList', JSON.stringify(res.menuList));
+
+        store.addMenu(router);
+
+        await nextTick();
+        router.push('/visual');
     } catch (error) {
-        // console.error("登录失败:", error);
-        // console.dir(error); 
-        console.error("具体的报错信息:", error.message);
+        console.error('具体的报错信息:', error.message);
+        ElMessage.error('登录失败');
     }
 };
+
 const handleKeyup = (e) => {
     if (e.key === 'Enter') {
         handleLogin();
@@ -95,7 +309,6 @@ onBeforeUnmount(() => {
 
     :deep(.el-form-item__content) {
         justify-content: center;
-
     }
 }
 </style>
