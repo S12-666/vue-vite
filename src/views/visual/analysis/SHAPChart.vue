@@ -265,11 +265,30 @@ const renderChart = () => {
             d3.select(this).select('path').attr('opacity', 0.8);
             const isPos = d.val >= 0;
             const color = isPos ? '#F56C6C' : '#409EFF';
+
+            const coolingStatus = props.shapData?.cooling_status;
+            const currentMetric = activeMetricId.value;
+            let contributionLabel = 'SHAP贡献'; // 默认为 SHAP
+
+            if (coolingStatus === 0) {
+                // cooling_status 为 0 (过冷却状态):
+                // pa, pf, pn 显示 SHAP，ps, gs 显示 SPE
+                if (['ps', 'gs'].includes(currentMetric)) {
+                    contributionLabel = 'SPE贡献';
+                }
+            } else {
+                // cooling_status 非 0 (未过冷却):
+                // pa, pf 显示 SHAP，pn, ps, gs 显示 SPE
+                if (['pn', 'ps', 'gs'].includes(currentMetric)) {
+                    contributionLabel = 'SPE贡献';
+                }
+            }
+
             const html = `
                 <div style="font-weight:bold; color:#303133; margin-bottom:4px;">${d.name}</div>
                 <div style="color:#606266; font-size:12px;">实际值: <span style="color:#303133; font-weight:bold;">${d.actualValue}</span></div>
                 <div style="color:#606266; font-size:12px;">
-                    SHAP贡献: <span style="color:${color}; font-weight:bold;">${isPos ? '+' : ''}${d.val.toFixed(3)}</span>
+                    ${contributionLabel}: <span style="color:${color}; font-weight:bold;">${isPos ? '+' : ''}${d.val.toFixed(3)}</span>
                 </div>
             `;
             chartTooltip.show(event, html, color);

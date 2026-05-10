@@ -28,7 +28,8 @@ export default defineConfig({
         changeOrigin: true
       },
       '/newbaogangapi': {
-        target: 'http://172.20.110.176:5900',
+        // target: 'http://172.20.110.176:5900',
+        target: 'http://172.29.175.6:5900',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/newbaogangapi/, '/api')
       }
